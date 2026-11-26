@@ -14,10 +14,23 @@ export function setupMediaInputs({ onReview, onResult, onCommand }) {
     const stop = $(paste ? 'paste-media-stop' : 'audio-input-stop');
     const transcript = $(paste ? 'claim' : 'audio-transcript');
     let stream, player, objectURL, reader, timer, finishAudio, inFrame, finishing = false;
-    let collected = '', lastFrame = '', reachedLimit = false;
+    let collected = '', lastFrame = '', reachedLimit = false, speechText = '';
+    const visualTexts = [];
     const display = text => { if (paste) transcript.value = text; else transcript.textContent = text; };
-    const append = text => {
-      collected = (collected + '\n' + text).trim().slice(0, MAX_TEXT_LENGTH);
+    const append = (text, audio = false) => {
+      if (audio) speechText = (speechText+' '+text).trim().slice(0,MAX_TEXT_LENGTH);
+      else {
+        const clean = text.split('\n').map(line=>line.trim()).filter(line=>(line.match(/[\p{L}\p{N}]{2,}/gu)||[]).length>=3).join(' ');
+        if (!clean || visualTexts.includes(clean)) return;
+        const words = new Set(clean.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu)||[]);
+        const repeated = visualTexts.some(previous=>{
+          const before = new Set(previous.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu)||[]);
+          return [...words].filter(word=>before.has(word)).length / Math.max(words.size,before.size) > .75;
+        });
+        if (!repeated) visualTexts.push(clean.slice(0,1000));
+        if (visualTexts.length>8) visualTexts.shift();
+      }
+      collected = [speechText,...visualTexts].filter(Boolean).join('\n\n').slice(0, MAX_TEXT_LENGTH);
       display(collected);
       if (collected.length === MAX_TEXT_LENGTH && !reachedLimit) {
         reachedLimit = true;
@@ -80,7 +93,7 @@ export function setupMediaInputs({ onReview, onResult, onCommand }) {
           }
           if (command === 'concluir' || command === 'concluir a leitura') { if (!finishing) void complete(); return; }
         }
-        if (final) append(words); else display((collected + ' ' + words).trim().slice(0, MAX_TEXT_LENGTH));
+        if (final) append(words,true); else display((speechText + ' ' + words + '\n' + visualTexts.join('\n')).trim().slice(0, MAX_TEXT_LENGTH));
       });
       if (signal.aborted || finishing) return;
       if (player) {

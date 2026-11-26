@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { findFactChecks, relatedChecks, FACT_CHECKS } from '../regras-negocio/checagens.js';
 import { articleUrl, contextFor, publishedChecks } from '../regras-negocio/noticias.js';
 import { validateClaim, createSearchLinks, safePreferences } from '../regras-negocio/validacao.js';
+import { searchPlan } from '../regras-negocio/fontes-pesquisa.js';
+import { allowedSearchUrl } from '../regras-negocio/busca-online.js';
 
 test('fuzzing determinístico de entradas, URLs e preferências', () => {
   let seed = 20261126;
@@ -11,6 +13,7 @@ test('fuzzing determinístico de entradas, URLs e preferências', () => {
   for (let i = 0; i < 4000; i++) {
     const text = Array.from({ length: next() % 60 }, () => pieces[next() % pieces.length]).join('');
     const results = findFactChecks(text);
+    assert.ok(searchPlan(text).query.length <= 240);
     assert.ok(results.every(row => FACT_CHECKS.some(item => item.id === row.id)));
     assert.ok(relatedChecks(text).length <= 2);
     assert.ok(contextFor(text).length <= 2);
@@ -29,7 +32,12 @@ test('fuzzing determinístico de entradas, URLs e preferências', () => {
     assert.deepEqual(contextFor(value), []);
     assert.equal(typeof safePreferences(value).highContrast, 'boolean');
   }
-  for (const attack of ['javascript:alert(1)', 'https://g1.globo.com.evil.example/', 'https://g1.globo.com@evil.example/', 'http://127.0.0.1/', 'https://g1.globo.com:8443/', 'file:///C:/Users/']) assert.equal(articleUrl(attack), undefined);
+  for (const attack of ['javascript:alert(1)', 'https://g1.globo.com.evil.example/', 'https://g1.globo.com@evil.example/', 'http://127.0.0.1/', 'https://g1.globo.com:8443/', 'file:///C:/Users/']) {
+    assert.equal(articleUrl(attack), undefined);
+    assert.equal(allowedSearchUrl(attack), undefined);
+  }
+  assert.ok(!searchPlan('Pessoa contato@example.com CPF 123.456.789-01 quer saber sobre voto').query.includes('@'));
+  assert.ok(!searchPlan('Pessoa contato@example.com CPF 123.456.789-01 quer saber sobre voto').query.includes('123.456'));
 });
 
 test('paráfrases com negação não recebem o veredito da afirmação oposta', () => {

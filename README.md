@@ -2,9 +2,9 @@
 
 # Central da Informação
 
-**Versão 0.9.3** · Site e extensão para Chrome de computador.
+**Versão 0.10.0** · Site e extensão para Chrome de computador.
 
-A Central da Informação acompanha a área de tela que você escolher, reconhece texto em português e mostra a afirmação checada, a explicação e a fonte. O acompanhamento ocorre no dispositivo e dispensa conta, chave de API e gravação.
+A Central da Informação acompanha a área de tela que você escolher, reconhece texto em português e mostra a afirmação checada, a explicação e a fonte. O reconhecimento ocorre no dispositivo. A pesquisa consulta páginas online por assunto e dispensa uma chave de API nesta versão.
 
 <p align="center"><img src="docs/inicio.png" width="320" height="549" alt="Painel inicial com cinco botões e acompanhamento da tela ativado."> <img src="docs/checagem.png" width="320" height="549" alt="Resultado com a condição para votar depois das 17h e a fonte do Tribunal Superior Eleitoral."></p>
 
@@ -26,6 +26,12 @@ Execute `npm run build`. No Chrome, abra `chrome://extensions`, ative Modo do de
 - `dist/site` e `dist/extensao` são gerados pelo mesmo código. Alterações devem ser feitas nos arquivos-fonte.
 
 O site em atualização online usa o servidor de `npm start`. O pacote estático mantém a edição de notícias incluída quando as fontes online estão indisponíveis.
+
+## Pesquisa online por assunto
+
+A Central realiza uma busca a cada consulta, recupera publicações e lê passagens de páginas públicas. As perguntas novas não precisam ser cadastradas na base editorial. Os resultados são mantidos apenas durante a sessão. O endereço da matéria, sua data quando disponível e a redação da fonte ficam visíveis. Orientações gerais sobre voto distinguem a liberdade de escolha das condições da candidatura e da eleição. Uma semelhança temática oferece contexto, enquanto um veredito depende da afirmação checada.
+
+O serviço de busca usa endpoints públicos de RSS, sujeitos a disponibilidade e alterações dos provedores. O site usa o servidor local como intermediário. A extensão acessa as origens declaradas no manifesto. Após trocar de versão, confirme as permissões solicitadas pelo navegador.
 
 ## Primeira consulta
 
@@ -50,7 +56,7 @@ Abra http://127.0.0.1:4173/web/index.html no Chrome ou Edge de computador. Para 
 - **Ouvir conteúdo** recebe arquivo, microfone ou som da aba. Ao escolher o microfone, você também pode dizer “abrir eleições”, “abrir acessibilidade”, “colar informação” ou “voltar ao início”. A leitura em voz alta tem velocidade, pausa e parada, com destaque de palavra quando a voz do navegador informa os marcadores de leitura.
 - **Acessibilidade** permite ampliar até 200%, aumentar o espaçamento, usar cores suaves, alternar a paleta para daltonismo, ativar avisos falados e consultar o VLibras. A fonte Atkinson Hyperlegible Next acompanha a extensão.
 
-- **Eleições** abre os serviços oficiais e até três manchetes por fonte, com data e link. O painel consulta as listagens públicas do TSE e da Agência Brasil. Na extensão instalada, use **Atualizar notícias** para autorizar essas duas origens. Sem conexão, a seleção incluída na versão continua disponível. Para renovar essa seleção antes de distribuir uma versão, execute `node scripts/atualizar-edicao.mjs` com as dependências e o Chromium do Playwright instalados.
+- **Eleições** abre os serviços oficiais e até três manchetes por fonte, com data e link. O painel consulta as listagens públicas do TSE e da Agência Brasil. Use **Atualizar notícias** para consultar essas duas origens. Sem conexão, a seleção incluída na versão continua disponível. Para renovar essa seleção antes de distribuir uma versão, execute `node scripts/atualizar-edicao.mjs` com as dependências e o Chromium do Playwright instalados.
 
 Todos os cards são botões nativos com ícone decorativo e nome visível. Teclado, foco, zoom e mensagens de estado permanecem disponíveis. A revisão do texto, as buscas adicionais e a consulta pontual em Libras têm telas próprias. Os números 1 a 5 abrem os cards. O botão de informação em cada card explica sua função. Ao navegar por Tab, a voz opcional lê o foco.
 
@@ -62,15 +68,15 @@ As três fontes iniciais são [urna e internet](https://www.justicaeleitoral.jus
 
 ## Libras
 
-Em Acessibilidade, marque **Ativar Libras em todas as telas** para usar o widget no site e na extensão. O ajuste fica salvo. A tradução precisa de conexão e envia ao VLibras o texto selecionado. Em um resultado, a consulta pontual também permanece disponível. Na versão web, o botão **Ativar VLibras nesta página** carrega o widget oficial em uma página separada. Na extensão instalada, o link abre a ferramenta hospedada pelo VLibras. A consulta inicia quando a pessoa escolhe o texto no serviço. A checagem eleitoral continua local.
+Em Acessibilidade, marque **Ativar Libras em todas as telas** para usar o widget no site e na extensão. O ajuste fica salvo. A tradução precisa de conexão e envia ao VLibras o texto selecionado. Em um resultado, a consulta pontual também permanece disponível. Na versão web, o botão **Ativar VLibras nesta página** carrega o widget oficial em uma página separada. Na extensão instalada, o link abre a ferramenta hospedada pelo VLibras. A consulta inicia quando a pessoa escolhe o texto no serviço.
 
 O VLibras é gratuito. A API comercial Hand Talk for Devs requer uma chave contratada. A página de planos do plugin para sites anuncia tradução em Libras a partir do plano Light. [VLibras](https://www.gov.br/governodigital/pt-br/acessibilidade-e-usuario/vlibras) · [Configuração do SDK Hand Talk](https://api-docs.handtalk.me/v1/javascript/reference/explain-configs) · [Planos do plugin Hand Talk](https://www.handtalk.me/br/planos/)
 
 ## Privacidade e permissões
 
-O manifesto autoriza consultas aos portais do g1 e da Agência Brasil. Para links dos outros portais aceitos, a extensão pode pedir acesso à origem. O seletor de tela e o microfone exigem autorização do navegador. A transcrição usa o Vosk local e o modelo de português incluído. O texto, os arquivos e as capturas não são enviados na atualização das notícias.
+O manifesto autoriza consultas ao Bing, Google Notícias, g1, Agência Brasil, TSE, Justiça Eleitoral, Aos Fatos e Planalto. Não solicita acesso permanente a todos os sites. O seletor de tela e o microfone exigem autorização do navegador. A transcrição usa o Vosk local e o modelo de português incluído. A pesquisa por assunto envia um trecho de texto ou fala aos buscadores e portais consultados. Imagens e arquivos permanecem no dispositivo. As perguntas e os resultados da pesquisa ficam na memória da sessão.
 
-O texto fica na memória do painel; recarregá-lo apaga o conteúdo. Apenas os ajustes de leitura são armazenados localmente. A consulta à base é local e não envia o texto para checagem externa. Ao abrir uma busca adicional, o trecho visível no campo correspondente é enviado ao Google. Os links informam abertura de nova aba. Vozes podem usar serviços do navegador/sistema; vozes locais em português são priorizadas quando disponíveis.
+O texto fica na memória do painel; recarregá-lo apaga o conteúdo. Apenas os ajustes de leitura são armazenados localmente. A comparação editorial é local. A pesquisa online transmite a consulta aos provedores indicados na interface. Ao abrir uma busca adicional, o trecho visível no campo correspondente é enviado ao Google. Os links informam abertura de nova aba. Vozes podem usar serviços do navegador/sistema; vozes locais em português são priorizadas quando disponíveis.
 
 A imagem pode conter qualquer dado visível na área escolhida. O fluxo alternativo que lê o documento da aba exclui campos de formulário e conteúdo oculto. Ambos mantêm o texto apenas na memória do painel.
 
@@ -88,7 +94,7 @@ npx playwright install chromium
 npm test
 ```
 
-Os testes exercitam os cinco cards, teclado e retorno do foco, erros, contraste, ampliação, áudio simulado, cancelamento de capturas antigas ao navegar, exclusão de campos privados, ausência de envio automático, persistência mínima, correspondências conservadoras e captura real da extensão em um perfil isolado. A avaliação automática usa axe-core e não substitui leitores de tela nem testes com pessoas.
+Os testes exercitam os cinco cards, teclado e retorno do foco, erros, contraste, ampliação, áudio simulado, cancelamento de capturas antigas ao navegar, exclusão de campos privados, persistência mínima, pesquisa online, correspondências conservadoras e captura real da extensão em um perfil isolado. A avaliação automática usa axe-core e não substitui leitores de tela nem testes com pessoas.
 
 `npm start` não exige instalar pacotes. As dependências são apenas de desenvolvimento. Os ícones já estão incluídos; para regenerá-los, execute `node scripts/gerar-icones.mjs` com as dependências de desenvolvimento e o Chromium do Playwright instalados.
 
@@ -105,3 +111,10 @@ Ampliar e manter a base de checagens ou conectar um serviço de busca com fonte,
 - [Chrome — painel lateral](https://developer.chrome.com/docs/extensions/reference/api/sidePanel)
 - [Fato ou Boato](https://www.justicaeleitoral.jus.br/fato-ou-boato/)
 - [Aos Fatos](https://www.aosfatos.org/)
+
+
+## Ensaios com mídia externa
+
+O comando `node scripts/testar-midias-reais.mjs` obtém dois vídeos públicos do Wikimedia Commons, com fonte e licença, e envia os arquivos completos pelo campo da aplicação. Execute com o site aberto. Para outra porta, defina `TEST_URL`. Os resultados e as amostras ficam em `dist/ensaios-reais`, fora do versionamento. O ensaio registra a resposta observada, inclusive transcrição incorreta e ausência de evidência. Ele não define um veredito pela aparência do arquivo.
+
+Consulte os resultados e os limites em [Validação da versão 0.10.0](docs/validacao-0.10.0.md).

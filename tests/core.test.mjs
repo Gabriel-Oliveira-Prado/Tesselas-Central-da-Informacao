@@ -72,10 +72,12 @@ test('somente preferências de leitura válidas são persistidas', () => {
   assert.deepEqual(safePreferences({ fontSize: '999', highContrast: 'true' }), { fontSize: '100', highContrast: true, wideSpacing: false });
 });
 
-test('conexões permanentes limitadas às duas fontes de notícias', async () => {
+test('conexões permanentes limitadas às origens de pesquisa declaradas', async () => {
   const manifest = JSON.parse(await readFile(new URL('../extensao/manifest.json', import.meta.url)));
   assert.equal(manifest.manifest_version, 3);
-  assert.deepEqual(manifest.host_permissions, ['https://g1.globo.com/*', 'https://agenciabrasil.ebc.com.br/*']);
+  assert.ok(manifest.host_permissions.includes('https://www.bing.com/*'));
+  assert.ok(manifest.host_permissions.includes('https://news.google.com/*'));
+  assert.ok(!manifest.host_permissions.includes('<all_urls>'));
   assert.equal(manifest.content_scripts, undefined);
   assert.deepEqual(manifest.permissions.sort(), ['activeTab', 'scripting', 'storage', 'sidePanel'].sort());
   assert.ok(manifest.content_security_policy.extension_pages.includes("connect-src 'self'"));

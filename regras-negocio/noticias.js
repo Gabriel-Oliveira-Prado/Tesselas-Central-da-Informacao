@@ -61,7 +61,7 @@ export function contextFor(text) {
   }).filter(hit => hit.score >= .33).sort((a, b) => b.score - a.score).slice(0, 2).map(hit => hit.row);
 }
 
-export function publishedChecks(text, story) {
+export function publishedChecks(text, story, linkedStory = true) {
   if (typeof text !== 'string') return [];
   text = text.slice(0, 8000);
   const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[“”"'‘’#]/g, '').replace(/\s+/g, ' ').trim();
@@ -71,7 +71,7 @@ export function publishedChecks(text, story) {
     if (new URL(row.url).hostname !== 'g1.globo.com' || !new URL(row.url).pathname.includes('/fato-ou-fake/')) return [];
     const match = /^É #(FAKE|FATO)(?:\s+que\s+|:\s*|\s+)(.+?)(?:;|$)/i.exec(row.title);
     const fullHeadline = normalize(row.title).replace(/[.!?]$/, '');
-    if (!match || (story?.url !== row.url && !sentences.has(normalize(match[2]).replace(/[.!?]$/, '')) && !sentences.has(fullHeadline))) return [];
+    if (!match || ((!linkedStory || story?.url !== row.url) && !sentences.has(normalize(match[2]).replace(/[.!?]$/, '')) && !sentences.has(fullHeadline))) return [];
     return [{ id: row.url, kind: match[1].toUpperCase() === 'FAKE' ? 'false' : 'true', claim: match[2],
       finding: match[1].toUpperCase() === 'FAKE' ? 'Falso, segundo a fonte' : 'Confirmado pela fonte',
       explanation: row.lead || row.title, url: row.url, source: 'g1 · Fato ou Fake', topic: 'esta checagem do g1', published: row.date, consultedAt: new Date().toISOString().slice(0, 10) }];

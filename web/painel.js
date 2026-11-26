@@ -31,6 +31,7 @@ document.querySelectorAll('.action-card').forEach((button) => {
   button.addEventListener('click', () => { homeTrigger = button.id; }, { capture: true });
 });
 let activeCapture;
+let activeResearch;
 let liveSession;
 let finishLiveAudio;
 let sessionHistory = [];
@@ -38,7 +39,16 @@ try { navigator.mediaDevices?.setCaptureHandleConfig?.({ handle: 'central-painel
 enableAccessibleNavigation();
 const stopMediaInputs = setupMediaInputs({
   onReview(text) { $('claim').value = text; $('claim').dispatchEvent(new Event('input')); $('claim').focus(); },
-  onResult(text) { renderResult({ text }); },
+  async onResult(text) {
+    activeResearch?.abort();
+    activeResearch = new AbortController();
+    const current = ++captureRevision;
+    $('audio-input-status').textContent = 'Pesquisando o trecho reconhecido nas fontes…';
+    try {
+      const evidence = await research(text,undefined,{signal:activeResearch.signal});
+      if (current === captureRevision) renderResult({ text, evidence });
+    } catch { if (current===captureRevision) $('audio-input-status').textContent='A pesquisa foi interrompida. Tente novamente.'; }
+  },
   onCommand(command) {
     if (command === 'voltar ao inicio') { goHome(); return; }
     const button = command === 'abrir eleicoes' ? 'open-elections' : command === 'colar informacao' ? 'open-paste' : 'open-settings';
@@ -75,6 +85,7 @@ function resetSpeech() {
 }
 
 function showView(name, focusId) {
+  activeResearch?.abort();
   stopMediaInputs();
   if (name !== 'live') liveSession?.abort();
   activeCapture?.abort();
@@ -188,15 +199,15 @@ $('search-query').addEventListener('input', renderSearchLinks);
 
 function renderResult(content) {
   lastContent = content;
-  const evidence = evidenceFor(content.text, content.story);
+  const evidence = content.evidence || evidenceFor(content.text, content.story);
   if (content.story && !evidence.exact.some(item => item.url === content.story.url)) evidence.news = [content.story, ...evidence.news.filter(n => n.url !== content.story.url)];
   const matches = evidence.exact;
   const context = evidence.related.length || evidence.news.length;
-  $('result-title').textContent = matches.length ? 'Checagem encontrada' : context ? 'Contexto encontrado' : 'Sem conclusão';
-  $('result-summary').textContent = matches.length
+  $('result-title').textContent = evidence.orientation ? 'Orientação encontrada' : matches.length ? 'Checagem encontrada' : context ? 'Contexto encontrado' : 'Sem conclusão';
+  $('result-summary').textContent = evidence.orientation ? evidence.orientation.title : matches.length
     ? 'Compare a afirmação encontrada com a explicação da fonte.'
-    : context ? 'Estas publicações ajudam a entender o assunto. A afirmação específica ainda precisa de confirmação.' : 'Não encontrei uma checagem correspondente. Isso não confirma nem desmente a informação.';
-  $('result-scope').textContent = matches.length
+    : context ? 'Veja os trechos encontrados nas fontes. Confira a data e as condições antes de aplicar a informação ao seu caso.' : 'Não encontrei uma checagem correspondente. Isso não confirma nem desmente a informação.';
+  $('result-scope').textContent = evidence.search?.status === 'unavailable' ? 'As fontes online estão indisponíveis neste momento. Você pode tentar pesquisar novamente.' : matches.length
     ? 'Esta checagem se refere ao trecho indicado, não à página inteira.'
     : 'Você pode consultar outras fontes abaixo.';
   if (content.truncated) $('result-scope').textContent += ' Foram lidos apenas os primeiros 8.000 caracteres.';
@@ -206,9 +217,9 @@ function renderResult(content) {
   $('listen-result').hidden = !voiceAvailable;
   $('result-tools').hidden = false;
   $('libras-status').textContent = '';
-  $('libras-text').value = matches.length ? matches.map((item) => `${item.claim} ${item.finding}. ${item.explanation} Fonte: ${item.source}.`).join('\n\n') : [$('result-title').textContent, $('result-summary').textContent, ...evidence.related.map(r => r.explanation), ...evidence.news.map(r => r.title + '. ' + r.source)].join(' ');
+  $('libras-text').value = evidence.orientation ? evidence.orientation.explanation : matches.length ? matches.map((item) => `${item.claim} ${item.finding}. ${item.explanation} Fonte: ${item.source}.`).join('\n\n') : [$('result-title').textContent, $('result-summary').textContent, ...evidence.related.map(r => r.explanation), ...evidence.news.map(r => r.title + '. ' + r.source)].join(' ');
   showEvidence($('result-matches'), evidence);
-  $('reviewed-claim').textContent = content.text;
+  $('reviewed-claim').value = content.text;
   $('source-context').hidden = !content.url;
   $('source-context').textContent = content.url ? `Origem: ${content.title || content.url}. ${content.url}` : '';
   $('retry-paste').hidden = true;
@@ -295,6 +306,10 @@ function showSessionResults() {
     section.append(element('h2', item.origin + ' · ' + item.time.toLocaleTimeString('pt-BR')), element('p', item.text));
     showEvidence(section.appendChild(document.createElement('div')), item.evidence);
     if (!item.evidence.exact.length && !item.evidence.related.length && !item.evidence.news.length) section.append(element('p', 'Sem evidência suficiente para concluir sobre este trecho.'));
+    const search = element('button', 'Pesquisar este trecho', 'button button-secondary');
+    search.type = 'button';
+    search.addEventListener('click', () => { $('claim').value = item.text; showView('paste','claim'); $('review-form').requestSubmit(); });
+    section.append(search);
     $('history-matches').append(section);
   }
   showView('history', 'history-title');
@@ -308,11 +323,26 @@ async function analyzeLive() {
   finishLiveAudio = undefined;
   sessionHistory = [];
   const remember = (text, evidence, origin, time) => {
-    if (!text || sessionHistory.some(item => item.text === text && item.origin === origin)) return;
+    if (!text || sessionHistory.some(item => item.text === text.slice(0,650) && item.origin === origin)) return;
     sessionHistory.push({ text: text.slice(0, 650), evidence, origin, time });
     if (sessionHistory.length > 50) sessionHistory.shift();
   };
   let lastKey, heard = '', heardAt = 0, track, audioTrack, listening = false, failedAudio = false, badge;
+  let pendingResearch, currentText = '', searchedText = '';
+  const enrich = (text, origin) => {
+    if (pendingResearch || text.length < 15 || text === searchedText || evidenceFor(text).exact.length) return;
+    searchedText = text;
+    pendingResearch = research(text, undefined, { signal }).then(evidence=>{
+      if (signal.aborted) return;
+      const item = sessionHistory.find(item=>item.text===text.slice(0,650) && item.origin===origin);
+      if (item) item.evidence = evidence;
+      if (currentText===text) {
+        showEvidence($('live-matches'), evidence);
+        if (evidence.orientation || evidence.news.length) $('live-summary').textContent = evidence.orientation?.title || 'Contexto encontrado nas fontes online.';
+        if (lastContent) lastContent.evidence = evidence;
+      }
+    }).catch(()=>{}).finally(()=>{pendingResearch=undefined;});
+  };
   const state = () => listening && audioTrack?.readyState === 'live' && !audioTrack.muted ? 'Lendo tela e escutando áudio' : failedAudio ? 'Lendo tela · áudio indisponível' : 'Lendo tela';
   const indicate = () => { if (!signal.aborted && track) { $('live-state').textContent = state(); badge?.(track, 'Central · ' + state()); } };
   prepareIndicator(signal).then(result => { badge = result; indicate(); });
@@ -335,6 +365,8 @@ async function analyzeLive() {
     $('loading-message').hidden = true;
     if (voiceAvailable) speechSynthesis.cancel();
     $('live-state').textContent = 'Compartilhamento encerrado.';
+    $('live-preview').removeAttribute('src');
+    $('live-preview').hidden = true;
     $('stop-live').textContent = 'Voltar ao início';
     if (started && lastKey === undefined) $('live-summary').textContent = 'Nenhum quadro analisado.';
   }, { once: true });
@@ -363,7 +395,7 @@ async function analyzeLive() {
           transcribe(new MediaStream([audioTrack]), signal, (text, final) => {
             if (signal.aborted) return;
             $('live-heard').textContent = 'Áudio · ' + text;
-            if (final) { heard = text; heardAt = Date.now(); remember(text, evidenceFor(text), 'Áudio da superfície escolhida', new Date()); }
+            if (final) { heard = text; heardAt = Date.now(); remember(text, evidenceFor(text), 'Áudio da superfície escolhida', new Date()); enrich(text,'Áudio da superfície escolhida'); }
           }).then(finish => { finishLiveAudio = finish; listening = true; indicate(); }).catch(() => { failedAudio = true; indicate(); });
         }
         $('live-matches').replaceChildren();
@@ -376,6 +408,7 @@ async function analyzeLive() {
         indicate();
         const spoken = Date.now() - heardAt < 9000 ? heard : '';
         const combined = [content.text, spoken].filter(Boolean).join('\n');
+        currentText = spoken.length >= 15 ? spoken : content.text;
         lastContent = combined ? { ...content, text: combined } : null;
         const referenceId = findVisualReference(canvas);
         const reference = referenceId && FACT_CHECKS.find(item => item.id === referenceId);
@@ -391,7 +424,7 @@ async function analyzeLive() {
         if (reference) remember('Imagem parecida com a arte da checagem sobre ' + reference.topic, { exact: [], related: [reference], news: [] }, 'Imagem', time);
         const summary = evidence.exact.length ? evidence.exact.map(item => item.finding + '. ' + item.explanation).join(' ')
           : content.text ? 'Sem conclusão para o trecho deste quadro.' : 'Sem conclusão. Nenhuma afirmação legível neste quadro.';
-        const key = JSON.stringify([summary, evidence.exact.map(item => item.id), evidence.related.map(item => item.id), evidence.news.map(item => item.url)]);
+        const key = JSON.stringify([currentText, summary, evidence.exact.map(item => item.id), evidence.related.map(item => item.id), evidence.news.map(item => item.url)]);
         if (lastKey !== key) {
           showEvidence($('live-matches'), evidence);
           $('live-summary').textContent = evidence.exact.length ? 'Checagem sobre ' + evidence.exact.map(item => item.topic).join(' e ') + '.' : evidence.related.length || evidence.news.length ? 'Contexto encontrado. Confira como a fonte descreve o assunto.' : summary;
@@ -408,6 +441,9 @@ async function analyzeLive() {
           lastKey = key;
         }
         $('live-text').textContent = content.text.slice(0, 650) || 'Sem texto visível neste quadro.';
+        $('live-preview').src = canvas.toDataURL('image/jpeg', .6);
+        $('live-preview').hidden = false;
+        enrich(currentText, spoken.length >= 15 ? 'Áudio da superfície escolhida' : 'Texto na superfície escolhida');
         $('live-time').textContent = 'Quadro analisado às ' + time.toLocaleTimeString('pt-BR') + '.';
         if (visualAssistant) {
           try {
@@ -458,12 +494,22 @@ $('review-form').addEventListener('submit', async (event) => {
     return;
   }
   clearError();
+  activeResearch?.abort();
+  const controller = new AbortController();
+  activeResearch = controller;
   const current = ++captureRevision;
   const submit = $('review-form').querySelector('[type=submit]');
   submit.setAttribute('aria-disabled', 'true');
   $('research-status').textContent = 'Pesquisando nas fontes disponíveis…';
   await new Promise(resolve => requestAnimationFrame(resolve));
-  await research(validation.text);
+  let evidence;
+  try {
+    evidence = await research(validation.text, undefined, { signal:controller.signal, onProgress: message => { if (current === captureRevision) $('research-status').textContent = message; } });
+  } catch {
+    if (current === captureRevision) $('research-status').textContent = 'A pesquisa foi interrompida. Tente novamente.';
+    submit.removeAttribute('aria-disabled');
+    return;
+  }
   submit.removeAttribute('aria-disabled');
   if (current !== captureRevision || $('claim').value.trim() !== validation.text) return;
   $('research-status').textContent = 'Consulta às fontes concluída.';
@@ -477,13 +523,7 @@ $('review-form').addEventListener('submit', async (event) => {
     } catch (err) { if (revision === captureRevision) { $('claim-error').hidden = false; $('claim-error').textContent = err.message; } }
     return;
   }
-  if (!evidenceFor(validation.text).exact.length) {
-    const revision = ++captureRevision;
-    announce('Consultando publicações disponíveis.');
-    await refreshContext();
-    if (revision !== captureRevision || $('claim').value.trim() !== validation.text) return;
-  }
-  renderResult({ text: validation.text });
+  renderResult({ text: validation.text, evidence });
 });
 $('use-example').addEventListener('click', () => {
   $('claim').value = $('claim').placeholder;
@@ -538,8 +578,8 @@ if (!voiceAvailable) {
 }
 
 function readingText(content) {
-  const { exact: checks, related, news } = evidenceFor(content.text, content.story);
-  const explanation = checks.length
+  const { exact: checks, related, news, orientation } = content.evidence || evidenceFor(content.text, content.story);
+  const explanation = orientation ? orientation.explanation : checks.length
     ? checks.map((item) => `Afirmação na base: ${item.claim} ${item.finding}. ${item.explanation} Fonte: ${item.source}.`).join(' ')
     : related.length || news.length || content.story ? 'Contexto encontrado. ' + [...related.map(item => item.explanation + ' Fonte: ' + item.source), ...(content.story ? [content.story] : news).map(item => item.title + '. Fonte: ' + item.source)].join(' ') : 'Sem conclusão. Não encontrei esta afirmação na base.';
   if (audioFromResult) return `Resultado da consulta: ${explanation}`;

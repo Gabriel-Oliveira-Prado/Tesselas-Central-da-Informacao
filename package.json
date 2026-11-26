@@ -1,6 +1,6 @@
 {
   "name": "central-da-informacao",
-  "version": "0.9.3",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "description": "Site e extensão acessíveis para pesquisar o contexto de informações eleitorais.",

@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { resolve, sep, extname } from 'node:path';
 import { electionSources } from '../regras-negocio/fontes-eleitorais.js';
 import { articleUrl, newsFeeds } from '../regras-negocio/noticias.js';
+import { allowedSearchUrl } from '../regras-negocio/busca-online.js';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json; charset=utf-8', '.webm': 'video/webm', '.wav': 'audio/wav', '.wasm': 'application/wasm', '.ttf': 'font/ttf' };
@@ -18,6 +19,19 @@ const server = createServer(async (request, response) => {
       return;
     }
     const source = [...electionSources, ...newsFeeds].find(item => url.pathname === '/eleicoes/fontes/' + item.id);
+    if (url.pathname === '/pesquisa/fonte') {
+      const upstream = allowedSearchUrl(url.searchParams.get('url'));
+      if (!upstream) { response.writeHead(400).end(); return; }
+      try {
+        const result = await fetch(upstream, { redirect:'error',signal:AbortSignal.timeout(6000) });
+        if (!result.ok) throw new Error();
+        const charset = result.headers.get('content-type')?.match(/charset=["']?([\w-]+)/i)?.[1];
+        const body = Buffer.from(await result.arrayBuffer());
+        if (body.length > 2500000) throw new Error();
+        response.writeHead(200, {'Content-Type':'text/plain'+(charset?'; charset='+charset:''),'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'"}).end(body);
+      } catch { response.writeHead(503).end('Fonte indisponível.'); }
+      return;
+    }
     if (url.pathname === '/noticia') {
       const article = articleUrl(url.searchParams.get('url'));
       if (!article) { response.writeHead(400).end(); return; }

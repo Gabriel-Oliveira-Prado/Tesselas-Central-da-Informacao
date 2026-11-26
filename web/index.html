@@ -70,9 +70,11 @@
       <section id="live-view" class="view tool-view" aria-labelledby="live-title" hidden>
         <h1 id="live-title" tabindex="-1">Análise ao vivo</h1>
         <p class="capture-status" id="live-state" role="status"></p>
+        <p class="small">A pesquisa online envia um trecho do texto ou da fala às fontes de busca.</p>
         <button id="stop-live" class="button button-primary" type="button">Encerrar acompanhamento</button>
         <h2 class="field-label" id="excerpt-title">Trecho em análise</h2>
         <p class="live-excerpt" id="live-text" tabindex="0" aria-labelledby="excerpt-title" role="region"></p>
+        <img id="live-preview" class="frame-preview" alt="Último quadro da área escolhida para análise" hidden>
         <p id="live-heard"></p>
         <p class="small" id="vision-result"></p>
         <p id="live-summary" role="status"></p>
@@ -87,7 +89,7 @@
         <form id="review-form" novalidate>
           <label class="field-label" for="claim">O que você quer conferir?</label>
           <textarea id="claim" name="claim" rows="6" maxlength="8000" required aria-describedby="claim-help claim-error" placeholder="Dá para votar pelo celular se estiver chovendo?"></textarea>
-          <p class="small" id="claim-help">Escreva uma frase ou cole o link de uma notícia.</p>
+          <p class="small" id="claim-help">Escreva uma frase ou cole um link. A pesquisa envia um trecho ao Bing, Google Notícias e às fontes consultadas.</p>
           <button type="button" class="button button-secondary" id="use-example">Usar a pergunta de exemplo</button>
           <p class="field-error" id="claim-error" hidden></p>
           <button class="button button-primary" type="submit">Pesquisar informação</button><p id="research-status" role="status"></p>
@@ -124,7 +126,7 @@
       <section id="support-view" class="view tool-view" aria-labelledby="support-title" hidden>
         <button class="back-button" type="button" data-back><span aria-hidden="true">←</span> Voltar</button>
         <h1 id="support-title" tabindex="-1"></h1>
-        <div id="read-text-details" class="support-content" hidden><p class="captured-text" id="reviewed-claim" tabindex="0"></p><p class="small" id="source-context" hidden></p><button class="button button-secondary" type="button" id="edit-read-text">Editar trecho para conferir</button></div>
+        <div id="read-text-details" class="support-content" hidden><label class="field-label" for="reviewed-claim">Texto reconhecido</label><textarea class="captured-text" id="reviewed-claim" rows="9" readonly aria-describedby="source-context"></textarea><p class="small" id="source-context" hidden></p><button class="button button-secondary" type="button" id="edit-read-text">Editar trecho para conferir</button></div>
         <div id="libras-details" class="support-content" hidden>
           <p>Copie a conclusão. No VLibras, abra o menu do avatar, escolha Tradutor e cole o texto que deseja traduzir.</p>
           <label class="field-label" for="libras-text">Texto para o tradutor</label>
@@ -187,7 +189,7 @@
       </section>
       <p class="sr-only" id="app-status" role="status" aria-live="polite" aria-atomic="true"></p>
     </main>
-    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.9.3</span></footer>
+    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.10.0</span></footer>
   </div>
 </body>
 </html>

@@ -105,7 +105,7 @@ test('analisar tela lê imagem por OCR local e encerra o compartilhamento', asyn
   await expect(page.getByText(/consultada em 25\/11\/2026/)).toBeVisible();
   await expect(page.getByRole('textbox')).toHaveCount(0);
   await page.getByText('Ver texto lido', { exact: true }).click();
-  await expect(page.locator('#reviewed-claim')).toHaveText(knownClaim);
+  await expect(page.locator('#reviewed-claim')).toHaveValue(knownClaim);
   expect(outsideRequests).toEqual([]);
   await page.screenshot({ path: 'test-results/central-analise.png', fullPage: true });
 });
@@ -204,7 +204,7 @@ test('HTML permanece texto, consulta é editável e conteúdo não é persistido
   const malicious = '<img src=x onerror="window.injetado=true"> & uma alegação';
   await pasteAndVerify(page, malicious);
   await page.getByText('Ver texto lido', { exact: true }).click();
-  await expect(page.locator('#reviewed-claim')).toHaveText(malicious);
+  await expect(page.locator('#reviewed-claim')).toHaveValue(malicious);
   expect(await page.evaluate(() => window.injetado)).toBeUndefined();
   await page.locator('#support-view [data-back]').click();
   await page.getByRole('button', { name: 'Buscar outras fontes' }).click();
@@ -383,8 +383,8 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     // uma aba de teste, sem mudar o foco da aba autorizada. As APIs são reais.
     await extensionPage.evaluate(() => document.getElementById('allow-tab').click());
     await expect(extensionPage.getByRole('heading', { name: 'Checagem encontrada', exact: true })).toBeFocused();
-    await expect(extensionPage.locator('#reviewed-claim')).toContainText(knownClaim);
-    await expect(extensionPage.locator('#reviewed-claim')).not.toContainText('DADO PRIVADO');
+    await expect(extensionPage.locator('#reviewed-claim')).toHaveValue(new RegExp('A urna eletrônica'));
+    await expect(extensionPage.locator('#reviewed-claim')).not.toHaveValue(/DADO PRIVADO/);
     await expect(extensionPage.locator('#result-view .finding')).toHaveText('Falso, segundo a fonte');
     await extensionPage.getByRole('button', { name: 'Voltar', exact: true }).click();
     await extensionPage.getByRole('button', { name: 'Acessibilidade', exact: true }).click();
