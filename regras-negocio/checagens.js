@@ -70,7 +70,7 @@ export const FACT_CHECKS = [
     url: 'https://www.justicaeleitoral.jus.br/fato-ou-boato/checagens/2022/peritos-federais-nao-comprovaram-fraude-nas-eleicoes-2022',
   },
   {
-    id: 'fila-17h', kind: 'context', topic: 'votação depois das 17h',
+    id: 'fila-17h', kind: 'conditional', topic: 'votação depois das 17h',
     concepts: [/vot|fila/, /17|dezessete|cinco/],
     claim: 'Pode votar depois das 17h?',
     variants: ['Pode votar depois das 17', 'Posso votar depois das 17 horas', 'Pode votar depois das 17h', 'Dá para votar depois das cinco', 'Posso votar após as 17h', 'Pode votar depois das 17 horas'],

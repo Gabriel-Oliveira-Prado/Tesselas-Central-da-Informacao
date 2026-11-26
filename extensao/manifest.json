@@ -2,8 +2,8 @@
   "manifest_version": 3,
   "name": "Central da Informação",
   "short_name": "Central",
-  "version": "0.10.0",
-  "description": "Analise informações, ouça conteúdo e acompanhe notícias eleitorais com recursos de acessibilidade.",
+  "version": "0.11.0",
+  "description": "Site e extensão acessíveis para verificar notícias, texto, áudio e vídeo com fontes.",
   "minimum_chrome_version": "116",
   "permissions": [
     "activeTab",

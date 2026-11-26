@@ -2,7 +2,7 @@ import { transcribe } from './transcricao.js';
 import { createReader, readFrame } from './captura-tela.js';
 import { MAX_TEXT_LENGTH } from '../regras-negocio/validacao.js';
 
-export function setupMediaInputs({ onReview, onResult, onCommand }) {
+export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest = action => action() }) {
   const $ = id => document.getElementById(id);
   let active;
   async function begin(kind, file, paste = false) {
@@ -11,6 +11,8 @@ export function setupMediaInputs({ onReview, onResult, onCommand }) {
     const { signal } = owner;
     active = owner;
     const status = $(paste ? 'caption-status' : 'audio-input-status');
+    status.classList.add('research-progress');
+    status.dataset.busy = 'true';
     const stop = $(paste ? 'paste-media-stop' : 'audio-input-stop');
     const transcript = $(paste ? 'claim' : 'audio-transcript');
     let stream, player, objectURL, reader, timer, finishAudio, inFrame, finishing = false;
@@ -38,6 +40,7 @@ export function setupMediaInputs({ onReview, onResult, onCommand }) {
       }
     };
     function cleanup() {
+      status.dataset.busy = 'false';
       clearTimeout(timer);
       stream?.getTracks().forEach(track => track.stop());
       if (player) { player.onended = player.onerror = null; player.pause(); player.removeAttribute('src'); player.load(); }
@@ -50,6 +53,7 @@ export function setupMediaInputs({ onReview, onResult, onCommand }) {
     async function complete() {
       if (finishing || signal.aborted) return;
       finishing = true;
+      status.textContent = 'Concluindo a transcrição. Aguarde…';
       player?.pause();
       clearTimeout(timer);
       try {
@@ -131,7 +135,7 @@ export function setupMediaInputs({ onReview, onResult, onCommand }) {
     }
   }
   $('mic-input').onclick = () => begin('mic');
-  $('tab-input').onclick = () => begin('tab');
+  $('tab-input').onclick = () => onShareRequest(() => begin('tab'));
   for (const id of ['audio-file', 'caption-file']) {
     $(id).addEventListener('change', () => {
       const file = $(id).files[0];

@@ -58,12 +58,13 @@ const server = createServer(async (request, response) => {
       response.writeHead(302, { Location: '/web/index.html' }).end();
       return;
     }
-    if (!/^\/(web|regras-negocio|demo)\//.test(pathname)) {
+    if (pathname.startsWith('/validacao/')) pathname = pathname.replace('/validacao/','/dist/validacao-0.11.0/');
+    if (!/^\/(web|regras-negocio|demo|dist\/validacao-0\.11\.0)\//.test(pathname)) {
       response.writeHead(404).end('Não encontrado.');
       return;
     }
     const path = resolve(root, `.${pathname}`);
-    const allowed = ['web', 'regras-negocio', 'demo'].some((folder) => path.startsWith(resolve(root, folder) + sep));
+    const allowed = ['web', 'regras-negocio', 'demo', 'dist/validacao-0.11.0'].some((folder) => path.startsWith(resolve(root, folder) + sep));
     if (!allowed) {
       response.writeHead(403).end('Acesso negado.');
       return;

@@ -15,7 +15,7 @@ test('pergunta inédita consulta buscadores e lê a página retornada, sem guard
   await page.locator('#open-paste').click();
   await page.locator('#claim').fill('Como funciona a reciclagem de vidro?');
   await page.locator('#review-form [type=submit]').click();
-  await expect(page.locator('#result-title')).toHaveText('Contexto encontrado');
+  await expect(page.locator('#result-title')).toHaveText('Não verificado');
   await expect(page.locator('#result-matches')).toContainText('encaminhá-las à indústria');
   expect(queries.some(query=>query?.includes('reciclagem de vidro'))).toBe(true);
   await expect(page.locator('#result-matches .finding')).toHaveCount(0);
@@ -34,7 +34,7 @@ test('orientação de voto é sustentada por página consultada e botão permite
   await page.locator('#open-paste').click();
   await page.locator('#claim').fill('É proibido votar no Nordeste?');
   await page.locator('#review-form [type=submit]').click();
-  await expect(page.locator('#result-title')).toHaveText('Orientação encontrada');
+  await expect(page.locator('#result-title')).toHaveText('Não verificado');
   await expect(page.locator('#result-matches')).toContainText('O direito de voto vale em todo o Brasil');
   await expect(page.locator('#result-matches a').first()).toHaveAttribute('href',/tse.jus.br/);
   const button = page.locator('#new-query');
@@ -67,7 +67,7 @@ test('recusa de um portal permite ler a Constituição em outra fonte oficial co
   await page.locator('#open-paste').click();
   await page.locator('#claim').fill('Posso votar no Lula?');
   await page.locator('#review-form [type=submit]').click();
-  await expect(page.locator('#result-title')).toHaveText('Orientação encontrada');
+  await expect(page.locator('#result-title')).toHaveText('Não verificado');
   await expect(page.locator('#result-matches')).toContainText('candidaturas válidas');
   await expect(page.locator('#result-matches blockquote')).toContainText('sufrágio universal');
   await expect(page.locator('#result-matches a').first()).toHaveAttribute('href',/planalto.gov.br/);
@@ -83,7 +83,7 @@ test('página indisponível preserva a notícia encontrada e não transforma man
   await page.locator('#open-paste').click();
   await page.locator('#claim').fill('Como funciona a reciclagem de vidro?');
   await page.locator('#review-form [type=submit]').click();
-  await expect(page.locator('#result-title')).toHaveText('Contexto encontrado');
+  await expect(page.locator('#result-title')).toHaveText('Não verificado');
   await expect(page.locator('#result-matches')).toContainText('Reciclagem de vidro');
   await expect(page.locator('#result-matches .finding')).toHaveCount(0);
 });

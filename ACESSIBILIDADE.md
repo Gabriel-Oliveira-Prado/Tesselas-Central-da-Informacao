@@ -20,7 +20,7 @@ Referências: **ABNT NBR 17225:2025** e **WCAG 2.2**, com foco nos requisitos A 
 | Conteúdo textual | Fonte Atkinson Hyperlegible Next, trechos em português e explicações com fonte. A revisão de texto, as buscas adicionais e a consulta em Libras têm telas próprias. |
 | Codificação e marcação semântica | HTML nativo; ARIA usado para mensagens, agrupamentos e associações necessárias. |
 | Áudio e vídeo | Arquivo de som, vídeo, microfone e som da aba podem gerar transcrição local. A Central aceita SRT e VTT e mantém a leitura em voz alta. A demonstração inclui descrição escrita e controles nativos. |
-| Animação | Sem animação, flashes ou movimento automático; preferência de movimento reduzido respeitada. |
+| Animação | Indicador suave de pesquisa, sem flashes. Redução de movimento pelo sistema e por controle persistido nas configurações. |
 | Tempo | Sem contagem regressiva, expiração de formulários ou avisos que desaparecem automaticamente. |
 
 Os cinco ícones medem 56 px CSS na escala inicial. O card inteiro recebe o clique. A área de acionamento toma como referência os itens 5.8.6 e 5.8.7 da ABNT NBR 17225, conforme o [mapeamento do Ceweb.br](https://todosnaweb.ceweb.br/publicacoes/wcag-2-2-abnt-17225). A cartilha Acessibilidade na Web, fascículo VI, página 64, orientou o uso de parágrafos de pelo menos 16 px e entrelinha de 1,5 ou mais. O tamanho de 56 px do ícone é uma escolha do projeto.
@@ -35,7 +35,7 @@ Os cinco ícones medem 56 px CSS na escala inicial. O card inteiro recebe o cliq
 - A leitura em voz alta transfere foco para Pausar; Parar devolve o foco para Ouvir.
 - Mensagens de estado ficam em uma região com anúncio educado; não há anúncio a cada tecla.
 - Abrir Ouvir conteúdo não inicia áudio automaticamente. O botão Ouvir é necessário; a voz inclui o texto e a explicação disponível da fonte.
-- A checagem se refere à afirmação indicada, não à página inteira; ausência de correspondência produz Sem conclusão.
+- A checagem se refere à afirmação indicada, não à página inteira. A conclusão aparece primeiro como Falso, Verdadeiro ou Fora de contexto. Sem evidência suficiente, informa Não verificado.
 
 ## Verificações automatizadas
 

@@ -15,9 +15,11 @@ import { FACT_CHECKS } from '../regras-negocio/checagens.js';
 import { research } from '../regras-negocio/pesquisa.js';
 import { enableAccessibleNavigation, highlightSpeech } from './navegacao-acessivel.js';
 import { setLibras } from './libras.js';
+import { conclusionFor } from '../regras-negocio/veredito.js';
 
 const $ = (id) => document.getElementById(id);
 const extension = Boolean(globalThis.chrome?.runtime?.id && globalThis.chrome?.scripting);
+document.body.classList.remove('no-js');
 if (extension) $('project-version').textContent = `Versão ${chrome.runtime.getManifest().version}`;
 const voiceAvailable = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
 let lastContent = null;
@@ -35,15 +37,19 @@ let activeResearch;
 let liveSession;
 let finishLiveAudio;
 let sessionHistory = [];
+let checkScope = 'general';
+let shareAction;
+let shareOrigin = 'screen';
 try { navigator.mediaDevices?.setCaptureHandleConfig?.({ handle: 'central-painel', permittedOrigins: ['*'] }); } catch { /* Disponibilidade varia com a superfície. */ }
 enableAccessibleNavigation();
 const stopMediaInputs = setupMediaInputs({
+  onShareRequest(action) { requestSharing(action, 'audio'); },
   onReview(text) { $('claim').value = text; $('claim').dispatchEvent(new Event('input')); $('claim').focus(); },
   async onResult(text) {
     activeResearch?.abort();
     activeResearch = new AbortController();
     const current = ++captureRevision;
-    $('audio-input-status').textContent = 'Pesquisando o trecho reconhecido nas fontes…';
+    progress('audio-input-status', true, 'Pesquisando o trecho reconhecido nas fontes…');
     try {
       const evidence = await research(text,undefined,{signal:activeResearch.signal});
       if (current === captureRevision) renderResult({ text, evidence });
@@ -72,6 +78,33 @@ $('copy-libras').addEventListener('click', async () => {
 });
 
 function announce(message) { $('app-status').textContent = message; }
+function progress(id, busy, message) {
+  const status = $(id);
+  status.classList.add('research-progress');
+  status.dataset.busy = String(busy);
+  status.textContent = message;
+}
+function setLiveConclusion(evidence, pending) {
+  const verdict = conclusionFor(evidence);
+  $('live-verdict').textContent = pending ? 'Verificação em andamento' : verdict.label;
+  $('live-verdict').className = 'conclusion-banner verdict-' + (pending ? 'pending' : verdict.kind);
+  progress('live-progress', pending, pending ? 'Buscando evidências. Aguarde o resultado deste trecho…' : 'Checagem deste trecho concluída. Continuo acompanhando novas informações.');
+}
+function requestSharing(action, origin = 'screen') {
+  shareAction = action;
+  shareOrigin = origin;
+  $('read-tab-alternative').hidden = !extension;
+  progress('capture-help-status',false,'');
+  showView('capture-help', 'capture-help-title');
+}
+$('start-sharing').addEventListener('click', () => {
+  const action = shareAction;
+  shareAction = undefined;
+  if (shareOrigin === 'audio') showView('audio', 'audio-title');
+  action?.();
+});
+$('share-paste-alternative').addEventListener('click', () => openPaste());
+$('read-tab-alternative').addEventListener('click', () => analyze(false));
 
 function resetSpeech() {
   speech = null;
@@ -91,6 +124,7 @@ function showView(name, focusId) {
   activeCapture?.abort();
   captureRevision += 1;
   if (name !== 'audio') resetSpeech();
+  if (name === 'paste' || name === 'elections') $(name === 'paste' ? 'paste-entry' : 'election-entry').append($('checker-entry'));
   document.querySelectorAll('.view').forEach((view) => { view.hidden = view.id !== `${name}-view`; });
   document.title = `${$(name + '-view').querySelector('h1').textContent} — Central da Informação`;
   window.scrollTo(0, 0);
@@ -120,8 +154,9 @@ function goHome() {
 }
 document.querySelectorAll('[data-back]').forEach((button) => button.addEventListener('click', goHome));
 
-function openPaste() { void refreshContext(); showView('paste', 'paste-title'); }
+function openPaste() { checkScope = 'general'; progress('research-status',false,''); void refreshContext(); showView('paste', 'paste-title'); }
 $('open-elections').addEventListener('click', () => {
+  checkScope = 'elections';
   showView('elections', 'elections-title');
   openElectionNews();
 });
@@ -129,6 +164,7 @@ $('open-paste').addEventListener('click', openPaste);
 $('retry-paste').addEventListener('click', openPaste);
 $('open-settings').addEventListener('click', () => showView('settings', 'settings-title'));
 function prepareAudio(fromResult) {
+  if (!fromResult) checkScope = 'general';
   audioFromResult = fromResult;
   $('speech-help').textContent = '';
   $('audio-description').textContent = '';
@@ -144,7 +180,8 @@ $('listen-result').addEventListener('click', () => {
 $('new-query').addEventListener('click', () => {
   $('claim').value = '';
   clearError();
-  showView('paste', 'claim');
+  progress('research-status',false,'');
+  showView(checkScope === 'elections' ? 'elections' : 'paste', 'claim');
 });
 
 function clearError() {
@@ -202,14 +239,14 @@ function renderResult(content) {
   const evidence = content.evidence || evidenceFor(content.text, content.story);
   if (content.story && !evidence.exact.some(item => item.url === content.story.url)) evidence.news = [content.story, ...evidence.news.filter(n => n.url !== content.story.url)];
   const matches = evidence.exact;
+  for (const id of ['research-status','audio-input-status']) $(id).dataset.busy = 'false';
   const context = evidence.related.length || evidence.news.length;
-  $('result-title').textContent = evidence.orientation ? 'Orientação encontrada' : matches.length ? 'Checagem encontrada' : context ? 'Contexto encontrado' : 'Sem conclusão';
-  $('result-summary').textContent = evidence.orientation ? evidence.orientation.title : matches.length
-    ? 'Compare a afirmação encontrada com a explicação da fonte.'
-    : context ? 'Veja os trechos encontrados nas fontes. Confira a data e as condições antes de aplicar a informação ao seu caso.' : 'Não encontrei uma checagem correspondente. Isso não confirma nem desmente a informação.';
-  $('result-scope').textContent = evidence.search?.status === 'unavailable' ? 'As fontes online estão indisponíveis neste momento. Você pode tentar pesquisar novamente.' : matches.length
-    ? 'Esta checagem se refere ao trecho indicado, não à página inteira.'
-    : 'Você pode consultar outras fontes abaixo.';
+  const conclusion = conclusionFor(evidence);
+  $('result-title').textContent = conclusion.label;
+  $('result-title').dataset.verdict = conclusion.kind;
+  $('result-summary').textContent = conclusion.explanation;
+  $('result-scope').textContent = matches.length ? 'Esta checagem se refere ao trecho indicado, não à página inteira.' : 'Você pode consultar outras fontes abaixo.';
+  if (evidence.search?.status === 'unavailable') $('result-scope').textContent += ' As fontes online estão indisponíveis neste momento. Você pode tentar pesquisar novamente.';
   if (content.truncated) $('result-scope').textContent += ' Foram lidos apenas os primeiros 8.000 caracteres.';
   $('allow-tab').hidden = true;
   if (content.screen) $('result-scope').textContent += ' Confira o texto lido na imagem. Você pode corrigir uma palavra e consultar novamente.';
@@ -254,6 +291,7 @@ function showCaptureError(error, fromScreen) {
 
 function reportCapture(message) {
   $('loading-message').textContent = message;
+  progress('capture-help-status', true, message);
   announce(message);
 }
 
@@ -269,6 +307,8 @@ async function analyze(fromScreen) {
   reportCapture(fromScreen ? 'Escolha uma aba, janela ou tela no navegador.' : 'Lendo o texto da aba…');
   try {
     const content = fromScreen ? await readSharedScreen(activeCapture.signal, reportCapture) : await captureTabText();
+    progress('research-status',true,'Pesquisando a informação reconhecida…');
+    content.evidence = await research(content.text,content.story,{signal:activeCapture.signal,onProgress:reportCapture});
     if (revision === captureRevision) renderResult(content);
   } catch (error) {
     if (revision === captureRevision) showCaptureError(error, fromScreen);
@@ -297,13 +337,14 @@ $('stop-live').addEventListener('click', async () => {
   $('stop-live').removeAttribute('aria-disabled');
   showSessionResults();
 });
-$('restart-analysis').addEventListener('click', () => analyzeLive());
+$('restart-analysis').addEventListener('click', () => requestSharing(() => analyzeLive()));
 function showSessionResults() {
   $('history-matches').replaceChildren();
   $('history-summary').textContent = sessionHistory.length ? sessionHistory.length + ' trechos analisados. Confira a origem e o horário de cada trecho.' : 'Nenhum trecho foi reconhecido. Tente novamente escolhendo a aba que contém a informação.';
   for (const item of sessionHistory) {
     const section = document.createElement('section');
-    section.append(element('h2', item.origin + ' · ' + item.time.toLocaleTimeString('pt-BR')), element('p', item.text));
+    const verdict = conclusionFor(item.evidence);
+    section.append(element('h2', verdict.label), element('p', item.origin + ' · ' + item.time.toLocaleTimeString('pt-BR')), element('p', item.text));
     showEvidence(section.appendChild(document.createElement('div')), item.evidence);
     if (!item.evidence.exact.length && !item.evidence.related.length && !item.evidence.news.length) section.append(element('p', 'Sem evidência suficiente para concluir sobre este trecho.'));
     const search = element('button', 'Pesquisar este trecho', 'button button-secondary');
@@ -332,16 +373,18 @@ async function analyzeLive() {
   const enrich = (text, origin) => {
     if (pendingResearch || text.length < 15 || text === searchedText || evidenceFor(text).exact.length) return;
     searchedText = text;
+    progress('live-progress', true, 'Pesquisando fontes para este trecho…');
     pendingResearch = research(text, undefined, { signal }).then(evidence=>{
       if (signal.aborted) return;
       const item = sessionHistory.find(item=>item.text===text.slice(0,650) && item.origin===origin);
       if (item) item.evidence = evidence;
       if (currentText===text) {
+        setLiveConclusion(evidence, false);
         showEvidence($('live-matches'), evidence);
-        if (evidence.orientation || evidence.news.length) $('live-summary').textContent = evidence.orientation?.title || 'Contexto encontrado nas fontes online.';
+        $('live-summary').textContent = conclusionFor(evidence).explanation;
         if (lastContent) lastContent.evidence = evidence;
       }
-    }).catch(()=>{}).finally(()=>{pendingResearch=undefined;});
+    }).catch(()=>{if (!signal.aborted && currentText === text) progress('live-progress',false,'Pesquisa interrompida. O trecho ainda não foi verificado.');}).finally(()=>{pendingResearch=undefined;});
   };
   const state = () => listening && audioTrack?.readyState === 'live' && !audioTrack.muted ? 'Lendo tela e escutando áudio' : failedAudio ? 'Lendo tela · áudio indisponível' : 'Lendo tela';
   const indicate = () => { if (!signal.aborted && track) { $('live-state').textContent = state(); badge?.(track, 'Central · ' + state()); } };
@@ -372,6 +415,13 @@ async function analyzeLive() {
   }, { once: true });
   try {
     await followScreen(session, {
+      onProgress(message) { if (!signal.aborted) progress('live-progress',true,message); },
+      onPreview(canvas,time) {
+        if(signal.aborted) return;
+        $('live-preview').src=canvas.toDataURL('image/jpeg',.6);
+        $('live-preview').hidden=false;
+        $('live-time').textContent='Quadro recebido às '+time.toLocaleTimeString('pt-BR')+'.';
+      },
       onStart(stream) {
         started = true;
         $('stop-live').removeAttribute('aria-disabled');
@@ -401,6 +451,9 @@ async function analyzeLive() {
         $('live-matches').replaceChildren();
         $('visual-source').hidden = true;
         $('live-summary').textContent = 'Lendo o primeiro quadro…';
+        $('live-verdict').textContent = 'Aguardando leitura';
+        $('live-verdict').className = 'conclusion-banner verdict-pending';
+        progress('live-progress',true,'Reconhecendo o conteúdo da área compartilhada…');
         for (const id of ['live-text', 'live-time', 'vision-result', 'live-heard']) $(id).textContent = '';
         showView('live', 'live-title');
       },
@@ -422,18 +475,18 @@ async function analyzeLive() {
         for (const key of ['exact','related','news']) evidence[key] = [...new Map([...evidence[key], ...audioEvidence[key]].map(item => [item.id || item.url, item])).values()];
         remember(content.text, evidenceFor(content.text), 'Texto na superfície escolhida', time);
         if (reference) remember('Imagem parecida com a arte da checagem sobre ' + reference.topic, { exact: [], related: [reference], news: [] }, 'Imagem', time);
-        const summary = evidence.exact.length ? evidence.exact.map(item => item.finding + '. ' + item.explanation).join(' ')
-          : content.text ? 'Sem conclusão para o trecho deste quadro.' : 'Sem conclusão. Nenhuma afirmação legível neste quadro.';
+        const summary = conclusionFor(evidence).label + '. ' + conclusionFor(evidence).explanation;
         const key = JSON.stringify([currentText, summary, evidence.exact.map(item => item.id), evidence.related.map(item => item.id), evidence.news.map(item => item.url)]);
         if (lastKey !== key) {
+          setLiveConclusion(evidence, !evidence.exact.length && currentText.length >= 15);
           showEvidence($('live-matches'), evidence);
-          $('live-summary').textContent = evidence.exact.length ? 'Checagem sobre ' + evidence.exact.map(item => item.topic).join(' e ') + '.' : evidence.related.length || evidence.news.length ? 'Contexto encontrado. Confira como a fonte descreve o assunto.' : summary;
+          $('live-summary').textContent = conclusionFor(evidence).explanation;
           if (evidence.exact.length) $('live-summary').append(element('span', ' ' + summary, 'sr-only'));
           const voice = $('speak-changes').checked && localPortugueseVoice();
           if (voice) {
             speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(evidence.exact.length
-              ? evidence.exact.map(item => item.claim + ' ' + item.finding + '. ' + item.explanation + ' Fonte: ' + item.source).join(' ') : summary);
+            const utterance = new SpeechSynthesisUtterance(conclusionFor(evidence).label + '. ' + (evidence.exact.length
+              ? evidence.exact.map(item => item.claim + ' ' + item.finding + '. ' + item.explanation + ' Fonte: ' + item.source).join(' ') : summary));
             utterance.voice = voice;
             utterance.lang = voice.lang;
             speechSynthesis.speak(utterance);
@@ -474,7 +527,7 @@ async function analyzeLive() {
     }
   }
 }
-$('analyze-page').addEventListener('click', () => $('live-mode').checked ? analyzeLive() : analyze(true));
+$('analyze-page').addEventListener('click', () => { checkScope = 'general'; requestSharing(() => $('live-mode').checked ? analyzeLive() : analyze(true)); });
 $('allow-tab').addEventListener('click', () => analyze(false));
 $('edit-read-text').addEventListener('click', () => {
   $('claim').value = lastContent.text;
@@ -500,33 +553,35 @@ $('review-form').addEventListener('submit', async (event) => {
   const current = ++captureRevision;
   const submit = $('review-form').querySelector('[type=submit]');
   submit.setAttribute('aria-disabled', 'true');
-  $('research-status').textContent = 'Pesquisando nas fontes disponíveis…';
+  progress('research-status',true,'Pesquisando nas fontes disponíveis…');
   await new Promise(resolve => requestAnimationFrame(resolve));
   let evidence;
   try {
     evidence = await research(validation.text, undefined, { signal:controller.signal, onProgress: message => { if (current === captureRevision) $('research-status').textContent = message; } });
   } catch {
-    if (current === captureRevision) $('research-status').textContent = 'A pesquisa foi interrompida. Tente novamente.';
+    if (current === captureRevision) progress('research-status',false,'A pesquisa foi interrompida. Tente novamente.');
     submit.removeAttribute('aria-disabled');
     return;
   }
   submit.removeAttribute('aria-disabled');
   if (current !== captureRevision || $('claim').value.trim() !== validation.text) return;
-  $('research-status').textContent = 'Consulta às fontes concluída.';
+  progress('research-status',false,'Consulta às fontes concluída.');
   if (/^https?:\/\/\S+$/i.test(validation.text)) {
     const url = articleUrl(validation.text);
     if (!url) { $('claim-error').hidden = false; $('claim-error').textContent = 'Para este site, cole o trecho da notícia. Links do g1, Agência Brasil, TSE, Justiça Eleitoral e Aos Fatos podem ser lidos diretamente.'; return; }
     const revision = ++captureRevision;
     try {
       const story = await readArticle(url);
-      if (revision === captureRevision && $('claim').value.trim() === validation.text) renderResult({ text: [story.title, story.lead].filter(Boolean).join('\n'), url: story.url, title: story.title, story });
+      const text = [story.title, story.lead].filter(Boolean).join('\n');
+      const evidence = await research(text,story,{signal:controller.signal});
+      if (revision === captureRevision && $('claim').value.trim() === validation.text) renderResult({ text, evidence, url: story.url, title: story.title, story });
     } catch (err) { if (revision === captureRevision) { $('claim-error').hidden = false; $('claim-error').textContent = err.message; } }
     return;
   }
   renderResult({ text: validation.text, evidence });
 });
 $('use-example').addEventListener('click', () => {
-  $('claim').value = $('claim').placeholder;
+  $('claim').value = checkScope === 'elections' ? 'Dá para votar pelo celular se estiver chovendo?' : 'Vídeo mostra resgate de onça no rio Negro, em Manaus, em 2025';
   $('claim').dispatchEvent(new Event('input'));
   $('claim').focus();
 });
@@ -540,6 +595,7 @@ function applyPreferences(preferences) {
   $('standard-colors').checked = !safe.highContrast;
   $('speak-focus').checked = safe.speakFocus !== false;
   $('enable-libras').checked = !!safe.libras;
+  $('reduce-motion').checked = !!safe.reduceMotion;
   void setLibras(!!safe.libras);
 }
 async function readPreferences() {
@@ -551,7 +607,7 @@ async function readPreferences() {
 }
 async function savePreferences() {
   preferenceRevision += 1;
-  const preferences = safePreferences({ fontSize: $('font-size').value, highContrast: !$('standard-colors').checked, wideSpacing: $('wide-spacing').checked, speakChanges: $('speak-changes').checked, colorProfile: $('color-profile').value, speakFocus: $('speak-focus').checked, libras: $('enable-libras').checked });
+  const preferences = safePreferences({ fontSize: $('font-size').value, highContrast: !$('standard-colors').checked, wideSpacing: $('wide-spacing').checked, speakChanges: $('speak-changes').checked, colorProfile: $('color-profile').value, speakFocus: $('speak-focus').checked, libras: $('enable-libras').checked, reduceMotion: $('reduce-motion').checked });
   applyPreferences(preferences);
   try {
     if (extension) await chrome.storage.local.set({ readingPreferences: preferences });
@@ -569,6 +625,7 @@ $('color-profile').addEventListener('change', savePreferences);
 $('speak-changes').addEventListener('change', savePreferences);
 $('speak-focus').addEventListener('change', savePreferences);
 $('enable-libras').addEventListener('change', savePreferences);
+$('reduce-motion').addEventListener('change', savePreferences);
 readPreferences();
 
 if (!voiceAvailable) {
@@ -582,10 +639,9 @@ function readingText(content) {
   const explanation = orientation ? orientation.explanation : checks.length
     ? checks.map((item) => `Afirmação na base: ${item.claim} ${item.finding}. ${item.explanation} Fonte: ${item.source}.`).join(' ')
     : related.length || news.length || content.story ? 'Contexto encontrado. ' + [...related.map(item => item.explanation + ' Fonte: ' + item.source), ...(content.story ? [content.story] : news).map(item => item.title + '. Fonte: ' + item.source)].join(' ') : 'Sem conclusão. Não encontrei esta afirmação na base.';
-  if (audioFromResult) return `Resultado da consulta: ${explanation}`;
-  return `Texto lido: ${content.text}
-
-Resultado da consulta: ${explanation}`;
+  const verdict = conclusionFor(content.evidence || evidenceFor(content.text,content.story));
+  if (audioFromResult) return `${verdict.label}. ${explanation}`;
+  return `${verdict.label}. ${explanation}\n\nTexto analisado: ${content.text}`;
 }
 function audioStatus(message) {
   $('speech-help').textContent = message;

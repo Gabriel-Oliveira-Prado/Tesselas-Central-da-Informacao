@@ -5,6 +5,7 @@ import { validateClaim, createSearchLinks, safePreferences } from '../regras-neg
 import { FACT_CHECKS, findFactChecks, relatedChecks } from '../regras-negocio/checagens.js';
 import { publishedChecks } from '../regras-negocio/noticias.js';
 import { newsEdition } from '../regras-negocio/edicao-noticias.js';
+import { conclusionFor } from '../regras-negocio/veredito.js';
 
 test('consulta reconhece frases completas e mantém fonte e data do resultado', () => {
   const matches = findFactChecks('A URNA ELETRONICA E CONECTADA A INTERNET DURANTE A VOTACAO.');
@@ -30,6 +31,10 @@ test('frases citadas retornam a afirmação da fonte e não um julgamento da pá
 });
 
 test('perguntas, negações e vídeos de outras datas preservam o sentido da fonte', () => {
+  const conditional=conclusionFor({exact:findFactChecks('Pode votar depois das 17?')});
+  assert.equal(conditional.label,'Não verificado');
+  assert.match(conditional.explanation,/depende das condições/);
+  assert.match(conditional.explanation,/fila/);
   assert.equal(findFactChecks('Dá para votar pelo celular se estiver chovendo?')[0].kind, 'false');
   assert.equal(findFactChecks('O e-Título com foto serve como identificação para votar.')[0].kind, 'true');
   assert.equal(findFactChecks('O vídeo dos peritos federais comprova fraude nas eleições de 2022.')[0].kind, 'context');

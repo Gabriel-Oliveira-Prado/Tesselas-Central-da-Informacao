@@ -15,5 +15,6 @@ export function applyReadingPreferences(value) {
   document.body.dataset.speakFocus = String(safe.speakFocus !== false);
   document.body.dataset.largeText = String(Number(safe.fontSize) >= 150);
   document.body.toggleAttribute('data-wide-spacing', safe.wideSpacing);
+  document.body.toggleAttribute('data-reduce-motion', safe.reduceMotion === true);
   return safe;
 }

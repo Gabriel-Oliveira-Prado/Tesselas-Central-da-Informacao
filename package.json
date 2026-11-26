@@ -1,9 +1,9 @@
 {
   "name": "central-da-informacao",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "private": true,
   "type": "module",
-  "description": "Site e extensão acessíveis para pesquisar o contexto de informações eleitorais.",
+  "description": "Site e extensão acessíveis para verificar notícias, texto, áudio e vídeo com fontes.",
   "scripts": {
     "start": "node scripts/servidor.mjs",
     "test": "node scripts/empacotar.mjs && node --test tests/*.test.mjs && playwright test",
@@ -16,6 +16,11 @@
     "@axe-core/playwright": "4.14.1",
     "@playwright/test": "1.62.1",
     "@tesseract.js-data/por": "1.0.0",
+    "chrome-launcher": "1.2.3",
+    "lighthouse": "13.6.0",
     "tesseract.js": "6.0.1"
+  },
+  "engines": {
+    "node": ">=22.19.0"
   }
 }

@@ -16,7 +16,7 @@ function render() {
   if (feature) {
     const link = document.getElementById('tse-feature-link');
     link.href = feature.url;
-    link.textContent = feature.title;
+    link.textContent = feature.title + ' — TSE (nova aba)';
   }
   const rows = electionSources.flatMap(source => edition[source.id].filter(article => !article.featured).map(article => ({ ...article, source })));
   rows.sort((a, b) => b.date.localeCompare(a.date));
@@ -27,7 +27,7 @@ function render() {
     link.href = article.url;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.textContent = article.title;
+    link.textContent = article.title + ' — ' + article.source.name + ' (nova aba)';
     const meta = document.createElement('div');
     meta.className = 'small';
     const date = document.createElement('time');

@@ -1,4 +1,5 @@
 import { MAX_TEXT_LENGTH } from '../regras-negocio/validacao.js';
+import { frameBytes } from './quadro-imagem.js';
 
 function paragraphText(paragraph) {
   let text = '';
@@ -93,7 +94,11 @@ export async function createReader(signal) {
 
 export async function readFrame(worker, canvas, signal, centralContent = false) {
   signal.throwIfAborted();
-  const { data } = await worker.recognize(canvas, {}, { text: true, blocks: true });
+  // A conversão assíncrona de canvas feita pelo motor pode ficar suspensa
+  // quando o painel está em segundo plano. Um PNG síncrono preserva o quadro
+  // recebido e permite ao worker começar a leitura sem depender dessa fila.
+  const bytes = frameBytes(canvas);
+  const { data } = await worker.recognize(bytes, {}, { text: true, blocks: true });
   signal.throwIfAborted();
   const blocks = data.blocks || [];
   const centralBlocks = blocks.filter(block => {
@@ -108,7 +113,7 @@ export async function readFrame(worker, canvas, signal, centralContent = false) 
   return { text: text.slice(0, MAX_TEXT_LENGTH), truncated: text.length > MAX_TEXT_LENGTH, screen: true };
 }
 
-export async function followScreen(controller, { onStart, onFrame }) {
+export async function followScreen(controller, { onStart, onFrame, onPreview = () => {}, onProgress = () => {} }) {
   const { signal } = controller;
   const stream = await chooseScreen(true);
   const video = document.createElement('video');
@@ -122,14 +127,18 @@ export async function followScreen(controller, { onStart, onFrame }) {
   signal.addEventListener('abort', stop, { once: true });
   track.addEventListener('ended', end, { once: true });
   let worker;
+  let firstFrame = true;
   try {
     signal.throwIfAborted();
     if (track.getCaptureHandle?.()?.handle === 'central-painel') throw new Error('own-panel');
     onStart(stream);
     video.muted = video.playsInline = true;
     video.srcObject = stream;
+    onProgress('Preparando os quadros da área compartilhada…');
     await video.play();
+    onProgress('Carregando o reconhecimento de texto no dispositivo…');
     worker = await createReader(signal);
+    onProgress('Reconhecendo o primeiro quadro…');
     while (!signal.aborted) {
       if (video.readyState >= 2 && video.videoWidth) {
         const scale = Math.min(1, 1920 / Math.max(video.videoWidth, video.videoHeight));
@@ -137,6 +146,8 @@ export async function followScreen(controller, { onStart, onFrame }) {
         canvas.height = Math.round(video.videoHeight * scale);
         canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
         const sampledAt = new Date();
+        onPreview(canvas,sampledAt);
+        if(firstFrame) { onProgress('Lendo o texto do primeiro quadro…');firstFrame=false; }
         const content = await readFrame(worker, canvas, signal, true);
         if (track.getCaptureHandle?.()?.handle === 'central-painel') throw new Error('own-panel');
         const ownInterface = /trecho em an[aá]lise|como podemos ajudar\?|resultados do acompanhamento/i.test(content.text);

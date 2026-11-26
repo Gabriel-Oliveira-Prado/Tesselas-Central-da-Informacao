@@ -2,15 +2,15 @@
 
 # Central da Informação
 
-**Versão 0.10.0** · Site e extensão para Chrome de computador.
+**Versão 0.11.0** · Site e extensão para Chrome de computador.
 
-A Central da Informação acompanha a área de tela que você escolher, reconhece texto em português e mostra a afirmação checada, a explicação e a fonte. O reconhecimento ocorre no dispositivo. A pesquisa consulta páginas online por assunto e dispensa uma chave de API nesta versão.
+A Central da Informação verifica notícias de qualquer tema e mostra primeiro a conclusão, seguida da afirmação, da explicação e da fonte. Os resultados são Falso, Verdadeiro, Fora de contexto ou Não verificado quando faltam evidências. Ela acompanha a área de tela escolhida e reconhece texto e fala em português. O reconhecimento ocorre no dispositivo. A pesquisa consulta páginas online por assunto e dispensa uma chave de API nesta versão.
 
-<p align="center"><img src="docs/inicio.png" width="320" height="549" alt="Painel inicial com cinco botões e acompanhamento da tela ativado."> <img src="docs/checagem.png" width="320" height="549" alt="Resultado com a condição para votar depois das 17h e a fonte do Tribunal Superior Eleitoral."></p>
+<p align="center"><img src="docs/inicio.png" width="320" height="549" alt="Painel inicial com cinco botões e acompanhamento da tela ativado."> <img src="docs/checagem.png" width="320" height="549" alt="Resultado Verdadeiro de uma checagem do g1 sobre resgate de onça, com explicação e fonte."></p>
 
 ## Executar o site
 
-Com Node.js 20 ou posterior, execute `npm start` e abra o endereço impresso no terminal. A interface web funciona sem instalar a extensão. Compartilhamento de tela e áudio depende das opções oferecidas pelo navegador. Em celulares, os cards ficam empilhados e os campos e arquivos continuam disponíveis.
+Com Node.js 22.19 ou posterior, execute `npm start` e abra o endereço impresso no terminal. A interface web funciona sem instalar a extensão. Compartilhamento de tela e áudio depende das opções oferecidas pelo navegador. Em celulares, os cards ficam empilhados e os campos e arquivos continuam disponíveis.
 
 ## Preparar a extensão
 
@@ -41,7 +41,7 @@ Em **Analisar tela**, escolha a aba ou a tela. Para incluir voz, marque o áudio
 
 ## Experimentar sem instalar
 
-Requer Node.js 20 ou mais recente.
+Requer Node.js 22.19 ou mais recente.
 
 ```sh
 npm start
@@ -56,7 +56,7 @@ Abra http://127.0.0.1:4173/web/index.html no Chrome ou Edge de computador. Para 
 - **Ouvir conteúdo** recebe arquivo, microfone ou som da aba. Ao escolher o microfone, você também pode dizer “abrir eleições”, “abrir acessibilidade”, “colar informação” ou “voltar ao início”. A leitura em voz alta tem velocidade, pausa e parada, com destaque de palavra quando a voz do navegador informa os marcadores de leitura.
 - **Acessibilidade** permite ampliar até 200%, aumentar o espaçamento, usar cores suaves, alternar a paleta para daltonismo, ativar avisos falados e consultar o VLibras. A fonte Atkinson Hyperlegible Next acompanha a extensão.
 
-- **Eleições** abre os serviços oficiais e até três manchetes por fonte, com data e link. O painel consulta as listagens públicas do TSE e da Agência Brasil. Use **Atualizar notícias** para consultar essas duas origens. Sem conexão, a seleção incluída na versão continua disponível. Para renovar essa seleção antes de distribuir uma versão, execute `node scripts/atualizar-edicao.mjs` com as dependências e o Chromium do Playwright instalados.
+- **Eleições** recebe perguntas, links, áudio, vídeo e legendas no mesmo formulário de checagem compartilhado. Também abre os serviços oficiais e até três manchetes por fonte, com data e link. O painel consulta as listagens públicas do TSE e da Agência Brasil. Use **Atualizar notícias** para consultar essas duas origens. Sem conexão, a seleção incluída na versão continua disponível. Para renovar essa seleção antes de distribuir uma versão, execute `node scripts/atualizar-edicao.mjs` com as dependências e o Chromium do Playwright instalados.
 
 Todos os cards são botões nativos com ícone decorativo e nome visível. Teclado, foco, zoom e mensagens de estado permanecem disponíveis. A revisão do texto, as buscas adicionais e a consulta pontual em Libras têm telas próprias. Os números 1 a 5 abrem os cards. O botão de informação em cada card explica sua função. Ao navegar por Tab, a voz opcional lê o foco.
 
@@ -64,7 +64,7 @@ Todos os cards são botões nativos com ícone decorativo e nome visível. Tecla
 
 Cada checagem inclui sua data de consulta. A edição de novembro de 2026 cobre voto pelo celular, conexão da urna, celular na cabine, identificação pelo e-Título, título impresso um vídeo de 2018 recirculado em 2022 e a regra da fila às 17h. As referências ficam em `regras-negocio/checagens.js`.
 
-As três fontes iniciais são [urna e internet](https://www.justicaeleitoral.jus.br/fato-ou-boato/checagens/2026/fato-ou-boato-inteligencia-artificial-nao-pode-mudar-o-voto-do-eleitor-na-urna), [voto pela internet](https://www.justicaeleitoral.jus.br/fato-ou-boato/checagens/2026/e-falso-que-eleitores-possam-votar-on-line-pelo-celular-em-caso-de-chuva-no-brasil-votacao-e-sempre-presencial) e [celular na cabine](https://www.tse.jus.br/comunicacao/noticias/2026/Setembro/manual-do-eleitor-uso-de-celular-e-proibido-na-cabine-de-votacao). Isso ainda não constitui um serviço geral de checagem.
+As três fontes iniciais são [urna e internet](https://www.justicaeleitoral.jus.br/fato-ou-boato/checagens/2026/fato-ou-boato-inteligencia-artificial-nao-pode-mudar-o-voto-do-eleitor-na-urna), [voto pela internet](https://www.justicaeleitoral.jus.br/fato-ou-boato/checagens/2026/e-falso-que-eleitores-possam-votar-on-line-pelo-celular-em-caso-de-chuva-no-brasil-votacao-e-sempre-presencial) e [celular na cabine](https://www.tse.jus.br/comunicacao/noticias/2026/Setembro/manual-do-eleitor-uso-de-celular-e-proibido-na-cabine-de-votacao). A cobertura depende da afirmação e das fontes encontradas. Notícias relacionadas não comprovam a informação.
 
 ## Libras
 
@@ -118,3 +118,9 @@ Ampliar e manter a base de checagens ou conectar um serviço de busca com fonte,
 O comando `node scripts/testar-midias-reais.mjs` obtém dois vídeos públicos do Wikimedia Commons, com fonte e licença, e envia os arquivos completos pelo campo da aplicação. Execute com o site aberto. Para outra porta, defina `TEST_URL`. Os resultados e as amostras ficam em `dist/ensaios-reais`, fora do versionamento. O ensaio registra a resposta observada, inclusive transcrição incorreta e ausência de evidência. Ele não define um veredito pela aparência do arquivo.
 
 Consulte os resultados e os limites em [Validação da versão 0.10.0](docs/validacao-0.10.0.md).
+
+## Gravar a validação
+
+Com o servidor em execução, use `node scripts/gravar-validacao.mjs`. A porta padrão deste roteiro é 4177; ajuste `TEST_URL` se necessário. O roteiro prepara quatro extensões oficiais de validação em `dist/ferramentas` e usa apenas perfis isolados do Chromium. Não instala extensões no seu perfil pessoal. Lighthouse e axe-core acompanham as dependências de desenvolvimento.
+
+Os vídeos WebM, capturas, relatórios e a galeria acessível ficam em `dist/validacao-0.11.0`. AMAWeb recebe uma cópia do HTML renderizado pelo campo de código. Essa avaliação cobre o estado enviado. Uma recusa do serviço é registrada como bloqueio, sem atribuir nota. Consulte [Validação 0.11.0](docs/validacao-0.11.0.md).

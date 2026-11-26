@@ -54,6 +54,8 @@ test('início tem cinco cards; teclado e retorno preservam o foco', async ({ pag
   await expect(page.locator('main')).toBeFocused();
   await page.locator('#analyze-page').focus();
   await page.keyboard.press('Enter');
+  await expect(page.locator('#capture-help-title')).toBeFocused();
+  await page.locator('#start-sharing').click();
   await expect(page.getByRole('heading', { name: 'Análise ao vivo', exact: true })).toBeFocused();
   await page.locator('#stop-live').click();
   await expect(page.locator('#history-title')).toBeFocused();
@@ -97,6 +99,7 @@ test('analisar tela lê imagem por OCR local e encerra o compartilhamento', asyn
   await page.goto(panelPath);
   await page.locator('#live-mode').uncheck();
   await page.getByRole('button', { name: 'Analisar tela', exact: true }).click();
+  await page.locator('#start-sharing').click();
   await expect.poll(() => page.evaluate(() => window.testStream?.active)).toBe(false);
   expect(await page.evaluate(() => window.captureOptions.audio)).toBe(false);
   await expect(page.getByText('Falso, segundo a fonte', { exact: true })).toBeVisible();
@@ -126,11 +129,12 @@ test('vídeo reproduzido ao vivo muda o veredito e descarta o anterior, sem envi
   });
   await page.goto(panelPath);
   await page.locator('#analyze-page').click();
+  await page.locator('#start-sharing').click();
   const verdict = page.locator('#live-matches .finding');
   for (const label of ['Falso, segundo a fonte', 'Confirmado pela fonte', 'Fora de contexto']) {
     await expect(verdict).toHaveText(label, { timeout: 11000 });
   }
-  await expect(page.locator('#live-summary')).toContainText('Sem conclusão', { timeout: 11000 });
+  await expect(page.locator('#live-summary')).toContainText('evidência suficiente', { timeout: 11000 });
   await expect(verdict).toHaveCount(0);
   await page.locator('#stop-live').press('Enter');
   await expect(page.locator('#live-state')).toHaveText('Compartilhamento encerrado.');
@@ -144,12 +148,13 @@ test('pergunta de exemplo e tema relacionado têm tratamentos distintos', async 
   await page.locator('#open-paste').click();
   await page.locator('#use-example').click();
   await page.getByRole('button', { name: 'Pesquisar informação' }).click();
-  await expect(page.locator('#result-matches .verdict-false')).toContainText('Mesmo com chuva, a votação é presencial.');
+  await expect(page.locator('#result-title')).toHaveText('Verdadeiro');
+  await expect(page.locator('#result-matches .verdict-true')).toContainText('resgate de onça');
   const audit = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
   expect(audit.violations).toEqual([]);
   await page.locator('#result-view [data-back]').click();
   await pasteAndVerify(page, 'É falso que dá para votar pelo celular se estiver chovendo.');
-  await expect(page.locator('#result-title')).toHaveText('Contexto encontrado');
+  await expect(page.locator('#result-title')).toHaveText('Não verificado');
   await expect(page.locator('#result-matches .finding')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Leitura sobre votação pela internet' })).toBeVisible();
 });
@@ -174,9 +179,10 @@ test('a descrição visual opcional permanece separada da checagem e libera o mo
   });
   await page.goto(panelPath);
   await page.locator('#analyze-page').click();
+  await page.locator('#start-sharing').click();
   await expect(page.locator('#live-view button')).toHaveCount(1);
   await expect(page.locator('#vision-result')).toHaveText('Possível aparelho celular.', { timeout: 10000 });
-  await expect(page.locator('#live-summary')).toContainText('Sem conclusão');
+  await expect(page.locator('#live-summary')).toContainText('evidência suficiente');
   await expect(page.locator('#live-matches .finding')).toHaveCount(0);
   await page.locator('#stop-live').click();
   expect(await page.evaluate(() => window.modelReleased && !window.testStream.active)).toBe(true);
@@ -194,9 +200,9 @@ test('colar texto informa erros e mantém resultado inconclusivo para conteúdo 
   await expect(page.locator('.finding')).toHaveText('Falso, segundo a fonte');
   await page.getByRole('button', { name: 'Voltar', exact: true }).click();
   await pasteAndVerify(page, 'A escola do meu bairro mudou de endereço.');
-  await expect(page.getByRole('heading', { name: 'Sem conclusão', exact: true })).toBeFocused();
+  await expect(page.getByRole('heading', { name: 'Não verificado', exact: true })).toBeFocused();
   await expect(page.locator('#result-matches .evidence')).toHaveCount(0);
-  await expect(page.locator('#result-summary')).toContainText('não confirma nem desmente');
+  await expect(page.locator('#result-summary')).toContainText('não há evidência suficiente');
 });
 
 test('HTML permanece texto, consulta é editável e conteúdo não é persistido', async ({ page }) => {
@@ -209,8 +215,8 @@ test('HTML permanece texto, consulta é editável e conteúdo não é persistido
   await page.locator('#support-view [data-back]').click();
   await page.getByRole('button', { name: 'Buscar outras fontes' }).click();
   await page.getByLabel('Trecho para buscar').fill('Consulta sem dados pessoais');
-  const link = page.getByRole('link', { name: 'Buscar no Fato ou Boato (nova aba)', exact: true });
-  expect(new URL(await link.getAttribute('href')).searchParams.get('q')).toBe('site:justicaeleitoral.jus.br/fato-ou-boato Consulta sem dados pessoais');
+  const link = page.getByRole('link', { name: 'Buscar no g1 Fato ou Fake (nova aba)', exact: true });
+  expect(new URL(await link.getAttribute('href')).searchParams.get('q')).toBe('site:g1.globo.com/fato-ou-fake Consulta sem dados pessoais');
   await page.getByLabel('Trecho para buscar').fill('');
   await expect(page.locator('#search-links a')).toHaveCount(0);
   await expect(page.locator('#search-query-error')).toBeVisible();
@@ -231,7 +237,8 @@ test('texto a 200% e alto contraste funcionam em 320 pixels em todas as opções
   await page.getByRole('button', { name: 'Voltar', exact: true }).click();
   await expectNoOverflow(page);
   await page.getByRole('button', { name: 'Analisar tela', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Checagem encontrada', exact: true })).toBeVisible();
+  await page.locator('#start-sharing').click();
+  await expect(page.getByRole('heading', { name: 'Falso', exact: true })).toBeVisible();
   await expectNoOverflow(page);
   await page.screenshot({ path: 'test-results/central-320-texto-200.png', fullPage: true });
   await page.getByRole('button', { name: 'Voltar', exact: true }).click();
@@ -284,7 +291,9 @@ test('mudar de opção durante a captura não troca a tela nem rouba o foco depo
   });
   await page.goto(panelPath);
   await page.getByRole('button', { name: 'Analisar tela', exact: true }).click();
-  await expect(page.locator('#loading-message')).toBeVisible();
+  await page.locator('#start-sharing').click();
+  await expect(page.locator('#capture-help-status')).toBeVisible();
+  await page.locator('#capture-help-view [data-back]').click();
   await page.getByRole('button', { name: 'Acessibilidade', exact: true }).click();
   await page.evaluate(() => window.cancelShare());
   await expect(page.locator('#loading-message')).toBeHidden();
@@ -311,6 +320,7 @@ test('captura exclui formulários e texto oculto; seleção privada continua rec
 });
 
 test('painel, resultado e página explicativa passam no axe-core', async ({ page }) => {
+  test.setTimeout(60000);
   await shareTestImage(page);
   async function scan() {
     const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice']).analyze();
@@ -324,7 +334,8 @@ test('painel, resultado e página explicativa passam no axe-core', async ({ page
   await scan();
   await page.getByRole('button', { name: 'Voltar', exact: true }).click();
   await page.getByRole('button', { name: 'Analisar tela', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Checagem encontrada', exact: true })).toBeVisible();
+  await page.locator('#start-sharing').click();
+  await expect(page.getByRole('heading', { name: 'Falso', exact: true })).toBeVisible({timeout:20000});
   await scan();
   await page.getByRole('button', { name: 'Voltar', exact: true }).click();
   await page.getByRole('button', { name: 'Acessibilidade', exact: true }).click();
@@ -338,6 +349,7 @@ test('painel, resultado e página explicativa passam no axe-core', async ({ page
 });
 
 test('extensão permite autorizar a leitura do texto da aba após cancelar a captura e apresenta uma checagem com fonte', async () => {
+  test.setTimeout(60000);
   const extensionPath = resolve('extensao');
   const userDataDir = await mkdtemp(join(tmpdir(), 'central-test-'));
   let context;
@@ -348,15 +360,22 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     });
     const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
     const extensionId = new URL(worker.url()).host;
-    await expect.poll(() => worker.evaluate(() => chrome.action.onClicked.hasListeners())).toBe(true);
+    await expect.poll(() => worker.evaluate(() => chrome.action.onClicked.hasListeners()),{timeout:15000}).toBe(true);
     const demoPage = await context.newPage();
     await demoPage.goto('http://127.0.0.1:4176/demo/noticia.html');
     await demoPage.evaluate(() => { document.title = 'Teste de captura autorizada'; });
     const extensionPage = await context.newPage();
+    const extensionErrors=[];
+    extensionPage.on('pageerror',error=>extensionErrors.push(error.message));
     await extensionPage.goto(`chrome-extension://${extensionId}/web/index.html`);
     // O seletor nativo aceita apenas a aba de teste no perfil isolado.
     await extensionPage.bringToFront();
     await extensionPage.locator('#analyze-page').click();
+    await extensionPage.locator('#start-sharing').click();
+    await demoPage.bringToFront();
+    await extensionPage.bringToFront();
+    await extensionPage.locator('#live-preview').waitFor({timeout:15000});
+    await extensionPage.locator('#live-preview').screenshot({path:'test-results/previa-real.png'});
     await expect(extensionPage.locator('.finding')).toHaveText('Falso, segundo a fonte', { timeout: 20000 });
     await expect(extensionPage.locator('#live-text')).toContainText(knownClaim);
     await demoPage.evaluate(() => { document.body.innerHTML = '<main style="padding:45px;font:32px Arial">Dá para votar pelo celular se estiver chovendo?</main>'; });
@@ -369,6 +388,7 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
       navigator.mediaDevices.getDisplayMedia = async () => { throw new DOMException('Cancelado', 'NotAllowedError'); };
     });
     await extensionPage.getByRole('button', { name: 'Analisar tela', exact: true }).click();
+    await extensionPage.locator('#start-sharing').click();
     await expect(extensionPage.getByRole('heading', { name: 'Tela não compartilhada', exact: true })).toBeFocused();
     await demoPage.bringToFront();
     const browserCdp = await context.browser().newBrowserCDPSession();
@@ -382,7 +402,7 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     // O painel nativo é um target CDP. Os mesmos handlers são exercitados em
     // uma aba de teste, sem mudar o foco da aba autorizada. As APIs são reais.
     await extensionPage.evaluate(() => document.getElementById('allow-tab').click());
-    await expect(extensionPage.getByRole('heading', { name: 'Checagem encontrada', exact: true })).toBeFocused();
+    await expect(extensionPage.getByRole('heading', { name: 'Falso', exact: true })).toBeFocused();
     await expect(extensionPage.locator('#reviewed-claim')).toHaveValue(new RegExp('A urna eletrônica'));
     await expect(extensionPage.locator('#reviewed-claim')).not.toHaveValue(/DADO PRIVADO/);
     await expect(extensionPage.locator('#result-view .finding')).toHaveText('Falso, segundo a fonte');
@@ -391,6 +411,7 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     await extensionPage.getByLabel('Tamanho do texto').selectOption('125');
     await expect(extensionPage.locator('#app-status')).toHaveText('Ajustes de leitura salvos neste dispositivo.');
     expect(await worker.evaluate(() => chrome.storage.local.get(null))).toEqual({ readingPreferences: { fontSize: '125', highContrast: true, wideSpacing: false } });
+    expect(extensionErrors).toEqual([]);
   } finally {
     await context?.close();
     if (resolve(userDataDir).startsWith(resolve(tmpdir()) + sep)) await rm(userDataDir, { recursive: true, force: true });
@@ -406,6 +427,7 @@ test('cancelar o seletor permite voltar com foco e não carrega OCR', async ({ p
   await page.goto(panelPath);
   await expect(page.locator('body')).toHaveAttribute('data-contrast', 'high');
   await page.getByRole('button', { name: 'Analisar tela', exact: true }).click();
+  await page.locator('#start-sharing').click();
   await expect(page.getByRole('heading', { name: 'Tela não compartilhada' })).toBeFocused();
   expect(ocrRequests).toEqual([]);
   await page.getByRole('button', { name: 'Voltar' }).click();

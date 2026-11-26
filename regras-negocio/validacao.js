@@ -12,7 +12,7 @@ export function createSearchLinks(value) {
   const query = typeof value === 'string' ? value.trim() : '';
   if (!query || query.length > MAX_SEARCH_LENGTH) return [];
   return [
-    { label: 'Buscar no Fato ou Boato', filter: 'site:justicaeleitoral.jus.br/fato-ou-boato' },
+    { label: 'Buscar no g1 Fato ou Fake', filter: 'site:g1.globo.com/fato-ou-fake' },
     { label: 'Buscar no Aos Fatos', filter: 'site:aosfatos.org' },
     { label: 'Buscar em outras fontes', filter: '' },
   ].map(({ label, filter }) => {
@@ -33,5 +33,6 @@ export function safePreferences(value = {}) {
     ...(['blue', 'mono'].includes(value.colorProfile) ? { colorProfile: value.colorProfile } : {}),
     ...(value.speakFocus === false ? { speakFocus: false } : {}),
     ...(value.libras === true ? { libras: true } : {}),
+    ...(value.reduceMotion === true ? { reduceMotion: true } : {}),
   };
 }
