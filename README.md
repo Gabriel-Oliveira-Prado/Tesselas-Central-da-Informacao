@@ -2,11 +2,11 @@
 
 # Central da Informação
 
-**Versão 0.9.0** · Site e extensão para Chrome de computador.
+**Versão 0.9.1** · Site e extensão para Chrome de computador.
 
 A Central da Informação acompanha a área de tela que você escolher, reconhece texto em português e mostra a afirmação checada, a explicação e a fonte. O acompanhamento ocorre no dispositivo e dispensa conta, chave de API e gravação.
 
-<p align="center"><img src="docs/inicio.png" width="320" height="519" alt="Painel inicial com cinco botões e acompanhamento da tela ativado."> <img src="docs/checagem.png" width="320" height="519" alt="Resultado com a condição para votar depois das 17h e a fonte do Tribunal Superior Eleitoral."></p>
+<p align="center"><img src="docs/inicio.png" width="320" height="549" alt="Painel inicial com cinco botões e acompanhamento da tela ativado."> <img src="docs/checagem.png" width="320" height="549" alt="Resultado com a condição para votar depois das 17h e a fonte do Tribunal Superior Eleitoral."></p>
 
 ## Executar o site
 
