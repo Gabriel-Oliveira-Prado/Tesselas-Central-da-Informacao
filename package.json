@@ -1,15 +1,16 @@
 {
   "name": "central-da-informacao",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "private": true,
   "type": "module",
   "description": "Site e extensão acessíveis para pesquisar o contexto de informações eleitorais.",
   "scripts": {
     "start": "node scripts/servidor.mjs",
     "test": "node scripts/empacotar.mjs && node --test tests/*.test.mjs && playwright test",
-    "test:unit": "node --test tests/*.test.mjs",
-    "test:browser": "playwright test",
-    "build": "node scripts/empacotar.mjs"
+    "test:unit": "node scripts/empacotar.mjs && node --test tests/*.test.mjs",
+    "test:browser": "node scripts/empacotar.mjs && playwright test",
+    "build": "node scripts/empacotar.mjs",
+    "prestart": "node scripts/empacotar.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.14.1",

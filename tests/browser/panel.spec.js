@@ -338,7 +338,7 @@ test('painel, resultado e página explicativa passam no axe-core', async ({ page
 });
 
 test('extensão permite autorizar a leitura do texto da aba após cancelar a captura e apresenta uma checagem com fonte', async () => {
-  const extensionPath = resolve('dist/extensao');
+  const extensionPath = resolve('extensao');
   const userDataDir = await mkdtemp(join(tmpdir(), 'central-test-'));
   let context;
   try {

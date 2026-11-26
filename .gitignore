@@ -2,5 +2,7 @@ node_modules/
 test-results/
 playwright-report/
 dist/
+extensao/web/
+extensao/regras-negocio/
 .env
 .env.*

@@ -80,7 +80,7 @@ test('conexões permanentes limitadas às duas fontes de notícias', async () =>
   assert.deepEqual(manifest.permissions.sort(), ['activeTab', 'scripting', 'storage', 'sidePanel'].sort());
   assert.ok(manifest.content_security_policy.extension_pages.includes("connect-src 'self'"));
   for (const icon of Object.values(manifest.icons)) {
-    const content = await readFile(new URL(`../${icon}`, import.meta.url));
+    const content = await readFile(new URL(`../extensao/${icon}`, import.meta.url));
     assert.equal(content.subarray(1, 4).toString(), 'PNG');
   }
 });

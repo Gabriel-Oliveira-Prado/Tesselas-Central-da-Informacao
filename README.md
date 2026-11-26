@@ -2,7 +2,7 @@
 
 # Central da Informação
 
-**Versão 0.9.2** · Site e extensão para Chrome de computador.
+**Versão 0.9.3** · Site e extensão para Chrome de computador.
 
 A Central da Informação acompanha a área de tela que você escolher, reconhece texto em português e mostra a afirmação checada, a explicação e a fonte. O acompanhamento ocorre no dispositivo e dispensa conta, chave de API e gravação.
 
@@ -14,12 +14,12 @@ Com Node.js 20 ou posterior, execute `npm start` e abra o endereço impresso no 
 
 ## Preparar a extensão
 
-Execute `npm run build`. No Chrome, abra `chrome://extensions`, ative Modo do desenvolvedor e escolha Carregar sem compactação. Selecione `dist/extensao`. O ícone abre o painel lateral.
+Execute `npm run build`. No Chrome, abra `chrome://extensions`, ative Modo do desenvolvedor e escolha Carregar sem compactação. Selecione a pasta `extensao` do projeto. O ícone abre o painel lateral. Ao executar `npm start`, essa preparação também acontece automaticamente.
 
 ## Organização
 
 - `web/` contém a interface compartilhada, os recursos locais, a captura, os controles de áudio e o tradutor.
-- `extensao/` contém o manifesto e o serviço do Chrome.
+- `extensao/` contém o manifesto e o serviço do Chrome. O build acrescenta as pastas geradas `web/` e `regras-negocio/`, necessárias para carregar a extensão no navegador.
 - `regras-negocio/` contém validação, checagens, pesquisa e fontes.
 - `scripts/` contém o servidor local, a atualização editorial e o empacotamento.
 - `tests/` contém testes de regras, navegação, mídia e fuzzing.
