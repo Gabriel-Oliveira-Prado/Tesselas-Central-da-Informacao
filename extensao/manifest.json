@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Central da Informação",
   "short_name": "Central",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Site e extensão acessíveis para verificar notícias, texto, áudio e vídeo com fontes.",
   "minimum_chrome_version": "116",
   "permissions": [

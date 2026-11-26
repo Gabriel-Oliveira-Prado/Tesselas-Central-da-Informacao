@@ -14,7 +14,8 @@ export function applyReadingPreferences(value) {
   document.body.dataset.colorProfile = safe.colorProfile || 'normal';
   document.body.dataset.speakFocus = String(safe.speakFocus !== false);
   document.body.dataset.largeText = String(Number(safe.fontSize) >= 150);
-  document.body.toggleAttribute('data-wide-spacing', safe.wideSpacing);
+  document.body.dataset.textSpacing = safe.textSpacing;
+  document.body.toggleAttribute('data-extra-large', Number(safe.fontSize) >= 250);
   document.body.toggleAttribute('data-reduce-motion', safe.reduceMotion === true);
   return safe;
 }

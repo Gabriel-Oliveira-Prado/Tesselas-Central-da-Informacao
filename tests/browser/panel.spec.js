@@ -51,8 +51,7 @@ test('início tem cinco cards; teclado e retorno preservam o foco', async ({ pag
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Pular para o conteúdo' })).toBeFocused();
   await page.keyboard.press('Enter');
-  await expect(page.locator('main')).toBeFocused();
-  await page.locator('#analyze-page').focus();
+  await expect(page.locator('#analyze-page')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('#capture-help-title')).toBeFocused();
   await page.locator('#start-sharing').click();
@@ -410,7 +409,7 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     await extensionPage.getByRole('button', { name: 'Acessibilidade', exact: true }).click();
     await extensionPage.getByLabel('Tamanho do texto').selectOption('125');
     await expect(extensionPage.locator('#app-status')).toHaveText('Ajustes de leitura salvos neste dispositivo.');
-    expect(await worker.evaluate(() => chrome.storage.local.get(null))).toEqual({ readingPreferences: { fontSize: '125', highContrast: true, wideSpacing: false } });
+    expect(await worker.evaluate(() => chrome.storage.local.get(null))).toEqual({ readingPreferences: { fontSize: '125', highContrast: true, textSpacing: 'normal' } });
     expect(extensionErrors).toEqual([]);
   } finally {
     await context?.close();
@@ -468,16 +467,16 @@ test('ampliação e espaçamento acompanham a pessoa até a página de privacida
   await page.goto(panelPath);
   await page.locator('#open-settings').click();
   await page.getByLabel('Tamanho do texto').selectOption('200');
-  await page.getByLabel('Aumentar o espaçamento').check();
+  await page.getByLabel('Distância entre letras e palavras').selectOption('wide');
   const opened = context.waitForEvent('page');
   await page.getByRole('link', { name: /Sobre e privacidade/ }).press('Enter');
   const about = await opened;
   await about.setViewportSize({ width: 320, height: 620 });
-  await expect(about.locator('body')).toHaveAttribute('data-wide-spacing', '');
+  await expect(about.locator('body')).toHaveAttribute('data-text-spacing', 'wide');
   await expect(about.locator('html')).toHaveCSS('font-size', '32px');
   await expectNoOverflow(about);
-  await page.getByLabel('Aumentar o espaçamento').uncheck();
-  await expect(about.locator('body')).not.toHaveAttribute('data-wide-spacing', '');
+  await page.getByLabel('Distância entre letras e palavras').selectOption('normal');
+  await expect(about.locator('body')).not.toHaveAttribute('data-text-spacing', 'wide');
 });
 
 test('resultado falado tem equivalente escrito, velocidade ajustável e retorno de foco', async ({ page }) => {
@@ -537,10 +536,6 @@ test('cards com rótulos, alvo amplo, contraste e foco em cores forçadas', asyn
   await page.reload();
   await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
-  await page.keyboard.press('Tab');
-  await expect(page.locator('#home-title')).toBeFocused();
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
   await expect(page.locator('#analyze-page')).toBeFocused();
   await expect(page.locator('#analyze-page')).toHaveCSS('outline-style', 'solid');
 });

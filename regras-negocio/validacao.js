@@ -24,13 +24,14 @@ export function createSearchLinks(value) {
 
 export function safePreferences(value = {}) {
   if (!value || typeof value !== 'object') value = {};
-  const sizes = ['100', '125', '150', '200'];
+  const sizes = ['100', '125', '150', '200', '250', '300', '350', '400'];
+  const perfil = value.colorProfile === 'blue' ? 'protanopia' : value.colorProfile;
   return {
     fontSize: sizes.includes(String(value.fontSize)) ? String(value.fontSize) : '100',
     highContrast: value.highContrast !== false,
-    wideSpacing: value.wideSpacing === true,
+    textSpacing: ['normal', 'medium', 'wide'].includes(value.textSpacing) ? value.textSpacing : value.wideSpacing === true ? 'wide' : 'normal',
     ...(value.speakChanges === true ? { speakChanges: true } : {}),
-    ...(['blue', 'mono'].includes(value.colorProfile) ? { colorProfile: value.colorProfile } : {}),
+    ...(['protanopia', 'deuteranopia', 'tritanopia', 'mono'].includes(perfil) ? { colorProfile: perfil } : {}),
     ...(value.speakFocus === false ? { speakFocus: false } : {}),
     ...(value.libras === true ? { libras: true } : {}),
     ...(value.reduceMotion === true ? { reduceMotion: true } : {}),

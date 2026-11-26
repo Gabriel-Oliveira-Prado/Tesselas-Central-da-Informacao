@@ -1,5 +1,6 @@
 import { electionSources, extractHeadlines } from '../regras-negocio/fontes-eleitorais.js';
 import { electionEdition } from '../regras-negocio/edicao-eleitoral.js';
+import { carregarApuracao } from './apuracao.js';
 
 const installed = location.protocol === 'chrome-extension:';
 const origins = electionSources.map(source => new URL(source.url).origin + '/*');
@@ -11,13 +12,6 @@ let pending = false;
 let lastSuccess = 0;
 
 function render() {
-  const feature = edition.tse.find(article => article.featured);
-  document.getElementById('tse-feature').hidden = !feature;
-  if (feature) {
-    const link = document.getElementById('tse-feature-link');
-    link.href = feature.url;
-    link.textContent = feature.title + ' — TSE (nova aba)';
-  }
   const rows = electionSources.flatMap(source => edition[source.id].filter(article => !article.featured).map(article => ({ ...article, source })));
   rows.sort((a, b) => b.date.localeCompare(a.date));
   const list = document.getElementById('election-headlines');
@@ -81,5 +75,6 @@ async function update(askPermission) {
 refresh.addEventListener('click', () => update(true));
 export function openElectionNews() {
   render();
+  void carregarApuracao();
   if (Date.now() - lastSuccess > 15 * 60 * 1000) void update(false);
 }

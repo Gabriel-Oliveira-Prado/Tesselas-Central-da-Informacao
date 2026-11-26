@@ -7,6 +7,18 @@ function node(tag, text, className) {
   return el;
 }
 
+export function renderVerdict(element, kind, label) {
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  icon.setAttribute('aria-hidden', 'true');
+  icon.setAttribute('class', 'pictograma');
+  const use = document.createElementNS(icon.namespaceURI, 'use');
+  use.setAttribute('href', 'assets/acoes.svg#' + kind);
+  icon.append(use);
+  element.className = 'conclusion-banner verdict-' + kind;
+  element.dataset.verdict = kind;
+  element.replaceChildren(icon, document.createTextNode(label));
+}
+
 export function showEvidence(container, { exact, related, news = [], orientation }) {
   const cards = exact.map(record => {
     const article = document.createElement('article');

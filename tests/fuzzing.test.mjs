@@ -23,7 +23,7 @@ test('fuzzing determinístico de entradas, URLs e preferências', () => {
       assert.equal(new URL(link.href).origin, 'https://www.google.com');
       assert.ok(new URL(link.href).searchParams.get('q').endsWith(text.trim().toWellFormed()));
     }
-    assert.ok(['100', '125', '150', '200'].includes(safePreferences({ fontSize: text }).fontSize));
+    assert.ok(['100', '125', '150', '200', '250', '300', '350', '400'].includes(safePreferences({ fontSize: text }).fontSize));
     const url = articleUrl(text);
     if (url) assert.equal(url.protocol, 'https:');
   }

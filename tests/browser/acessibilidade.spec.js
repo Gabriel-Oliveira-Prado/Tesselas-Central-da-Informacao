@@ -10,6 +10,18 @@ test('informações dos cards, atalhos e Tab alcançam a conclusão', async ({ p
     } });
   });
   await page.goto('/web/index.html');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.brand')).toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.focusSpeech.at(-1))).toBe('Logo Central da Informação, início');
+  await page.keyboard.press('Tab');
+  await expect(page.locator('#home-title')).toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.focusSpeech.at(-1))).toContain('Como podemos ajudar? Use 1 a 5 para selecionar.');
+  for (const [index, card] of ['analyze-page','open-paste','open-audio','open-settings','open-elections'].entries()) {
+    await page.keyboard.press(String(index + 1));
+    await expect(page.locator('#' + card)).toBeFocused();
+    await expect(page.locator('#home-view')).toBeVisible();
+  }
   const help = page.getByRole('button', { name: 'Sobre Analisar tela', exact: true });
   await help.press('Enter');
   await expect(help).toHaveAttribute('aria-expanded', 'true');
@@ -17,6 +29,9 @@ test('informações dos cards, atalhos e Tab alcançam a conclusão', async ({ p
   await page.keyboard.press('Escape');
   await expect(help).toHaveAttribute('aria-expanded', 'false');
   await page.keyboard.press('2');
+  await expect(page.locator('#open-paste')).toBeFocused();
+  await expect.poll(() => page.evaluate(() => window.focusSpeech.at(-1))).toBe('Colar informação');
+  await page.keyboard.press('Enter');
   await expect(page.locator('#paste-title')).toBeFocused();
   await page.locator('#claim').fill('Pode votar depois das 17?');
   await page.locator('#review-form [type=submit]').click();
@@ -29,6 +44,43 @@ test('informações dos cards, atalhos e Tab alcançam a conclusão', async ({ p
   await page.locator('#new-query').click();
   await expect(page.locator('#claim')).toBeFocused();
   await expect(page.locator('#claim')).toHaveValue('');
+});
+
+test('preferências anteriores migram e o painel comporta texto a 400% em 320 pixels', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 750 });
+  await page.goto('/web/index.html');
+  await page.evaluate(() => localStorage.setItem('central-reading', JSON.stringify({ wideSpacing: true, colorProfile: 'blue' })));
+  await page.reload();
+  await page.locator('#open-settings').click();
+  await expect(page.locator('#text-spacing')).toHaveValue('wide');
+  await expect(page.locator('#color-profile')).toHaveValue('protanopia');
+  await page.locator('#font-size').selectOption('400');
+  await page.locator('#color-profile').selectOption('tritanopia');
+  const semRolagemHorizontal = async () => expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await semRolagemHorizontal();
+  await page.reload();
+  await expect(page.locator('html')).toHaveCSS('font-size', '64px');
+  await expect(page.locator('body')).toHaveAttribute('data-color-profile', 'tritanopia');
+  await semRolagemHorizontal();
+  for (const id of ['open-audio', 'open-paste', 'analyze-page', 'open-elections']) {
+    await page.locator('#' + id).click();
+    await semRolagemHorizontal();
+    await page.locator('.view:visible [data-back]').click();
+  }
+});
+
+test('apuração oficial permite comparar turnos e percorrer candidaturas estaduais', async ({ page }) => {
+  await page.goto('/web/index.html');
+  await page.locator('#open-elections').click();
+  await expect(page.locator('#candidaturas li')).toHaveCount(2);
+  await expect(page.locator('#fonte-apuracao')).toHaveAttribute('href', /resultados\.tse\.jus\.br\/oficial\/ele2026\/6258\//);
+  await expect(page.locator('#candidaturas')).toContainText(/Presidente · Eleito · \d+,\d+%/);
+  await page.locator('#local-apuracao').selectOption('df');
+  await page.locator('#disputa').selectOption({ label: 'Deputado Distrital · 1º turno' });
+  await expect(page.locator('#candidaturas li')).toHaveCount(10);
+  await page.locator('#mais-candidaturas').press('Enter');
+  await expect(page.locator('#candidaturas li')).toHaveCount(20);
+  await expect(page.locator('#candidaturas li').nth(10)).toBeFocused();
 });
 
 test('cards empilhados e cores preservam o contraste no celular', async ({ page }) => {

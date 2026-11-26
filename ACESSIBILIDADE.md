@@ -15,7 +15,7 @@ Referências: **ABNT NBR 17225:2025** e **WCAG 2.2**, com foco nos requisitos A 
 | Links e navegação | Links descritivos, aviso de nova aba, retorno ao painel e destino externo explícito. |
 | Botões e controles | Cards são botões nativos com ícones e nomes visíveis; alvos de pelo menos 44 px na escala padrão. |
 | Formulários e entrada | Labels explícitos, instruções associadas, erro textual, aria-invalid e foco no campo inválido. |
-| Apresentação | Layout fluido, ampliação até 200%, zoom nativo e conteúdo reorganizado em largura estreita. |
+| Apresentação | Layout fluido, ampliação até 400%, zoom nativo e conteúdo reorganizado em largura estreita. |
 | Uso de cores | Status sempre escrito, contraste nos temas padrão e alto contraste e suporte a cores forçadas. |
 | Conteúdo textual | Fonte Atkinson Hyperlegible Next, trechos em português e explicações com fonte. A revisão de texto, as buscas adicionais e a consulta em Libras têm telas próprias. |
 | Codificação e marcação semântica | HTML nativo; ARIA usado para mensagens, agrupamentos e associações necessárias. |
@@ -98,6 +98,6 @@ O botão mede pelo menos 48 px de altura e tem borda sólida de 2 px. Os cinco c
 
 ## Verificações da versão 0.9.0
 
-Os cards têm botões independentes para informação, números visíveis e atalhos 1 a 5. No celular, são empilhados. Textos de resultado entram na sequência do Tab. A voz de foco é opcional e pode ser desativada em Acessibilidade. A leitura de conteúdo destaca palavras quando o sintetizador fornece eventos de fronteira. A captura recusa a própria interface e mantém um histórico temporário com a origem dos trechos. O histórico é apagado ao iniciar outra análise ou fechar o painel.
+Os cards têm botões independentes para informação, números visíveis e atalhos 1 a 5 para posicionar o foco. Enter ou Espaço abre a opção. No celular, são empilhados. Textos de resultado entram na sequência do Tab. A voz de foco é opcional e pode ser desativada em Acessibilidade. A leitura de conteúdo destaca palavras quando o sintetizador fornece eventos de fronteira. A captura recusa a própria interface e mantém um histórico temporário com a origem dos trechos. O histórico é apagado ao iniciar outra análise ou fechar o painel.
 
 O fuzzing determinístico cobre 4.000 entradas com Unicode inválido, links, HTML e negações. A avaliação automática da interface própria continua usando axe-core. A validação linguística de Libras, a análise de todos os critérios WCAG e o uso com leitores de tela por pessoas com deficiência continuam pendentes. As observações anteriores sobre o widget são registros da avaliação anterior, não uma certificação desta edição.

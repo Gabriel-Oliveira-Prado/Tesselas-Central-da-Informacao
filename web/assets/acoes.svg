@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <symbol id="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m6.5 12 3.5 3.5 7.5-8"/></symbol>
+  <symbol id="false" viewBox="0 0 24 24"><path d="M7 2h10l5 5v10l-5 5H7l-5-5V7Z"/><path d="m8 8 8 8m0-8-8 8"/></symbol>
+  <symbol id="context" viewBox="0 0 24 24"><path d="M12 2 23 21H1Z"/><path d="M12 9v5m0 3v.5"/></symbol>
+  <symbol id="unverified" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9 8a3.2 3.2 0 0 1 6 1.5c0 2.6-3 2.7-3 5m0 3v.2"/></symbol>
+  <symbol id="pending" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="buscar" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7"/><path d="m15.5 15.5 6 6"/></symbol>
+  <symbol id="arquivo" viewBox="0 0 24 24"><path d="M5 2h9l5 5v15H5ZM14 2v6h5M12 11v8m-4-4h8"/></symbol>
+  <symbol id="microfone" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0m-7 7v4m-4 0h8"/></symbol>
+  <symbol id="tela" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M12 17v4m-5 0h10"/></symbol>
+  <symbol id="ouvir" viewBox="0 0 24 24"><path d="M11 4 6 8H3v8h3l5 4Zm4 4a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></symbol>
+  <symbol id="parar" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></symbol>
+</svg>

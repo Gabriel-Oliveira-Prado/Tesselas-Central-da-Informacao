@@ -73,8 +73,8 @@ test('buscas preservam a consulta como dado, inclusive caracteres especiais', ()
 });
 
 test('somente preferências de leitura válidas são persistidas', () => {
-  assert.deepEqual(safePreferences({ fontSize: '200', highContrast: true, claim: 'dado pessoal' }), { fontSize: '200', highContrast: true, wideSpacing: false });
-  assert.deepEqual(safePreferences({ fontSize: '999', highContrast: 'true' }), { fontSize: '100', highContrast: true, wideSpacing: false });
+  assert.deepEqual(safePreferences({ fontSize: '200', highContrast: true, claim: 'dado pessoal' }), { fontSize: '200', highContrast: true, textSpacing: 'normal' });
+  assert.deepEqual(safePreferences({ fontSize: '999', highContrast: 'true' }), { fontSize: '100', highContrast: true, textSpacing: 'normal' });
 });
 
 test('conexões permanentes limitadas às origens de pesquisa declaradas', async () => {

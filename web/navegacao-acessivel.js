@@ -2,7 +2,7 @@ export function enableAccessibleNavigation() {
   let keyboard = false, utterance, timer;
   const prepareText = root => {
     for (const el of root.querySelectorAll('h1,h2,h3,p,blockquote')) {
-      if (el.closest('[hidden],.sr-only,header,footer,[vw],#vlibras-app-root')) continue;
+      if (el.id === 'home-instructions' || el.closest('[hidden],.sr-only,header,footer,[vw],#vlibras-app-root')) continue;
       if (!el.textContent.trim() || el.querySelector('button,input,textarea,select,a, p, h2')) continue;
       if (el.tabIndex < 0) el.tabIndex = 0;
     }
@@ -12,24 +12,30 @@ export function enableAccessibleNavigation() {
   observer.observe(document.querySelector('main'), { childList: true, subtree: true });
   document.addEventListener('keydown', event => {
     if (event.key === 'Tab') keyboard = true;
-    if (event.altKey || event.ctrlKey || event.metaKey || /INPUT|TEXTAREA|SELECT/.test(event.target.tagName) || event.target.isContentEditable) return;
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+        event.target.matches('input:not([type=checkbox]),textarea,select') || event.target.isContentEditable) return;
     const buttons = [...document.querySelectorAll('.action-card')];
     const button = buttons[Number(event.key) - 1];
     if (/^[1-5]$/.test(event.key) && button && !document.getElementById('home-view')?.hidden) {
       const help = button.closest('.card-shell').querySelector('.card-info');
       if (help.getAttribute('aria-expanded') === 'true') help.click();
       event.preventDefault();
-      button.click();
+      keyboard = true;
+      if (document.activeElement === button) speakFocus(button);
+      else button.focus();
     }
   });
   document.addEventListener('pointerdown', () => { keyboard = false; clearTimeout(timer); });
-  document.addEventListener('focusin', event => {
+  function speakFocus(el) {
     if (!keyboard || document.body.dataset.speakFocus === 'false' || !globalThis.speechSynthesis) return;
     clearTimeout(timer);
     if (utterance) speechSynthesis.cancel();
-    const el = event.target;
-    if (el.closest('[hidden]') || el.matches('textarea,input:not([type=checkbox],[type=file])')) return;
-    const text = el.getAttribute('aria-label') || el.labels?.[0]?.textContent || el.textContent;
+    if (el.closest('[hidden]') || el.matches('body,main,section,html')) return;
+    const label = el.getAttribute('aria-label') || el.labels?.[0]?.textContent ||
+      el.querySelector('img[alt]')?.alt || el.querySelector('.card-label')?.textContent || el.textContent;
+    const description = (el.getAttribute('aria-describedby') || '').split(/\s+/)
+      .map(id => document.getElementById(id)?.textContent.trim()).filter(Boolean).join(' ');
+    const text = [label?.trim(), el.selectedOptions?.[0]?.textContent, description].filter(Boolean).join(' ');
     if (!text?.trim()) return;
     timer = setTimeout(() => {
       if (document.activeElement !== el) return;
@@ -39,6 +45,19 @@ export function enableAccessibleNavigation() {
       speechSynthesis.cancel();
       speechSynthesis.speak(utterance);
     }, 120);
+  }
+  document.addEventListener('focusin', event => speakFocus(event.target));
+  const skip = document.querySelector('.skip-link');
+  skip?.addEventListener('click', event => {
+    const view = document.querySelector('.view:not([hidden])');
+    const first = view?.querySelector('.action-card');
+    const target = first || [...(view?.querySelectorAll('textarea,select,input,button:not([data-back]),a[href]') || [])]
+      .find(el => !el.disabled && el.getClientRects().length) ||
+      document.querySelector('main h1');
+    if (!target) return;
+    event.preventDefault();
+    if (first && !first.getClientRects().length) first.parentElement.querySelector('.card-info')?.click();
+    target.focus();
   });
   for (const button of document.querySelectorAll('.card-info')) {
     button.addEventListener('click', () => {

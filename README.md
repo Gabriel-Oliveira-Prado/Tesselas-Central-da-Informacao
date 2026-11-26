@@ -2,7 +2,7 @@
 
 # Central da Informação
 
-**Versão 0.11.0** · Site e extensão para Chrome de computador.
+**Versão 0.12.0** · Site e extensão para Chrome de computador.
 
 A Central da Informação verifica notícias de qualquer tema e mostra primeiro a conclusão, seguida da afirmação, da explicação e da fonte. Os resultados são Falso, Verdadeiro, Fora de contexto ou Não verificado quando faltam evidências. Ela acompanha a área de tela escolhida e reconhece texto e fala em português. O reconhecimento ocorre no dispositivo. A pesquisa consulta páginas online por assunto e dispensa uma chave de API nesta versão.
 
@@ -54,11 +54,13 @@ Abra http://127.0.0.1:4173/web/index.html no Chrome ou Edge de computador. Para 
 - **Analisar tela** usa reconhecimento de texto, comparação com duas artes conhecidas e transcrição em português. O reconhecimento de objetos inicia automaticamente nos computadores que disponibilizam o modelo do Chrome. Ao encerrar, os trechos e suas fontes ficam na tela Resultados do acompanhamento. O navegador pode precisar baixá-lo.
 - **Colar informação** recebe texto ou um link do g1, Agência Brasil, TSE, Justiça Eleitoral ou Aos Fatos. O card de arquivos aceita áudio, vídeo e legendas SRT ou VTT. Confira o texto reconhecido antes de verificar.
 - **Ouvir conteúdo** recebe arquivo, microfone ou som da aba. Ao escolher o microfone, você também pode dizer “abrir eleições”, “abrir acessibilidade”, “colar informação” ou “voltar ao início”. A leitura em voz alta tem velocidade, pausa e parada, com destaque de palavra quando a voz do navegador informa os marcadores de leitura.
-- **Acessibilidade** permite ampliar até 200%, aumentar o espaçamento, usar cores suaves, alternar a paleta para daltonismo, ativar avisos falados e consultar o VLibras. A fonte Atkinson Hyperlegible Next acompanha a extensão.
+- **Acessibilidade** permite ampliar até 400%, escolher a distância entre letras e palavras, usar cores suaves, escolher paletas para protanopia, deuteranopia e tritanopia ou escala de cinza, ativar avisos falados e consultar o VLibras. A fonte Atkinson Hyperlegible Next acompanha a extensão.
 
-- **Eleições** recebe perguntas, links, áudio, vídeo e legendas no mesmo formulário de checagem compartilhado. Também abre os serviços oficiais e até três manchetes por fonte, com data e link. O painel consulta as listagens públicas do TSE e da Agência Brasil. Use **Atualizar notícias** para consultar essas duas origens. Sem conexão, a seleção incluída na versão continua disponível. Para renovar essa seleção antes de distribuir uma versão, execute `node scripts/atualizar-edicao.mjs` com as dependências e o Chromium do Playwright instalados.
+- **Eleições** recebe perguntas, links, áudio, vídeo e legendas no mesmo formulário de checagem compartilhado. Mostra a apuração das eleições gerais de 2026 para a Presidência e as 27 UFs, por cargo e turno. Cada candidatura traz o percentual e a situação publicada pelo TSE. Os arquivos da edição acompanham o site e a extensão e podem ser renovados com `node scripts/atualizar-apuracao.mjs`. O painel também apresenta até três manchetes por fonte, com data e link. O painel consulta as listagens públicas do TSE e da Agência Brasil. Use **Atualizar notícias** para consultar essas duas origens. Sem conexão, a seleção incluída na versão continua disponível. Para renovar essa seleção antes de distribuir uma versão, execute `node scripts/atualizar-edicao.mjs` com as dependências e o Chromium do Playwright instalados.
 
-Todos os cards são botões nativos com ícone decorativo e nome visível. Teclado, foco, zoom e mensagens de estado permanecem disponíveis. A revisão do texto, as buscas adicionais e a consulta pontual em Libras têm telas próprias. Os números 1 a 5 abrem os cards. O botão de informação em cada card explica sua função. Ao navegar por Tab, a voz opcional lê o foco.
+<p><img src="docs/apuracao.png" width="320" height="549" alt="Apuração da Presidência com seleção de estado, cargo e turno. Cada candidatura tem nome, partido, situação e percentual."></p>
+
+Todos os cards são botões nativos com ícone decorativo e nome visível. Teclado, foco, zoom e mensagens de estado permanecem disponíveis. A revisão do texto, as buscas adicionais e a consulta pontual em Libras têm telas próprias. Os números 1 a 5 levam o foco ao card. Enter ou Espaço abre a opção selecionada. O botão de informação em cada card explica sua função. Ao navegar por Tab, a voz opcional lê o foco.
 
 **Fontes de contexto.** A Central combina sete checagens editoriais com as publicações do g1 Fato ou Fake e da Agência Brasil. A atualização lê seus feeds públicos. Uma edição incluída funciona offline. Uma afirmação revisada ou correspondente ao enunciado de uma checagem explícita pode receber um veredito. Matérias relacionadas apresentam o contexto e o link da publicação.
 

@@ -4,7 +4,7 @@ import './legendas.js';
 import { openElectionNews } from './eleicoes.js';
 import { readPageContent } from './leitura-pagina.js';
 import { readSharedScreen, followScreen } from './captura-tela.js';
-import { evidenceFor, showEvidence } from './resultados.js';
+import { evidenceFor, showEvidence, renderVerdict } from './resultados.js';
 import { createVisualAssistant, describeFrame, visualAvailability } from './assistente-visual.js';
 import { findVisualReference } from './comparacao-visual.js';
 import { setupMediaInputs } from './entrada-midia.js';
@@ -86,8 +86,7 @@ function progress(id, busy, message) {
 }
 function setLiveConclusion(evidence, pending) {
   const verdict = conclusionFor(evidence);
-  $('live-verdict').textContent = pending ? 'Verificação em andamento' : verdict.label;
-  $('live-verdict').className = 'conclusion-banner verdict-' + (pending ? 'pending' : verdict.kind);
+  renderVerdict($('live-verdict'), pending ? 'pending' : verdict.kind, pending ? 'Verificação em andamento' : verdict.label);
   progress('live-progress', pending, pending ? 'Buscando evidências. Aguarde o resultado deste trecho…' : 'Checagem deste trecho concluída. Continuo acompanhando novas informações.');
 }
 function requestSharing(action, origin = 'screen') {
@@ -242,8 +241,7 @@ function renderResult(content) {
   for (const id of ['research-status','audio-input-status']) $(id).dataset.busy = 'false';
   const context = evidence.related.length || evidence.news.length;
   const conclusion = conclusionFor(evidence);
-  $('result-title').textContent = conclusion.label;
-  $('result-title').dataset.verdict = conclusion.kind;
+  renderVerdict($('result-title'), conclusion.kind, conclusion.label);
   $('result-summary').textContent = conclusion.explanation;
   $('result-scope').textContent = matches.length ? 'Esta checagem se refere ao trecho indicado, não à página inteira.' : 'Você pode consultar outras fontes abaixo.';
   if (evidence.search?.status === 'unavailable') $('result-scope').textContent += ' As fontes online estão indisponíveis neste momento. Você pode tentar pesquisar novamente.';
@@ -278,7 +276,7 @@ function showCaptureError(error, fromScreen) {
     'no-text': 'Amplie o trecho na tela e tente novamente. Você também pode colar a informação.',
     'capture-ended': 'A captura foi interrompida. Volte para escolher a tela novamente.',
   };
-  $('result-title').textContent = denied ? 'Tela não compartilhada' : 'Não consegui ler o conteúdo';
+  renderVerdict($('result-title'), 'unverified', denied ? 'Tela não compartilhada' : 'Não consegui ler o conteúdo');
   $('result-summary').textContent = denied ? 'Volte para escolher uma tela ou cole a informação.'
     : messages[error.message] || (fromScreen ? 'Tente compartilhar novamente no Chrome ou Edge de computador. Você também pode colar o texto.' : 'Abra a extensão pelo ícone na aba desejada ou cole a informação.');
   $('result-scope').textContent = '';
@@ -344,7 +342,9 @@ function showSessionResults() {
   for (const item of sessionHistory) {
     const section = document.createElement('section');
     const verdict = conclusionFor(item.evidence);
-    section.append(element('h2', verdict.label), element('p', item.origin + ' · ' + item.time.toLocaleTimeString('pt-BR')), element('p', item.text));
+    const heading = element('h2', '');
+    renderVerdict(heading, verdict.kind, verdict.label);
+    section.append(heading, element('p', item.origin + ' · ' + item.time.toLocaleTimeString('pt-BR')), element('p', item.text));
     showEvidence(section.appendChild(document.createElement('div')), item.evidence);
     if (!item.evidence.exact.length && !item.evidence.related.length && !item.evidence.news.length) section.append(element('p', 'Sem evidência suficiente para concluir sobre este trecho.'));
     const search = element('button', 'Pesquisar este trecho', 'button button-secondary');
@@ -451,8 +451,7 @@ async function analyzeLive() {
         $('live-matches').replaceChildren();
         $('visual-source').hidden = true;
         $('live-summary').textContent = 'Lendo o primeiro quadro…';
-        $('live-verdict').textContent = 'Aguardando leitura';
-        $('live-verdict').className = 'conclusion-banner verdict-pending';
+        renderVerdict($('live-verdict'), 'pending', 'Aguardando leitura');
         progress('live-progress',true,'Reconhecendo o conteúdo da área compartilhada…');
         for (const id of ['live-text', 'live-time', 'vision-result', 'live-heard']) $(id).textContent = '';
         showView('live', 'live-title');
@@ -588,7 +587,7 @@ $('use-example').addEventListener('click', () => {
 
 function applyPreferences(preferences) {
   const safe = applyReadingPreferences(preferences);
-  $('wide-spacing').checked = safe.wideSpacing;
+  $('text-spacing').value = safe.textSpacing;
   $('speak-changes').checked = !!safe.speakChanges;
   $('color-profile').value = safe.colorProfile || 'normal';
   $('font-size').value = safe.fontSize;
@@ -607,7 +606,7 @@ async function readPreferences() {
 }
 async function savePreferences() {
   preferenceRevision += 1;
-  const preferences = safePreferences({ fontSize: $('font-size').value, highContrast: !$('standard-colors').checked, wideSpacing: $('wide-spacing').checked, speakChanges: $('speak-changes').checked, colorProfile: $('color-profile').value, speakFocus: $('speak-focus').checked, libras: $('enable-libras').checked, reduceMotion: $('reduce-motion').checked });
+  const preferences = safePreferences({ fontSize: $('font-size').value, highContrast: !$('standard-colors').checked, textSpacing: $('text-spacing').value, speakChanges: $('speak-changes').checked, colorProfile: $('color-profile').value, speakFocus: $('speak-focus').checked, libras: $('enable-libras').checked, reduceMotion: $('reduce-motion').checked });
   applyPreferences(preferences);
   try {
     if (extension) await chrome.storage.local.set({ readingPreferences: preferences });
@@ -620,7 +619,7 @@ async function savePreferences() {
 }
 $('font-size').addEventListener('change', savePreferences);
 $('standard-colors').addEventListener('change', savePreferences);
-$('wide-spacing').addEventListener('change', savePreferences);
+$('text-spacing').addEventListener('change', savePreferences);
 $('color-profile').addEventListener('change', savePreferences);
 $('speak-changes').addEventListener('change', savePreferences);
 $('speak-focus').addEventListener('change', savePreferences);
