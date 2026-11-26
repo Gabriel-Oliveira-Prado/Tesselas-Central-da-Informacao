@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { validateClaim, createSearchLinks, safePreferences } from '../extension/core.js';
-import { FACT_CHECKS, findFactChecks } from '../extension/verification.js';
+import { validateClaim, createSearchLinks, safePreferences } from '../regras-negocio/validacao.js';
+import { FACT_CHECKS, findFactChecks, relatedChecks } from '../regras-negocio/checagens.js';
+import { publishedChecks } from '../regras-negocio/noticias.js';
+import { newsEdition } from '../regras-negocio/edicao-noticias.js';
 
 test('consulta reconhece frases completas e mantém fonte e data do resultado', () => {
   const matches = findFactChecks('A URNA ELETRONICA E CONECTADA A INTERNET DURANTE A VOTACAO.');
@@ -27,11 +29,29 @@ test('frases citadas retornam a afirmação da fonte e não um julgamento da pá
   assert.equal(findFactChecks(FACT_CHECKS[2].claim)[0].finding, 'Confirmado pela fonte');
 });
 
+test('perguntas, negações e vídeos de outras datas preservam o sentido da fonte', () => {
+  assert.equal(findFactChecks('Dá para votar pelo celular se estiver chovendo?')[0].kind, 'false');
+  assert.equal(findFactChecks('O e-Título com foto serve como identificação para votar.')[0].kind, 'true');
+  assert.equal(findFactChecks('O vídeo dos peritos federais comprova fraude nas eleições de 2022.')[0].kind, 'context');
+  for (const phrase of ['É falso que dá para votar pelo celular se estiver chovendo.', 'O vídeo dos peritos federais comprova fraude nas eleições de 2026.', 'Será que existe voto online quando chove?']) {
+    assert.deepEqual(findFactChecks(phrase), []);
+    assert.ok(relatedChecks(phrase).length || phrase.includes('2026'));
+  }
+});
+
 test('não aceita conteúdo vazio ou acima do limite', () => {
   for (const value of ['', ' \n\t ', null, undefined, 'a'.repeat(8001)]) {
     assert.equal(validateClaim(value).valid, false);
   }
   assert.deepEqual(validateClaim('  Uma afirmação.  '), { valid: true, text: 'Uma afirmação.' });
+});
+
+test('manchetes completas de vídeos checados preservam a conclusão publicada', () => {
+  const fake = newsEdition.find(row => row.title.startsWith('É #FAKE que vídeo de descarte de cebolas'));
+  const fact = newsEdition.find(row => row.title.startsWith('É #FATO: Vídeo mostra resgate de onça'));
+  assert.equal(publishedChecks(fake.title)[0].kind, 'false');
+  assert.equal(publishedChecks(fact.title)[0].kind, 'true');
+  assert.deepEqual(publishedChecks('Não é verdade que ' + fake.title), []);
 });
 
 test('buscas preservam a consulta como dado, inclusive caracteres especiais', () => {
@@ -48,19 +68,19 @@ test('buscas preservam a consulta como dado, inclusive caracteres especiais', ()
 });
 
 test('somente preferências de leitura válidas são persistidas', () => {
-  assert.deepEqual(safePreferences({ fontSize: '200', highContrast: true, claim: 'dado pessoal' }), { fontSize: '200', highContrast: true });
-  assert.deepEqual(safePreferences({ fontSize: '999', highContrast: 'true' }), { fontSize: '100', highContrast: true });
+  assert.deepEqual(safePreferences({ fontSize: '200', highContrast: true, claim: 'dado pessoal' }), { fontSize: '200', highContrast: true, wideSpacing: false });
+  assert.deepEqual(safePreferences({ fontSize: '999', highContrast: 'true' }), { fontSize: '100', highContrast: true, wideSpacing: false });
 });
 
-test('manifesto não dá acesso permanente a sites nem conexão automática a servidores', async () => {
-  const manifest = JSON.parse(await readFile(new URL('../extension/manifest.json', import.meta.url)));
+test('conexões permanentes limitadas às duas fontes de notícias', async () => {
+  const manifest = JSON.parse(await readFile(new URL('../extensao/manifest.json', import.meta.url)));
   assert.equal(manifest.manifest_version, 3);
-  assert.equal(manifest.host_permissions, undefined);
+  assert.deepEqual(manifest.host_permissions, ['https://g1.globo.com/*', 'https://agenciabrasil.ebc.com.br/*']);
   assert.equal(manifest.content_scripts, undefined);
   assert.deepEqual(manifest.permissions.sort(), ['activeTab', 'scripting', 'storage', 'sidePanel'].sort());
   assert.ok(manifest.content_security_policy.extension_pages.includes("connect-src 'self'"));
   for (const icon of Object.values(manifest.icons)) {
-    const content = await readFile(new URL(`../extension/${icon}`, import.meta.url));
+    const content = await readFile(new URL(`../${icon}`, import.meta.url));
     assert.equal(content.subarray(1, 4).toString(), 'PNG');
   }
 });

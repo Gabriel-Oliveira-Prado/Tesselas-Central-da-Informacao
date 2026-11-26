@@ -1,0 +1,16 @@
+Reconhecimento local em português
+
+vosk-browser 0.0.8 e seu worker WebAssembly são distribuídos sob Apache 2.0.
+Origem: https://github.com/ccoreilly/vosk-browser
+Pacote: https://www.npmjs.com/package/vosk-browser/v/0.0.8
+Licença do pacote: COPYING
+
+Adaptações da Central da Informação: separação do worker em arquivo local,
+substituição das ligações de funções geradas em tempo de execução por funções
+estáticas compatíveis com Manifest V3, extração em memória e sinalização da
+última resposta do reconhecedor. Os avisos dos componentes permanecem no código.
+
+O arquivo pt.tar.gz contém vosk-model-small-pt-0.3, modelo de português
+distribuído pela Alpha Cephei sob Apache 2.0, reempacotado para o navegador.
+Origem: https://alphacephei.com/vosk/models/vosk-model-small-pt-0.3.zip
+Licença do modelo: LICENSE-model.txt

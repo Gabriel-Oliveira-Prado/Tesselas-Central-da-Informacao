@@ -1,0 +1,130 @@
+import { transcribe } from './transcricao.js';
+import { createReader, readFrame } from './captura-tela.js';
+import { MAX_TEXT_LENGTH } from '../regras-negocio/validacao.js';
+
+export function setupMediaInputs({ onReview, onResult, onCommand }) {
+  const $ = id => document.getElementById(id);
+  let active;
+  async function begin(kind, file, paste = false) {
+    active?.abort();
+    const owner = new AbortController();
+    const { signal } = owner;
+    active = owner;
+    const status = $(paste ? 'caption-status' : 'audio-input-status');
+    const stop = $(paste ? 'paste-media-stop' : 'audio-input-stop');
+    const transcript = $(paste ? 'claim' : 'audio-transcript');
+    let stream, player, objectURL, reader, timer, finishAudio, inFrame, finishing = false;
+    let collected = '', lastFrame = '', reachedLimit = false;
+    const display = text => { if (paste) transcript.value = text; else transcript.textContent = text; };
+    const append = text => {
+      collected = (collected + '\n' + text).trim().slice(0, MAX_TEXT_LENGTH);
+      display(collected);
+      if (collected.length === MAX_TEXT_LENGTH && !reachedLimit) {
+        reachedLimit = true;
+        queueMicrotask(complete);
+      }
+    };
+    function cleanup() {
+      clearTimeout(timer);
+      stream?.getTracks().forEach(track => track.stop());
+      if (player) { player.onended = player.onerror = null; player.pause(); player.removeAttribute('src'); player.load(); }
+      if (objectURL) URL.revokeObjectURL(objectURL);
+      if (reader) void reader.terminate();
+      stop.hidden = true;
+      stop.onclick = null;
+    }
+    signal.addEventListener('abort', cleanup, { once: true });
+    async function complete() {
+      if (finishing || signal.aborted) return;
+      finishing = true;
+      player?.pause();
+      clearTimeout(timer);
+      try {
+        await finishAudio?.();
+        await inFrame;
+        if (signal.aborted) return;
+        owner.abort();
+        if (collected) {
+          status.textContent = reachedLimit ? 'Primeiros 8.000 caracteres prontos para revisão.' : 'Transcrição pronta. Confira o trecho reconhecido.';
+          if (paste) onReview(collected); else onResult(collected);
+        } else status.textContent = 'Nenhuma fala ou frase legível encontrada. Tente outra fonte ou escreva o trecho.';
+      } catch { if (!signal.aborted) { owner.abort(); status.textContent = 'Não foi possível concluir a leitura.'; } }
+    }
+    status.textContent = file ? 'Abrindo ' + file.name + '…' : 'Aguardando sua permissão…';
+    display('');
+    try {
+      if (kind === 'mic') stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (kind === 'tab') {
+        stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true, selfBrowserSurface: 'exclude' });
+        if (!stream.getAudioTracks().length) throw new Error('Escolha uma aba e marque Compartilhar áudio da aba.');
+      }
+      if (signal.aborted) { stream?.getTracks().forEach(t => t.stop()); return; }
+      if (file) {
+        player = document.createElement('video');
+        player.playsInline = true;
+        objectURL = URL.createObjectURL(file);
+        player.src = objectURL;
+        player.preload = 'auto';
+      }
+      const input = player || new MediaStream(stream.getAudioTracks());
+      stop.hidden = false;
+      stop.onclick = complete;
+      status.textContent = 'Preparando a transcrição em português…';
+      finishAudio = await transcribe(input, signal, (words, final) => {
+        if (kind === 'mic' && final) {
+          const command = words.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+          if (['abrir eleicoes', 'abrir acessibilidade', 'abrir configuracoes', 'colar informacao', 'voltar ao inicio'].includes(command)) {
+            owner.abort();
+            onCommand(command);
+            return;
+          }
+          if (command === 'concluir' || command === 'concluir a leitura') { if (!finishing) void complete(); return; }
+        }
+        if (final) append(words); else display((collected + ' ' + words).trim().slice(0, MAX_TEXT_LENGTH));
+      });
+      if (signal.aborted || finishing) return;
+      if (player) {
+        player.onended = complete;
+        player.onerror = () => { owner.abort(); status.textContent = 'Formato não reconhecido pelo navegador. Tente MP3, WAV, MP4 ou WebM.'; };
+        await player.play();
+        if (player.videoWidth) {
+          const canvas = document.createElement('canvas');
+          reader = await createReader(signal);
+          if (signal.aborted) { await reader.terminate(); return; }
+          const sample = async () => {
+            if (signal.aborted || finishing) return;
+            const scale = Math.min(1, 1440 / player.videoWidth);
+            canvas.width = Math.round(player.videoWidth * scale); canvas.height = Math.round(player.videoHeight * scale);
+            canvas.getContext('2d').drawImage(player, 0, 0, canvas.width, canvas.height);
+            const { text } = await readFrame(reader, canvas, signal);
+            if (text && text !== lastFrame) append(text);
+            lastFrame = text;
+          };
+          const next = () => {
+            inFrame = sample().catch(() => {});
+            inFrame.then(() => { if (!signal.aborted && !finishing) timer = setTimeout(next, 1800); });
+          };
+          next();
+        }
+      } else stream.getTracks().forEach(track => track.addEventListener('ended', complete, { once: true }));
+      if (!signal.aborted) status.textContent = file ? 'Lendo ' + file.name + '. Você pode concluir o trecho antes do fim.' : kind === 'mic' ? 'Escutando. Diga a informação ou um comando como “abrir eleições”. Toque em Concluir e verificar ao terminar.' : 'Escutando a aba compartilhada. Escolha Concluir e verificar quando terminar.';
+    } catch (err) {
+      if (!signal.aborted) {
+        owner.abort();
+        status.textContent = err.name === 'NotAllowedError'
+          ? kind === 'mic' ? 'Microfone bloqueado. Permita o microfone nas configurações do navegador e tente novamente.' : 'Compartilhamento cancelado. Escolha Compartilhar tela e ouvir para selecionar uma aba com áudio.'
+          : err.message || 'Não foi possível abrir este áudio. Escolha outro arquivo.';
+      }
+    }
+  }
+  $('mic-input').onclick = () => begin('mic');
+  $('tab-input').onclick = () => begin('tab');
+  for (const id of ['audio-file', 'caption-file']) {
+    $(id).addEventListener('change', () => {
+      const file = $(id).files[0];
+      if (file && !/\.(srt|vtt)$/i.test(file.name)) { begin('file', file, id === 'caption-file'); $(id).value = ''; }
+      else active?.abort();
+    });
+  }
+  return () => active?.abort();
+}

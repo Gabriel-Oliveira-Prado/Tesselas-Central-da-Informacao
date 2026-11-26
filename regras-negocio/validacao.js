@@ -23,9 +23,15 @@ export function createSearchLinks(value) {
 }
 
 export function safePreferences(value = {}) {
+  if (!value || typeof value !== 'object') value = {};
   const sizes = ['100', '125', '150', '200'];
   return {
     fontSize: sizes.includes(String(value.fontSize)) ? String(value.fontSize) : '100',
     highContrast: value.highContrast !== false,
+    wideSpacing: value.wideSpacing === true,
+    ...(value.speakChanges === true ? { speakChanges: true } : {}),
+    ...(['blue', 'mono'].includes(value.colorProfile) ? { colorProfile: value.colorProfile } : {}),
+    ...(value.speakFocus === false ? { speakFocus: false } : {}),
+    ...(value.libras === true ? { libras: true } : {}),
   };
 }

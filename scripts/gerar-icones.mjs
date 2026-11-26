@@ -1,7 +1,7 @@
 import { chromium } from 'playwright';
 import { fileURLToPath } from 'node:url';
 
-const assets = new URL('../extension/assets/', import.meta.url);
+const assets = new URL('../web/assets/', import.meta.url);
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage({ viewport: { width: 128, height: 128 } });

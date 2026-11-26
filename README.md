@@ -1,25 +1,37 @@
-<p align="center"><img src="extension/assets/logotipo.svg" width="258" alt="Logotipo da Central da Informação"></p>
+<p align="center"><img src="web/assets/logotipo.svg" width="258" alt="Logotipo da Central da Informação"></p>
 
 # Central da Informação
 
-**Versão 0.4.0** · Extensão para Chrome de computador.
+**Versão 0.9.0** · Site e extensão para Chrome de computador.
 
-A Central da Informação ajuda a conferir mensagens eleitorais antes de compartilhá-las. Você escolhe uma aba, janela ou tela. A extensão captura uma imagem, encerra o compartilhamento e reconhece o texto em português no próprio dispositivo. Quando encontra uma das três afirmações da base, apresenta a checagem, a explicação e um link para a fonte.
+A Central da Informação acompanha a área de tela que você escolher, reconhece texto em português e mostra a afirmação checada, a explicação e a fonte. O acompanhamento ocorre no dispositivo e dispensa conta, chave de API e gravação.
 
-<p><img src="docs/inicio.png" width="320" alt="Painel inicial com quatro botões: Analisar tela, Colar informação, Ouvir conteúdo e Acessibilidade."> <img src="docs/checagem.png" width="320" alt="Resultado da consulta sobre a conexão da urna à internet, com o veredito da fonte, a explicação e o link para conferência."></p>
+<p align="center"><img src="docs/inicio.png" width="320" height="519" alt="Painel inicial com cinco botões e acompanhamento da tela ativado."> <img src="docs/checagem.png" width="320" height="519" alt="Resultado com a condição para votar depois das 17h e a fonte do Tribunal Superior Eleitoral."></p>
 
-## Instalação da versão 0.4.0
+## Executar o site
 
-1. Na [publicação da versão 0.4.0](https://github.com/Gabriel-Oliveira-Prado/Central-da-Informacao/releases/tag/v0.4.0), baixe `central-da-informacao-0.4.0.zip` e extraia o arquivo.
-2. No Chrome 116 ou posterior, abra `chrome://extensions` e ative **Modo do desenvolvedor**.
-3. Clique em **Carregar sem compactação** e selecione a pasta extraída que contém `manifest.json`. Se você clonou o repositório, selecione a pasta `extension`.
-4. Fixe a extensão na barra do navegador. Abra uma página, clique no ícone da Central e confira a versão no rodapé do painel.
+Com Node.js 20 ou posterior, execute `npm start` e abra o endereço impresso no terminal. A interface web funciona sem instalar a extensão. Compartilhamento de tela e áudio depende das opções oferecidas pelo navegador. Em celulares, os cards ficam empilhados e os campos e arquivos continuam disponíveis.
+
+## Preparar a extensão
+
+Execute `npm run build`. No Chrome, abra `chrome://extensions`, ative Modo do desenvolvedor e escolha Carregar sem compactação. Selecione `dist/extensao`. O ícone abre o painel lateral.
+
+## Organização
+
+- `web/` contém a interface compartilhada, os recursos locais, a captura, os controles de áudio e o tradutor.
+- `extensao/` contém o manifesto e o serviço do Chrome.
+- `regras-negocio/` contém validação, checagens, pesquisa e fontes.
+- `scripts/` contém o servidor local, a atualização editorial e o empacotamento.
+- `tests/` contém testes de regras, navegação, mídia e fuzzing.
+- `dist/site` e `dist/extensao` são gerados pelo mesmo código. Alterações devem ser feitas nos arquivos-fonte.
+
+O site em atualização online usa o servidor de `npm start`. O pacote estático mantém a edição de notícias incluída quando as fontes online estão indisponíveis.
 
 ## Primeira consulta
 
-Escolha **Colar informação** e cole a frase de teste “A urna eletrônica é conectada à internet durante a votação.” Clique em **Verificar informação**. O painel encontra a checagem, explica que a urna funciona desconectada durante a votação e oferece o link da Justiça Eleitoral.
+Escolha **Colar informação** e cole a frase de teste “A urna eletrônica é conectada à internet durante a votação.” Clique em **Pesquisar informação**. O painel encontra a checagem, explica que a urna funciona desconectada durante a votação e oferece o link da Justiça Eleitoral.
 
-Para usar **Analisar tela**, abra o conteúdo que deseja conferir, clique no card e confirme a área escolhida no seletor do navegador. Use **Ver texto lido** para conferir como as palavras foram reconhecidas. Em vídeos, a consulta considera apenas o quadro capturado. Mensagens de voz precisam de transcrição para consulta. **Sem conclusão** indica que a busca local não encontrou uma correspondência.
+Em **Analisar tela**, escolha a aba ou a tela. Para incluir voz, marque o áudio no seletor do navegador. O painel mostra o trecho e o contexto e oferece **Encerrar acompanhamento**. Na aba autorizada, um selo informa se a Central lê a tela e escuta áudio. Outras superfícies usam o indicador nativo do navegador.
 
 ## Experimentar sem instalar
 
@@ -29,32 +41,40 @@ Requer Node.js 20 ou mais recente.
 npm start
 ```
 
-Abra http://127.0.0.1:4173/extension/panel.html no Chrome ou Edge de computador. Em **Analisar tela**, escolha uma aba, janela ou tela e confirme no seletor do navegador. Para experimentar, abra http://127.0.0.1:4173/demo/noticia.html em outra aba e escolha essa aba no seletor. O painel captura uma imagem sem áudio, encerra o compartilhamento e lê as palavras no dispositivo. Funciona também com texto visível em imagens e PDFs. A nitidez afeta a leitura.
+Abra http://127.0.0.1:4173/web/index.html no Chrome ou Edge de computador. Para testar com um vídeo que muda de assunto, abra http://127.0.0.1:4173/demo/acompanhamento.html em outra aba. Compartilhe essa aba com a Central e reproduza o vídeo.
 
-## Os quatro cards
+## Os cinco cards
 
-- **Analisar tela** reconhece o texto de uma imagem da área compartilhada e consulta até 8.000 caracteres nas três checagens locais. Abra **Ver texto lido** para conferir ou corrigir o trecho. Se a captura for bloqueada, o painel oferece a colagem e, na extensão, a leitura autorizada do texto da aba.
-- **Colar informação** consulta a mesma base com texto digitado ou colado.
-- **Ouvir conteúdo** lê o texto e a explicação, com pausa e parada. Sem texto anterior, solicita que você escolha uma tela na versão web ou permita ler a aba na extensão.
-- **Acessibilidade** oferece tamanho de texto de 100% a 200%. O alto contraste vem ativado. Marque **Usar cores suaves** para trocar o tema.
+- **Analisar tela** usa reconhecimento de texto, comparação com duas artes conhecidas e transcrição em português. O reconhecimento de objetos inicia automaticamente nos computadores que disponibilizam o modelo do Chrome. Ao encerrar, os trechos e suas fontes ficam na tela Resultados do acompanhamento. O navegador pode precisar baixá-lo.
+- **Colar informação** recebe texto ou um link do g1, Agência Brasil, TSE, Justiça Eleitoral ou Aos Fatos. O card de arquivos aceita áudio, vídeo e legendas SRT ou VTT. Confira o texto reconhecido antes de verificar.
+- **Ouvir conteúdo** recebe arquivo, microfone ou som da aba. Ao escolher o microfone, você também pode dizer “abrir eleições”, “abrir acessibilidade”, “colar informação” ou “voltar ao início”. A leitura em voz alta tem velocidade, pausa e parada, com destaque de palavra quando a voz do navegador informa os marcadores de leitura.
+- **Acessibilidade** permite ampliar até 200%, aumentar o espaçamento, usar cores suaves, alternar a paleta para daltonismo, ativar avisos falados e consultar o VLibras. A fonte Atkinson Hyperlegible Next acompanha a extensão.
 
-Todos os cards são botões nativos com ícone decorativo e nome visível. Teclado, foco, zoom e mensagens de estado permanecem disponíveis. Texto completo e buscas adicionais ficam recolhidos por padrão na tela de resultado.
+- **Eleições** abre os serviços oficiais e até três manchetes por fonte, com data e link. O painel consulta as listagens públicas do TSE e da Agência Brasil. Na extensão instalada, use **Atualizar notícias** para autorizar essas duas origens. Sem conexão, a seleção incluída na versão continua disponível. Para renovar essa seleção antes de distribuir uma versão, execute `node scripts/atualizar-edicao.mjs` com as dependências e o Chromium do Playwright instalados.
 
-**A base é inicial e limitada.** O arquivo `extension/verification.js` contém três afirmações com explicação, fonte e data de consulta. A busca local exige frases completas correspondentes, ignorando caixa, acentuação e espaços; não faz inferência por palavras isoladas, não entende qualquer paráfrase e não usa um agente de IA. Negações diferentes da frase registrada ficam sem correspondência.
+Todos os cards são botões nativos com ícone decorativo e nome visível. Teclado, foco, zoom e mensagens de estado permanecem disponíveis. A revisão do texto, as buscas adicionais e a consulta pontual em Libras têm telas próprias. Os números 1 a 5 abrem os cards. O botão de informação em cada card explica sua função. Ao navegar por Tab, a voz opcional lê o foco.
 
-Quando há correspondência, o resultado exibe a conclusão da fonte sobre a afirmação registrada, inclusive se ela aparece citada em um texto. A página inteira não recebe um veredito. Para textos sem correspondência, mostra **Sem conclusão**. A base foi consultada em 25/11/2026 e não se atualiza automaticamente.
+**Fontes de contexto.** A Central combina sete checagens editoriais com as publicações do g1 Fato ou Fake e da Agência Brasil. A atualização lê seus feeds públicos. Uma edição incluída funciona offline. Uma afirmação revisada ou correspondente ao enunciado de uma checagem explícita pode receber um veredito. Matérias relacionadas apresentam o contexto e o link da publicação.
+
+Cada checagem inclui sua data de consulta. A edição de novembro de 2026 cobre voto pelo celular, conexão da urna, celular na cabine, identificação pelo e-Título, título impresso um vídeo de 2018 recirculado em 2022 e a regra da fila às 17h. As referências ficam em `regras-negocio/checagens.js`.
 
 As três fontes iniciais são [urna e internet](https://www.justicaeleitoral.jus.br/fato-ou-boato/checagens/2026/fato-ou-boato-inteligencia-artificial-nao-pode-mudar-o-voto-do-eleitor-na-urna), [voto pela internet](https://www.justicaeleitoral.jus.br/fato-ou-boato/checagens/2026/e-falso-que-eleitores-possam-votar-on-line-pelo-celular-em-caso-de-chuva-no-brasil-votacao-e-sempre-presencial) e [celular na cabine](https://www.tse.jus.br/comunicacao/noticias/2026/Setembro/manual-do-eleitor-uso-de-celular-e-proibido-na-cabine-de-votacao). Isso ainda não constitui um serviço geral de checagem.
 
+## Libras
+
+Em Acessibilidade, marque **Ativar Libras em todas as telas** para usar o widget no site e na extensão. O ajuste fica salvo. A tradução precisa de conexão e envia ao VLibras o texto selecionado. Em um resultado, a consulta pontual também permanece disponível. Na versão web, o botão **Ativar VLibras nesta página** carrega o widget oficial em uma página separada. Na extensão instalada, o link abre a ferramenta hospedada pelo VLibras. A consulta inicia quando a pessoa escolhe o texto no serviço. A checagem eleitoral continua local.
+
+O VLibras é gratuito. A API comercial Hand Talk for Devs requer uma chave contratada. A página de planos do plugin para sites anuncia tradução em Libras a partir do plano Light. [VLibras](https://www.gov.br/governodigital/pt-br/acessibilidade-e-usuario/vlibras) · [Configuração do SDK Hand Talk](https://api-docs.handtalk.me/v1/javascript/reference/explain-configs) · [Planos do plugin Hand Talk](https://www.handtalk.me/br/planos/)
+
 ## Privacidade e permissões
 
-O manifesto usa apenas `activeTab`, `scripting`, `storage` e `sidePanel`, sem acesso permanente a todos os sites, scripts executados automaticamente ou servidores de checagem. A política da extensão permite conexões apenas à própria origem, para carregar os arquivos de reconhecimento em `vendor/ocr`.
+O manifesto autoriza consultas aos portais do g1 e da Agência Brasil. Para links dos outros portais aceitos, a extensão pode pedir acesso à origem. O seletor de tela e o microfone exigem autorização do navegador. A transcrição usa o Vosk local e o modelo de português incluído. O texto, os arquivos e as capturas não são enviados na atualização das notícias.
 
 O texto fica na memória do painel; recarregá-lo apaga o conteúdo. Apenas os ajustes de leitura são armazenados localmente. A consulta à base é local e não envia o texto para checagem externa. Ao abrir uma busca adicional, o trecho visível no campo correspondente é enviado ao Google. Os links informam abertura de nova aba. Vozes podem usar serviços do navegador/sistema; vozes locais em português são priorizadas quando disponíveis.
 
 A imagem pode conter qualquer dado visível na área escolhida. O fluxo alternativo que lê o documento da aba exclui campos de formulário e conteúdo oculto. Ambos mantêm o texto apenas na memória do painel.
 
-O motor Tesseract.js, o worker, o núcleo WebAssembly e os dados de português acompanham a extensão. O reconhecimento dispensa servidor externo, conta e chave de IA. Os pacotes de origem estão fixados no arquivo de dependências. As licenças acompanham os arquivos em `extension/vendor/ocr`.
+O motor Tesseract.js, o worker, o núcleo WebAssembly e os dados de português acompanham a extensão. O reconhecimento dispensa servidor externo, conta e chave de IA. Os pacotes de origem estão fixados no arquivo de dependências. As licenças acompanham os arquivos em `web/vendor/ocr`.
 
 ## Acessibilidade
 
@@ -68,9 +88,9 @@ npx playwright install chromium
 npm test
 ```
 
-Os testes exercitam os quatro cards, teclado e retorno do foco, erros, contraste, ampliação, áudio simulado, cancelamento de capturas antigas ao navegar, exclusão de campos privados, ausência de envio automático, persistência mínima, correspondências conservadoras e captura real da extensão em um perfil isolado. A avaliação automática usa axe-core e não substitui leitores de tela nem testes com pessoas.
+Os testes exercitam os cinco cards, teclado e retorno do foco, erros, contraste, ampliação, áudio simulado, cancelamento de capturas antigas ao navegar, exclusão de campos privados, ausência de envio automático, persistência mínima, correspondências conservadoras e captura real da extensão em um perfil isolado. A avaliação automática usa axe-core e não substitui leitores de tela nem testes com pessoas.
 
-`npm start` não exige instalar pacotes. As dependências são apenas de desenvolvimento. Os ícones já estão incluídos; para regenerá-los, execute `node scripts/create-icons.mjs` com as dependências de desenvolvimento e o Chromium do Playwright instalados.
+`npm start` não exige instalar pacotes. As dependências são apenas de desenvolvimento. Os ícones já estão incluídos; para regenerá-los, execute `node scripts/gerar-icones.mjs` com as dependências de desenvolvimento e o Chromium do Playwright instalados.
 
 ## Próxima etapa possível
 

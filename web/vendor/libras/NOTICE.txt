@@ -1,0 +1,10 @@
+VLibras Widget 7.12.2
+Origem dos módulos: https://vlibras.gov.br/app/
+Código-fonte: https://github.com/spbgovbr-vlibras/vlibras-web-browsers
+Licença: LGPL-3.0-or-later, incluída em LICENSE.
+
+Os módulos JavaScript acompanham o projeto para permitir seu uso em Manifest V3.
+O carregamento e o botão de ativação são controlados por web/libras.js.
+A inicialização da telemetria foi desativada, substituindo Ga=!Ua() por Ga=!1
+no módulo vlibras-initial-CMx6VRWn.js. Demais módulos conservam seus conteúdos.
+Avatar, fontes, dicionários e serviço de tradução são hospedados pelo VLibras.

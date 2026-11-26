@@ -5,23 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Como funciona e privacidade — Central da Informação</title>
   <link rel="icon" href="assets/mark.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="estilos.css">
+  <script type="module" src="sobre.js"></script>
 </head>
 <body class="about" data-contrast="high">
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
   <div class="shell">
-    <header class="brand-bar"><a class="brand" href="panel.html"><img src="assets/logotipo.svg" width="258" height="68" alt="Central da Informação, início"></a></header>
+    <header class="brand-bar"><a class="brand" href="index.html"><img src="assets/logotipo.svg" width="258" height="68" alt="Central da Informação, início"></a></header>
     <main id="conteudo" tabindex="-1">
-      <h1>Como funciona<br>e privacidade.</h1>
+      <h1>Como funciona e privacidade</h1>
       <p>A Central da Informação é uma extensão para ajudar na leitura e na verificação de informações eleitorais.</p>
       <section aria-labelledby="limits-title"><h2 id="limits-title">Como funciona a análise</h2>
-        <p>Ao escolher Analisar tela, o navegador pergunta qual aba, janela ou tela você quer compartilhar. A Central captura uma imagem sem áudio, encerra o compartilhamento e reconhece o texto em português no seu dispositivo.</p>
+        <p>A Central acompanha a tela escolhida até você encerrar. Se você compartilhar também o som da aba, o painel transcreve as falas em português. O microfone só é solicitado ao escolher Falar ao microfone. Os quadros e o áudio são processados no dispositivo.</p>
         <p>Tudo que estiver visível na área escolhida pode aparecer na imagem, inclusive campos preenchidos. Compartilhe apenas o trecho desejado. Em Ver texto lido, você pode conferir e corrigir as palavras reconhecidas.</p>
-        <p>A consulta procura frases completas em três checagens eleitorais com fonte, consultadas em 25/11/2026. O resultado vale para a afirmação indicada. Quando a frase não é reconhecida ou está fora da base, aparece Sem conclusão. Você também pode colar um texto.</p>
+        <p>A consulta combina checagens locais, publicações do g1 e notícias da Agência Brasil. A conclusão vale para a afirmação identificada. Matérias sobre temas parecidos aparecem como contexto. O reconhecimento de objetos inicia automaticamente quando o Chrome oferece o modelo local.</p>
       </section>
       <section aria-labelledby="privacy-title"><h2 id="privacy-title">Seus dados</h2><ul>
         <li>A captura e o reconhecimento do texto acontecem no dispositivo. A imagem é descartada após a leitura. O texto fica na memória até você recarregar o painel.</li>
-        <li>Somente o tamanho do texto e a preferência de contraste ficam salvos.</li>
+        <li>O painel guarda suas escolhas de tamanho, espaçamento e contraste neste dispositivo.</li>
+        <li>O painel consulta endereços públicos do g1 e da Agência Brasil para atualizar as notícias. A busca pelo seu texto ocorre no dispositivo. Quando você cola um link compatível, a Central pode consultar aquela página no portal de origem. Buscas adicionais no Google dependem de abrir o link correspondente.</li>
+        <li>O VLibras é um serviço online opcional. Você pode copiar uma conclusão e escolher o texto que deseja traduzir no serviço.</li>
         <li>Ao abrir uma busca adicional, o trecho exibido no campo de busca será enviado ao Google. Você pode editá-lo antes.</li>
         <li>Ouvir conteúdo usa as vozes do navegador. A Central dá preferência a vozes locais em português. Algumas vozes usam serviços online do fornecedor.</li>
       </ul></section>
@@ -34,7 +37,7 @@
         <li><a href="https://www.aosfatos.org/" target="_blank" rel="noopener noreferrer">Aos Fatos (nova aba)</a></li>
       </ul><p>A Central da Informação é um projeto independente, sem vínculo com essas organizações.</p></section>
     </main>
-    <footer class="footer"><a href="panel.html">Voltar ao painel Central da Informação</a></footer>
+    <footer><a class="back-button" href="index.html"><span aria-hidden="true">←</span> Voltar ao painel</a></footer>
   </div>
 </body>
 </html>
