@@ -2,7 +2,7 @@
 
 # Central da Informação
 
-**Versão 0.9.1** · Site e extensão para Chrome de computador.
+**Versão 0.9.2** · Site e extensão para Chrome de computador.
 
 A Central da Informação acompanha a área de tela que você escolher, reconhece texto em português e mostra a afirmação checada, a explicação e a fonte. O acompanhamento ocorre no dispositivo e dispensa conta, chave de API e gravação.
 
