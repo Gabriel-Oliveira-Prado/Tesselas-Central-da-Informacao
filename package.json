@@ -1,0 +1,19 @@
+{
+  "name": "central-da-informacao",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "description": "Extensão acessível para orientar a verificação de informações eleitorais.",
+  "scripts": {
+    "start": "node scripts/dev-server.mjs",
+    "test": "node --test tests/core.test.mjs && playwright test",
+    "test:unit": "node --test tests/core.test.mjs",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.1",
+    "@playwright/test": "1.62.1",
+    "@tesseract.js-data/por": "1.0.0",
+    "tesseract.js": "6.0.1"
+  }
+}
