@@ -127,7 +127,7 @@ test('vídeo reproduzido ao vivo muda o veredito e descarta o anterior, sem envi
   await page.locator('#analyze-page').click();
   await page.locator('#start-sharing').click();
   const verdict = page.locator('#live-matches .finding');
-  for (const label of ['Falso, segundo a fonte', 'Confirmado pela fonte', 'Fora de contexto']) {
+  for (const label of ['Falso', 'Verdadeiro', 'Falso']) {
     await expect(verdict).toHaveText(label, { timeout: 11000 });
     await expect(page.locator('#continue-live')).toBeVisible();
     await page.locator('#continue-live').click();
@@ -196,7 +196,7 @@ test('colar texto informa erros e mantém resultado inconclusivo para conteúdo 
   await expect(page.locator('#claim-error')).toBeVisible();
   await page.getByLabel('O que você quer conferir?').fill(knownClaim);
   await page.getByRole('button', { name: 'Pesquisar informação', exact: true }).click();
-  await expect(page.locator('.finding')).toHaveText('Falso, segundo a fonte');
+  await expect(page.locator('.finding')).toHaveText('Falso');
   await page.getByRole('button', { name: 'Voltar', exact: true }).click();
   await pasteAndVerify(page, 'A escola do meu bairro mudou de endereço.');
   await expect(page.getByRole('heading', { name: 'Não verificado', exact: true })).toBeFocused();
@@ -276,7 +276,7 @@ test('voz tem acionamento explícito, lê a explicação e permite pausa e parad
   await page.locator('#open-audio').evaluate(el => el.click());
   await page.locator('#speak').click();
   await expect(page.getByRole('button', { name: 'Pausar', exact: true })).toBeFocused();
-  expect(await page.evaluate(() => window.spokenText)).toContain('Falso, segundo a fonte');
+  expect(await page.evaluate(() => window.spokenText)).toContain('Falso');
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'Continuar', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
@@ -380,7 +380,7 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     await extensionPage.bringToFront();
     await extensionPage.locator('#live-preview').waitFor({timeout:15000});
     await extensionPage.locator('#live-preview').screenshot({path:'test-results/previa-real.png'});
-    await expect(extensionPage.locator('.finding')).toHaveText('Falso, segundo a fonte', { timeout: 20000 });
+    await expect(extensionPage.locator('.finding')).toHaveText('Falso', { timeout: 20000 });
     await expect(extensionPage.locator('#live-text')).toContainText(knownClaim);
     await extensionPage.locator('#continue-live').click();
     await demoPage.evaluate(() => { document.body.innerHTML = '<main style="padding:45px;font:32px Arial">Dá para votar pelo celular se estiver chovendo?</main>'; });
@@ -410,7 +410,7 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     await expect(extensionPage.getByRole('heading', { name: 'Falso', exact: true })).toBeFocused();
     await expect(extensionPage.locator('#reviewed-claim')).toHaveValue(new RegExp('A urna eletrônica'));
     await expect(extensionPage.locator('#reviewed-claim')).not.toHaveValue(/DADO PRIVADO/);
-    await expect(extensionPage.locator('#result-view .finding')).toHaveText('Falso, segundo a fonte');
+    await expect(extensionPage.locator('#result-view .finding')).toHaveText('Falso');
     await extensionPage.getByRole('button', { name: 'Voltar', exact: true }).click();
     await extensionPage.getByRole('button', { name: 'Acessibilidade', exact: true }).click();
     await extensionPage.getByLabel('Tamanho do texto').selectOption('125');
@@ -462,7 +462,7 @@ test('legendas VTT e SRT podem ser consultadas sem som, por teclado e sem envio'
     await expect(page.locator('#claim')).toBeFocused();
     await expect(page.locator('#claim')).toHaveValue(knownClaim);
     await page.getByRole('button', { name: 'Pesquisar informação' }).press('Enter');
-    await expect(page.locator('.finding')).toHaveText('Falso, segundo a fonte');
+    await expect(page.locator('.finding')).toHaveText('Falso');
     await page.locator('#result-view [data-back]').press('Enter');
   }
   expect(external).toEqual([]);
@@ -504,7 +504,7 @@ test('resultado falado tem equivalente escrito, velocidade ajustável e retorno 
   await page.locator('#speak').press('Enter');
   const spoken = await page.evaluate(() => window.lastSpeech);
   expect(spoken.rate).toBe(0.75);
-  expect(spoken.text).toContain('Falso, segundo a fonte');
+  expect(spoken.text).toContain('Falso');
   await expect(page.getByText('Ver texto para ouvir', { exact: true })).toHaveCount(0);
   await page.locator('#audio-view [data-back]').press('Enter');
   await expect(page.locator('#open-audio')).toBeFocused();
@@ -592,7 +592,7 @@ test('VLibras preserva a conclusão no painel e somente conecta a pedido', async
   await pasteAndVerify(page, knownClaim);
   await page.locator('#open-libras-details').press('Enter');
   const value = await page.getByLabel('Texto para o tradutor').inputValue();
-  expect(value).toContain('Falso, segundo a fonte');
+  expect(value).toContain('Falso');
   await page.locator('#copy-libras').press('Enter');
   await expect(page.locator('#libras-status')).toHaveText('Conclusão copiada.');
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(value);

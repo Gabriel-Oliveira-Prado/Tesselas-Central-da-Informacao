@@ -50,7 +50,7 @@ test('link de checagem, correspondência por tema e recusa de áudio têm estado
   await page.locator('#open-paste').click();
   await page.locator('#claim').fill(story.url);
   await page.locator('#review-form button[type=submit]').click();
-  await expect(page.locator('#result-matches .finding')).toHaveText('Falso, segundo a fonte');
+  await expect(page.locator('#result-matches .finding')).toHaveText('Falso');
   await expect(page.locator('#result-matches a').first()).toHaveAttribute('href', story.url);
   await page.locator('#result-view [data-back]').click();
   await page.locator('#open-audio').click();

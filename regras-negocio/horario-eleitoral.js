@@ -25,7 +25,7 @@ export function respostaHorario(texto) {
   const depois = hora * 60 + minuto > 17 * 60;
   const resposta = depois ? 'Se você chegar nesse horário, a fila já estará fechada. Quem estava na fila às 17h recebe senha e ainda pode votar.' :
     hora < 8 ? 'Nesse horário a votação ainda não começou.' : 'Sim, esse horário está dentro do período de votação.';
-  return { id:'horario-votacao-' + hora + '-' + minuto, kind:'answer', claim:texto.trim(),
+  return { id:'horario-votacao-' + hora + '-' + minuto, kind:depois || hora < 8 ? 'false' : 'true', claim:texto.trim(),
     finding:'Horário informado pelo TSE', explanation:resposta + ' Nas eleições de 2026 no Brasil, a votação vai das 8h às 17h, pelo horário de Brasília.',
     topic:'horário da votação', url:fonteHorario.url, source:fonteHorario.name, consultedAt:'2026-11-27' };
 }

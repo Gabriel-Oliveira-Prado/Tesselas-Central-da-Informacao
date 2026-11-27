@@ -72,7 +72,7 @@ export const FACT_CHECKS = [
   {
     id: 'fila-17h', kind: 'conditional', topic: 'votação depois das 17h',
     concepts: [/vot|fila/, /17|dezessete|cinco/],
-    claim: 'Pode votar depois das 17h?',
+    claim: 'Quem já estava na fila às 17h pode votar depois desse horário.',
     variants: ['Pode votar depois das 17', 'Posso votar depois das 17 horas', 'Pode votar depois das 17h', 'Dá para votar depois das cinco', 'Posso votar após as 17h', 'Pode votar depois das 17 horas'],
     finding: 'Depende de estar na fila',
     explanation: 'Quem já estava na fila da seção às 17h, no horário de Brasília, recebe senha e pode votar depois. Chegar depois das 17h sem estar na fila não dá esse direito.',

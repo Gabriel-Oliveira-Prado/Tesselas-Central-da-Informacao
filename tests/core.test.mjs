@@ -9,10 +9,24 @@ import { conclusionFor } from '../regras-negocio/veredito.js';
 import { evidenceFor } from '../regras-negocio/pesquisa.js';
 import { searchPlan } from '../regras-negocio/fontes-pesquisa.js';
 
+test('contexto e respostas anteriores usam vereditos binários e preservam a explicação', () => {
+  for (const [tipo, esperado] of [['context','Falso'], ['answer','Verdadeiro'], ['conditional','Verdadeiro']]) {
+    const registro = { kind:tipo, explanation:'A data confirmada na fonte é 2025.' };
+    const resultado = conclusionFor({ exact:[registro] });
+    assert.equal(resultado.label, esperado);
+    assert.equal(resultado.explanation, registro.explanation);
+  }
+  assert.equal(conclusionFor({ exact:[{kind:'context'}, {kind:'false'}] }).label, 'Falso');
+  assert.equal(conclusionFor({ exact:[{kind:'answer'}, {kind:'true'}] }).label, 'Verdadeiro');
+  for (const exact of [[], [{kind:'true'}, {kind:'false'}]]) {
+    assert.equal(conclusionFor({exact}).kind, 'unverified');
+  }
+});
+
 test('horário de chegada, fila e números de candidatura têm sentidos distintos', () => {
   for (const pergunta of ['pode votar de 20horas da noite?', 'Posso votar às oito da noite?', 'Dá pra votar às 20:30?']) {
     const resposta = conclusionFor(evidenceFor(pergunta));
-    assert.equal(resposta.label, 'Resposta da fonte');
+    assert.equal(resposta.label, 'Falso');
     assert.match(resposta.explanation, /fila já estará fechada/);
     assert.match(resposta.explanation, /17h recebe senha/);
     assert.match(searchPlan(pergunta).sources[0].name, /Horário/);
@@ -34,7 +48,7 @@ test('perguntas por idade preservam número, obrigação e condições da consul
   for (const [texto, tipo] of [
     ['votar com 16 anos e so se quiser?', 'true'],
     ['Quem tem dezessete anos é obrigado a votar?', 'false'],
-    ['Qual a idade mínima para votar?', 'answer'],
+    ['Qual a idade mínima para votar?', 'true'],
   ]) {
     const conclusao = conclusionFor(evidenceFor(texto));
     assert.equal(conclusao.kind, tipo);
@@ -73,8 +87,7 @@ test('frases citadas retornam a afirmação da fonte e não um julgamento da pá
 
 test('perguntas, negações e vídeos de outras datas preservam o sentido da fonte', () => {
   const conditional=conclusionFor({exact:findFactChecks('Pode votar depois das 17?')});
-  assert.equal(conditional.label,'Não verificado');
-  assert.match(conditional.explanation,/depende das condições/);
+  assert.equal(conditional.label,'Verdadeiro');
   assert.match(conditional.explanation,/fila/);
   assert.equal(findFactChecks('Dá para votar pelo celular se estiver chovendo?')[0].kind, 'false');
   assert.equal(findFactChecks('O e-Título com foto serve como identificação para votar.')[0].kind, 'true');
@@ -110,7 +123,7 @@ test('ano do registro em checagem publicada vale para texto, OCR e transcrição
     const [registro] = publishedChecks(texto);
     assert.equal(registro.kind, 'context');
     assert.match(registro.explanation, /2020.*2025/);
-    assert.equal(registro.claim, fato);
+    assert.equal(registro.claim, fato.replace('2025', '2020'));
   }
   assert.equal(publishedChecks(fato)[0].kind, 'true');
   for (const texto of [

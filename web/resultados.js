@@ -1,4 +1,5 @@
 export { evidenceFor } from '../regras-negocio/pesquisa.js';
+import { conclusionFor } from '../regras-negocio/veredito.js';
 
 function node(tag, text, className) {
   const el = document.createElement(tag);
@@ -21,19 +22,22 @@ export function renderVerdict(element, kind, label) {
 
 export function showEvidence(container, { exact, related, news = [], orientation }) {
   const cards = exact.map(record => {
+    const verdict = conclusionFor({ exact:[record] });
     const article = document.createElement('article');
-    article.className = 'evidence verdict-' + record.kind;
+    article.className = 'evidence verdict-' + verdict.kind;
     const label = node('p', '', 'verdict-label');
-    const icon = node('span', { false: '×', true: '✓', context: '◷', conditional:'◷', answer:'i' }[record.kind], 'verdict-icon');
+    const icon = node('span', { false: '×', true: '✓' }[verdict.kind], 'verdict-icon');
     icon.setAttribute('aria-hidden', 'true');
-    label.append(icon, node('strong', record.finding, 'finding'));
+    label.append(icon, node('strong', verdict.label, 'finding'));
     article.append(label, node('h2', record.claim), node('p', record.explanation));
     if (record.quote) article.append(node('blockquote', record.quote));
     appendSource(article, record);
     return article;
   });
   if (orientation) {
-    const article = node('article','','evidence verdict-context');
+    const verdict = conclusionFor({ orientation });
+    const article = node('article','','evidence verdict-' + verdict.kind);
+    if (verdict.kind !== 'unverified') article.append(node('strong',verdict.label,'finding'));
     article.append(node('h2',orientation.title),node('p',orientation.explanation),node('p','Síntese da orientação geral. Confira abaixo a redação da fonte.','small'));
     const link = node('a','Consultar a fonte oficial (nova aba)');
     link.href=orientation.source.url;link.target='_blank';link.rel='noopener noreferrer';

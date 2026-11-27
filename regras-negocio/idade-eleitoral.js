@@ -13,7 +13,7 @@ export function checarVotoJovem(texto) {
     source: fonteVotoJovem.name, url: fonteVotoJovem.url, topic: 'idade para votar', consultedAt: '2026-11-27',
   };
   if (/^(?:qual (?:e )?a idade minima (?:pra|para) votar|(?:a partir de |com )?quantos anos (?:eu )?(?:posso|pode|se pode) votar|a partir de que idade (?:eu )?(?:posso|pode|se pode) votar)$/.test(frase)) {
-    return { ...fonte, id:'idade-minima-voto', kind:'answer', claim:'Qual é a idade mínima para votar no Brasil?',
+    return { ...fonte, id:'idade-minima-voto', kind:'true', claim:'No Brasil, é possível votar a partir dos 16 anos.',
       finding:'Orientação do TSE', explanation:'A partir dos 16 anos. Para votar, é preciso completar 16 até o primeiro turno e fazer o alistamento eleitoral dentro do prazo. Aos 16 e 17 anos, votar é opcional.' };
   }
   const idade = /\b(?:(?:quem tem|quem fez|eu tenho|tenho|se tenho|uma pessoa de|aos|com|de) )?(16|17) anos\b/.exec(frase);

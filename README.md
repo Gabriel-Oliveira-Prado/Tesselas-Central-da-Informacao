@@ -2,13 +2,13 @@
 
 # Central da Informação
 
-**Versão 0.17.0** · Site e extensão para Chrome de computador.
+**Versão 0.18.0** · Site e extensão para Chrome de computador.
 
-A Central da Informação verifica notícias de qualquer tema e mostra primeiro a conclusão, seguida da afirmação, da explicação e da fonte. Os resultados são Falso, Verdadeiro, Fora de contexto ou Não verificado quando faltam evidências. Ela acompanha a área de tela escolhida e reconhece texto e fala em português. O reconhecimento ocorre no dispositivo. A pesquisa consulta páginas online por assunto e usa a chave do servidor quando a comparação por Gemini está disponível.
+A Central da Informação verifica notícias de qualquer tema. O resultado começa com **Verdadeiro** ou **Falso** e explica o que a fonte confirmou sobre a afirmação. Quando a evidência é insuficiente ou contraditória, aparece **Não verificado**. A Central acompanha a área de tela escolhida e reconhece texto e fala em português no dispositivo. A pesquisa consulta páginas online por assunto e usa a chave do servidor quando a comparação por Gemini está disponível.
 
-<p align="center"><img src="docs/inicio.png" width="320" height="549" alt="Painel inicial da Central com cinco opções."> <img src="docs/checagem.png" width="320" height="549" alt="Resposta sobre chegar às 20h para votar, com a regra da fila às 17h, fonte do TSE e botão Ouvir áudio."></p>
+<p align="center"><img src="docs/inicio.png" width="320" height="549" alt="Painel inicial da Central com cinco opções."> <img src="docs/checagem.png" width="320" height="549" alt="Resultado Falso para a afirmação de que o vídeo do resgate da onça é de 2020. A fonte confirma 2025."></p>
 
-Quando a checagem confirma o acontecimento e o trecho troca o ano, a Central mostra **Fora de contexto**, o ano informado, o ano confirmado e a fonte. A comparação também se aplica ao texto reconhecido na tela e às transcrições. Veja as gravações da mesma afirmação com 2020 e 2025 no [site](docs/gravacoes/checagem-de-ano.webm) e na [análise de tela da extensão](docs/gravacoes/ano-na-analise-de-tela.webm).
+Se a notícia troca o ano de um vídeo real, o resultado explica qual ano aparece no trecho e qual foi confirmado pela fonte. Veja a comparação entre 2020 e 2025 na [gravação do site](docs/gravacoes/checagem-de-ano.webm) e na [gravação da análise de tela da extensão](docs/gravacoes/ano-na-analise-de-tela.webm).
 
 ## Equipe
 

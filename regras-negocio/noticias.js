@@ -77,7 +77,7 @@ export function publishedChecks(text, story, linkedStory = true) {
     const ano = match[1].toUpperCase() === 'FATO' && compararAnoDaMidia(text, match[2]);
     if (ano?.ambiguo) return [];
     if (ano && ano.informado !== ano.confirmado) return [{
-      id: row.url + '#ano-' + ano.informado, kind:'context', claim:match[2],
+      id: row.url + '#ano-' + ano.informado, kind:'context', claim:match[2].replace(ano.confirmado, ano.informado),
       finding:'Fora de contexto · ano trocado',
       explanation:'O trecho informa ' + ano.informado + '. A checagem confirma ' + ano.confirmado + '. ' + match[2] + '.',
       url:row.url, source:'g1 · Fato ou Fake', topic:'o registro original', published:row.date,

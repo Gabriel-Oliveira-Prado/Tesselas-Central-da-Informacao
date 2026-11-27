@@ -270,7 +270,7 @@ function renderResult(content) {
   $('listen-result').hidden = !voiceAvailable;
   $('result-tools').hidden = false;
   $('libras-status').textContent = '';
-  $('libras-text').value = evidence.orientation ? evidence.orientation.explanation : matches.length ? matches.map((item) => `${item.claim} ${item.finding}. ${item.explanation} Fonte: ${item.source}.`).join('\n\n') : [$('result-title').textContent, $('result-summary').textContent, ...evidence.related.map(r => r.explanation), ...evidence.news.map(r => r.title + '. ' + r.source)].join(' ');
+  $('libras-text').value = textoDoResultado(evidence);
   showEvidence($('result-matches'), evidence);
   const principal = [...$('result-matches').querySelectorAll(':scope > article[class*="verdict-"]')].at(-1);
   if (principal) principal.after(novaConsulta);
@@ -368,9 +368,8 @@ function showSessionResults() {
     const verdict = conclusionFor(item.evidence);
     const heading = element('h2', '');
     renderVerdict(heading, verdict.kind, verdict.label);
-    section.append(heading, element('p', item.origin + ' · ' + item.time.toLocaleTimeString('pt-BR')), element('p', item.text));
+    section.append(heading, element('p', verdict.explanation), element('p', item.origin + ' · ' + item.time.toLocaleTimeString('pt-BR')), element('p', item.text));
     showEvidence(section.appendChild(document.createElement('div')), item.evidence);
-    if (!item.evidence.exact.length && !item.evidence.related.length && !item.evidence.news.length) section.append(element('p', 'Sem evidência suficiente para concluir sobre este trecho.'));
     const search = element('button', 'Pesquisar este trecho', 'button button-secondary');
     search.type = 'button';
     search.addEventListener('click', () => { $('claim').value = item.text; showView('paste','claim'); $('review-form').requestSubmit(); });
@@ -526,18 +525,17 @@ async function analyzeLive() {
         for (const key of ['exact','related','news']) evidence[key] = [...new Map([...evidence[key], ...audioEvidence[key]].map(item => [item.id || item.url, item])).values()];
         remember(content.text, evidenceFor(content.text), 'Texto na superfície escolhida', time);
         if (reference) remember('Imagem parecida com a arte da checagem sobre ' + reference.topic, { exact: [], related: [reference], news: [] }, 'Imagem', time);
-        const summary = conclusionFor(evidence).label + '. ' + conclusionFor(evidence).explanation;
+        const verdict = conclusionFor(evidence);
+        const summary = verdict.label + '. ' + verdict.explanation;
         const key = JSON.stringify([currentText, summary, evidence.exact.map(item => item.id), evidence.related.map(item => item.id), evidence.news.map(item => item.url)]);
         if (lastKey !== key) {
           setLiveConclusion(evidence, !evidence.exact.length && currentText.length >= 15);
           showEvidence($('live-matches'), evidence);
-          $('live-summary').textContent = conclusionFor(evidence).explanation;
-          if (evidence.exact.length) $('live-summary').append(element('span', ' ' + summary, 'sr-only'));
+          $('live-summary').textContent = verdict.explanation;
           const voice = $('speak-changes').checked && localPortugueseVoice();
           if (voice) {
             speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(conclusionFor(evidence).label + '. ' + (evidence.exact.length
-              ? evidence.exact.map(item => item.claim + ' ' + item.finding + '. ' + item.explanation + ' Fonte: ' + item.source).join(' ') : summary));
+            const utterance = new SpeechSynthesisUtterance(textoDoResultado(evidence));
             utterance.voice = voice;
             utterance.lang = voice.lang;
             speechSynthesis.speak(utterance);
@@ -685,14 +683,24 @@ if (!voiceAvailable) {
   $('speech-help').textContent = 'A voz não está disponível neste navegador. Você pode usar seu leitor de tela.';
 }
 
+function textoDoResultado(evidence) {
+  const verdict = conclusionFor(evidence);
+  const partes = [verdict.label + '.', verdict.explanation];
+  if (evidence.exact.length > 1) {
+    for (const item of evidence.exact) partes.push(item.claim, conclusionFor({exact:[item]}).label + '.', 'Fonte: ' + item.source + '.');
+  } else if (evidence.exact.length) {
+    partes.push('Fonte: ' + evidence.exact[0].source + '.');
+  } else if (evidence.orientation) {
+    partes.push('Fonte: ' + evidence.orientation.source.source + '.');
+  }
+  const leituras = [...evidence.related.map(item => item.explanation + ' Fonte: ' + item.source), ...evidence.news.map(item => item.title + '. ' + item.source)];
+  if (leituras.length) partes.push('Outras fontes para consultar.', ...leituras);
+  return partes.join(' ');
+}
+
 function readingText(content) {
-  const { exact: checks, related, news, orientation } = content.evidence || evidenceFor(content.text, content.story);
-  const explanation = orientation ? orientation.explanation : checks.length
-    ? checks.map((item) => `Afirmação na base: ${item.claim} ${item.finding}. ${item.explanation} Fonte: ${item.source}.`).join(' ')
-    : related.length || news.length || content.story ? 'Contexto encontrado. ' + [...related.map(item => item.explanation + ' Fonte: ' + item.source), ...(content.story ? [content.story] : news).map(item => item.title + '. Fonte: ' + item.source)].join(' ') : 'Sem conclusão. Não encontrei esta afirmação na base.';
-  const verdict = conclusionFor(content.evidence || evidenceFor(content.text,content.story));
-  if (audioFromResult) return `${verdict.label}. ${explanation}`;
-  return `${verdict.label}. ${explanation}\n\nTexto analisado: ${content.text}`;
+  const resultado = textoDoResultado(content.evidence || evidenceFor(content.text, content.story));
+  return audioFromResult ? resultado : resultado + '\n\nTexto analisado: ' + content.text;
 }
 function audioStatus(message) {
   $('speech-help').textContent = message;

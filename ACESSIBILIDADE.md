@@ -35,7 +35,7 @@ Os cinco ícones medem 56 px CSS na escala inicial. O card inteiro recebe o cliq
 - A leitura em voz alta transfere foco para Pausar; Parar devolve o foco para Ouvir.
 - Mensagens de estado ficam em uma região com anúncio educado; não há anúncio a cada tecla.
 - Abrir Ouvir conteúdo não inicia áudio automaticamente. O botão Ouvir é necessário; a voz inclui o texto e a explicação disponível da fonte.
-- A checagem se refere à afirmação indicada, não à página inteira. A conclusão aparece primeiro como Falso, Verdadeiro ou Fora de contexto. Sem evidência suficiente, informa Não verificado.
+- A checagem se refere à afirmação indicada, não à página inteira. A conclusão aparece primeiro como Falso ou Verdadeiro, com o contexto explicado em seguida. Sem evidência suficiente, informa Não verificado.
 
 ## Verificações automatizadas
 

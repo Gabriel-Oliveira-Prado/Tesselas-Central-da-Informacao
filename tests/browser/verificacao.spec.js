@@ -50,10 +50,42 @@ test('legenda com o ano trocado leva o foco ao veredito e informa o ano confirma
   await page.locator('#caption-file').setInputFiles({ name: 'resgate.vtt', mimeType: 'text/vtt', buffer: Buffer.from(legenda) });
   await page.locator('#use-caption').click();
   await page.locator('#review-form [type=submit]').click();
-  const titulo = page.getByRole('heading', { name: 'Fora de contexto', exact: true });
+  const titulo = page.getByRole('heading', { name: 'Falso', exact: true });
   await expect(titulo).toBeFocused({ timeout: 25000 });
+  await expect(titulo).toHaveClass(/verdict-false/);
   await expect(page.locator('#result-matches')).toContainText('A checagem confirma 2025');
   await expect(page.locator('#result-matches a').first()).toHaveAttribute('href', /g1\.globo\.com\/fato-ou-fake\//);
+});
+
+test('perguntas e detalhes trocados mostram e falam o veredito seguido do contexto', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.resultadosFalados = [];
+    Object.defineProperty(window, 'speechSynthesis', { value: {
+      cancel() {}, getVoices: () => [],
+      speak: frase => window.resultadosFalados.push(frase.text),
+    } });
+  });
+  await page.route('**/pesquisa/fonte?*', route => route.fulfill({status:503}));
+  await page.goto('/web/index.html');
+  await page.locator('#open-paste').click();
+  for (const [pergunta, veredito, contexto] of [
+    ['Vídeo mostra resgate de onça no rio Negro, em Manaus, em 2020', 'Falso', 'A checagem confirma 2025'],
+    ['Qual a idade mínima para votar?', 'Verdadeiro', 'A partir dos 16 anos'],
+    ['pode votar de 20horas da noite?', 'Falso', 'fila já estará fechada'],
+  ]) {
+    await page.locator('#claim').fill(pergunta);
+    await page.locator('#review-form [type=submit]').click();
+    await expect(page.locator('#result-title')).toHaveText(veredito);
+    await expect(page.locator('#result-summary')).toContainText(contexto);
+    await expect(page.locator('#result-matches .finding')).toHaveText(veredito);
+    expect(await page.evaluate(() => window.resultadosFalados.at(-1))).toContain(veredito + '. ');
+    await expect(page.locator('#result-view')).not.toContainText(/Fora de contexto|Resposta da fonte|Orientação da fonte/);
+    await page.locator('#open-libras-details').click();
+    await expect(page.locator('#libras-text')).toHaveValue(new RegExp('^' + veredito));
+    await expect(page.locator('#libras-text')).not.toHaveValue(/Fora de contexto|Resposta da fonte/);
+    await page.locator('#support-view [data-back]').click();
+    await page.locator('#new-query').click();
+  }
 });
 
 test('pesquisa tem sinal de espera e respeita redução de movimento', async ({ page }) => {

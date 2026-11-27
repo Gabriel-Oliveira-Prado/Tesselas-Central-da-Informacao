@@ -40,7 +40,7 @@ test('informações dos cards, atalhos e Tab alcançam a conclusão', async ({ p
   await page.locator('#result-summary').focus();
   for (let i = 0; i < 6 && !await conclusion.evaluate(el => el === document.activeElement); i++) await page.keyboard.press('Tab');
   await expect(conclusion).toBeFocused();
-  await expect.poll(() => page.evaluate(() => window.focusSpeech.join(' '))).toContain('Depende de estar na fila');
+  await expect.poll(() => page.evaluate(() => window.focusSpeech.join(' '))).toContain('Verdadeiro');
   await page.locator('#new-query').click();
   await expect(page.locator('#claim')).toBeFocused();
   await expect(page.locator('#claim')).toHaveValue('');

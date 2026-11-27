@@ -24,7 +24,7 @@ async function gravarSite() {
     await expect(pagina.locator('#enable-libras')).not.toBeChecked();
     await pagina.locator('#settings-view [data-back]').click();
     await pagina.locator('#open-paste').click();
-    for (const [ano, veredito] of [[2020, 'Fora de contexto'], [2025, 'Verdadeiro']]) {
+    for (const [ano, veredito] of [[2020, 'Falso'], [2025, 'Verdadeiro']]) {
       await pagina.locator('#claim').pressSequentially(trecho(ano), { delay: 24 });
       await pagina.locator('#review-form [type=submit]').click();
       await expect(pagina.getByRole('heading', { name: veredito, exact: true })).toBeFocused({ timeout: 35000 });
@@ -78,7 +78,7 @@ async function gravarExtensao() {
     await painel.locator('#start-sharing').click();
     await fonte.bringToFront();
     await painel.bringToFront();
-    for (const [ano, veredito] of [[2020, 'Fora de contexto'], [2025, 'Verdadeiro']]) {
+    for (const [ano, veredito] of [[2020, 'Falso'], [2025, 'Verdadeiro']]) {
       if (ano === 2025) {
         await fonte.locator('main').evaluate((el, texto) => { el.textContent = texto; }, trecho(ano));
         await painel.locator('#continue-live').click();
@@ -90,7 +90,7 @@ async function gravarExtensao() {
     }
     await painel.locator('#stop-live').click();
     await expect(painel.locator('#history-title')).toBeFocused();
-    for (const nome of ['Fora de contexto', 'Verdadeiro']) {
+    for (const nome of ['Falso', 'Verdadeiro']) {
       await expect(painel.locator('#history-matches').getByRole('heading', { name: nome, exact: true })).toBeVisible();
     }
     await pausa(1400);

@@ -21,12 +21,12 @@ export async function research(text, story, options) {
   const found = online.articles.flatMap(article=>publishedChecks(text,article,false));
   evidence.exact = [...new Map([...evidence.exact,...found].map(record=>[record.id,record])).values()];
   evidence.news = evidence.exact.length ? [] : [...new Map([...online.articles, ...evidence.news].map(row=>[row.url,row])).values()].slice(0,3);
-  evidence.orientation = online.orientation;
-  if (!evidence.exact.length && !online.orientation && online.paginasLidas?.length) {
+  if (!evidence.exact.length && !online.orientation?.kind && online.paginasLidas?.length) {
     options?.onProgress?.('Comparando a afirmação com os trechos das fontes…');
     evidence.ia = await compararFontes(text, online.paginasLidas, options?.signal);
     if (evidence.ia.registro) evidence.exact.push(evidence.ia.registro);
   }
+  if (!evidence.exact.length) evidence.orientation = online.orientation;
   evidence.search = online;
   return evidence;
 }

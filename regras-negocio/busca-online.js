@@ -1,4 +1,4 @@
-import { sources, searchOrigins, newsPublishers, portaisAdicionais, reportagens, searchPlan, keywords } from './fontes-pesquisa.js';
+import { sources, searchOrigins, newsPublishers, portaisAdicionais, reportagens, searchPlan, keywords, normalize } from './fontes-pesquisa.js';
 
 const installed = globalThis.location?.protocol === 'chrome-extension:';
 export function allowedSearchUrl(value) {
@@ -110,9 +110,12 @@ export async function searchOnline(value, { signal = new AbortController().signa
   const remaining = unique.filter(row=>!passages.some(page=>page.url===row.url));
   const combined = [...passages,...remaining].sort((a,b)=>b.score-a.score).slice(0,3);
   let orientation;
-  const rights = passages.find(row=>row.passages.some(p=>/sufr[aá]gio universal/i.test(p)));
-  const choice = passages.find(row=>row.passages.some(p=>/liberdade de escolha/i.test(p)));
+  const oficiais = passages.filter(row => sources.some(source => source.url === row.url));
+  const rights = oficiais.find(row=>row.passages.some(p=>/sufr[aá]gio universal/i.test(p)));
+  const choice = oficiais.find(row=>row.passages.some(p=>/liberdade de escolha/i.test(p)));
+  const perguntaRegional = /^(?:eu )?(posso|pode|(?:e )?permitid[oa]|(?:e )?proibid[oa]) votar (?:no|na|em) (?:nordeste|sudeste|centro-oeste|norte|sul|brasil)[?!.]*$/.exec(normalize(plan.query));
   if (plan.civic && plan.regional && rights) orientation = {
+    kind: perguntaRegional && (perguntaRegional[1].includes('proibid') ? 'false' : 'true'),
     title:'O direito de voto vale em todo o Brasil',
     explanation:'A regra constitucional é o sufrágio universal, com valor igual para todos. A região onde a pessoa mora não cria uma proibição de votar. Para exercer o voto, confira sua situação eleitoral, sua seção e a data da eleição.',
     source:rights,
