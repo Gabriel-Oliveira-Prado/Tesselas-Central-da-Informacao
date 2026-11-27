@@ -4,6 +4,11 @@ import { searchOnline } from './busca-online.js';
 import { compararFontes } from './comparacao.js';
 import { checarVotoJovem } from './idade-eleitoral.js';
 import { respostaHorario } from './horario-eleitoral.js';
+import { conclusionFor } from './veredito.js';
+
+// Somente na memória desta aba. Números, pontuação e negações fazem parte da chave.
+const recentes = new Map();
+const validade = 5 * 60 * 1000;
 
 export function evidenceFor(text, story) {
   const exact = [...findFactChecks(text), ...publishedChecks(text, story)];
@@ -15,6 +20,11 @@ export function evidenceFor(text, story) {
 }
 
 export async function research(text, story, options) {
+  options?.signal?.throwIfAborted();
+  const chave = JSON.stringify([story?.url || '', text.normalize('NFC').trim().replace(/\s+/g, ' ')]);
+  const agora = Date.now();
+  for (const [id, entrada] of recentes) if (entrada.ate <= agora) recentes.delete(id);
+  if (recentes.has(chave)) return structuredClone(recentes.get(chave).evidencia);
   await refreshContext();
   const evidence = evidenceFor(text, story);
   const online = await searchOnline(text, {...options, fontesConhecidas:[...(story ? [story] : []), ...evidence.exact]});
@@ -40,5 +50,9 @@ export async function research(text, story, options) {
   }
   if (!evidence.exact.length) evidence.orientation = online.orientation;
   evidence.search = online;
+  if (['true','false'].includes(conclusionFor(evidence).kind) && evidence.exact.some(item => item.url && item.quote)) {
+    if (recentes.size >= 24) recentes.delete(recentes.keys().next().value);
+    recentes.set(chave, {ate:Date.now() + validade, evidencia:structuredClone(evidence)});
+  }
   return evidence;
 }

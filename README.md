@@ -2,7 +2,9 @@
 
 # Central da Informação
 
-**Versão 0.20.0** · Site e extensão para Chrome de computador.
+[Abrir o site da Central](https://tesselas-central-da-informacao.vercel.app) · [Instalar a extensão](https://tesselas-central-da-informacao.vercel.app/web/extensao.html)
+
+**Versão 0.21.0** · Site e extensão para Chrome de computador.
 
 A Central da Informação verifica notícias de qualquer tema. O resultado começa com **Verdadeiro** ou **Falso** e explica o que a fonte confirmou sobre a afirmação. Quando a evidência é insuficiente ou contraditória, aparece **Não verificado**. A Central acompanha a área de tela escolhida e reconhece texto e fala em português no dispositivo. A pesquisa consulta páginas online por assunto e usa a chave do servidor quando a comparação por Gemini está disponível.
 

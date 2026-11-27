@@ -14,7 +14,7 @@ async function consultarCentral(caminho, afirmacao, dados, signal, limite) {
 }
 
 export function buscarConsultas(afirmacao, signal) {
-  return consultarCentral('/api/consultas', afirmacao, {}, signal, 10000);
+  return consultarCentral('/api/consultas', afirmacao, {}, signal, 26000);
 }
 
 export async function compararFontes(afirmacao, artigos, signal) {

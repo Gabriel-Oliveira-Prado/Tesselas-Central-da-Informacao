@@ -1,0 +1,11 @@
+.git
+.env
+.env.*
+.vercel
+node_modules
+dist
+test-results
+playwright-report
+extensao/web
+extensao/regras-negocio
+**/__pycache__

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/site",
+  "functions": {
+    "api/central.js": {
+      "maxDuration": 60
+    },
+    "api/voz.py": {
+      "maxDuration": 180,
+      "excludeFiles": "{web,extensao,docs,tests,dist,demo,node_modules}/**"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/comparar",
+      "destination": "/api/central?rota=/api/comparar"
+    },
+    {
+      "source": "/api/consultas",
+      "destination": "/api/central?rota=/api/consultas"
+    },
+    {
+      "source": "/pesquisa/fonte",
+      "destination": "/api/central?rota=/pesquisa/fonte"
+    },
+    {
+      "source": "/noticia",
+      "destination": "/api/central?rota=/noticia"
+    },
+    {
+      "source": "/eleicoes/fontes/:id",
+      "destination": "/api/central?rota=/eleicoes/fontes/:id"
+    }
+  ],
+  "installCommand": "npm ci --omit=dev"
+}

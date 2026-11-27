@@ -34,6 +34,9 @@ test('resultado da pesquisa fica estável e Continuar análise lê o próximo tr
   await page.locator('#start-sharing').click();
   await expect(page.locator('#live-verdict')).toHaveText('Falso', { timeout: 30000 });
   await expect(page.locator('#continue-live')).toBeVisible();
+  for (const id of ['continue-live','stop-live']) {
+    expect(await page.locator('#'+id).evaluate(el => Boolean(el.compareDocumentPosition(document.getElementById('live-matches')) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+  }
   await page.evaluate(() => window.trocarTrecho('Vídeo mostra resgate de onça no rio Negro, em Manaus, em 2025.'));
   await expect(page.locator('#live-text')).toContainText('Curitiba');
   await page.locator('#continue-live').press('Space');

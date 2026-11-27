@@ -404,6 +404,14 @@ async function analyzeLive() {
   let lastKey, heard = '', heardAt = 0, track, audioTrack, listening = false, failedAudio = false, badge;
   let pendingResearch, trechoEmPesquisa, currentText = '', searchedText = '', paused = false;
   let resolvedEvidence, resolvedText = '', previousText = '';
+  let ultimoAviso = '';
+  const anunciarVeredito = (evidencia, trecho) => {
+    const resultado = conclusionFor(evidencia);
+    const chave = JSON.stringify([trecho, resultado.kind]);
+    if (chave === ultimoAviso) return;
+    ultimoAviso = chave;
+    anunciarAutomaticamente(resultado.label + '. ' + resultado.explanation, $('speak-changes').checked);
+  };
   const pause = () => {
     paused = true;
     $('continue-live').hidden = false;
@@ -449,6 +457,7 @@ async function analyzeLive() {
         setLiveConclusion(evidence, false);
         showEvidence($('live-matches'), evidence);
         $('live-summary').textContent = conclusionFor(evidence).explanation;
+        anunciarVeredito(evidence, text);
         if (lastContent) lastContent.evidence = evidence;
         pause();
       }
@@ -562,8 +571,9 @@ async function analyzeLive() {
         if (lastKey !== key) {
           setLiveConclusion(evidence, !evidence.exact.length && currentText.length >= 15);
           showEvidence($('live-matches'), evidence);
-          $('live-summary').textContent = verdict.explanation;
-          if (voiceAvailable && $('speak-changes').checked) void falar({text:textoDoResultado(evidence)});
+          const aguardando = !evidence.exact.length && currentText.length >= 15;
+          $('live-summary').textContent = aguardando ? '' : verdict.explanation;
+          if (!aguardando && currentText.length >= 15) anunciarVeredito(evidence, currentText);
           lastKey = key;
         }
         $('live-text').textContent = content.text.slice(0, 650) || 'Sem texto visível neste quadro.';

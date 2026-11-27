@@ -180,3 +180,14 @@ test('conexões permanentes limitadas às origens de pesquisa declaradas', async
     assert.equal(content.subarray(1, 4).toString(), 'PNG');
   }
 });
+
+test('OCR separa a manchete da legenda e conserva a cidade e as ressalvas', () => {
+  const manchete = 'Flávio Bolsonaro perde para Lula na seção eleitoral em que vota no Rio de Janeiro';
+  const legenda = 'O presidente recebeu mais votos nessa seção. '.repeat(4);
+  for (const cidade of ['Rio de Janeiro','São Paulo']) {
+    const titulo = manchete.replace('Rio de Janeiro',cidade);
+    assert.equal(trechoDaTela(['JUSTIÇA ELEITORAL', titulo, 'ss', legenda].join('\n\n')), titulo);
+  }
+  const corrigido = [manchete, 'Correção da reportagem', legenda].join('\n\n');
+  assert.equal(trechoDaTela(corrigido), corrigido.trim());
+});

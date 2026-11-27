@@ -3,7 +3,7 @@ import { falar, pararVoz } from './voz.js';
 export function enableAccessibleNavigation() {
   let keyboard = false, utterance, timer;
   const prepareText = root => {
-    for (const el of root.querySelectorAll('h1,h2,h3,p,blockquote')) {
+    for (const el of root.querySelectorAll('h1,h2,h3,p,blockquote,li')) {
       if (el.id === 'home-instructions' || el.closest('[hidden],.sr-only,header,footer,[vw],#vlibras-app-root')) continue;
       if (!el.textContent.trim() || el.querySelector('button,input,textarea,select,a, p, h2')) continue;
       if (el.tabIndex < 0) el.tabIndex = 0;
@@ -11,7 +11,7 @@ export function enableAccessibleNavigation() {
   };
   prepareText(document);
   const observer = new MutationObserver(() => prepareText(document));
-  observer.observe(document.querySelector('main'), { childList: true, subtree: true });
+  observer.observe(document.querySelector('main'), { childList:true, subtree:true, attributes:true, attributeFilter:['hidden'] });
   document.addEventListener('keydown', event => {
     if (event.key === 'Tab') keyboard = true;
     if (event.defaultPrevented || event.isComposing || event.target.closest('dialog[open]')) return;
@@ -43,11 +43,14 @@ export function enableAccessibleNavigation() {
     if (el.closest('#reading-controls') && !document.getElementById('stop-speech')?.disabled) return;
     if (utterance) pararVoz();
     if (el.closest('[hidden]') || el.matches('body,main,section,html')) return;
+    const titulo = (el.getAttribute('aria-labelledby') || '').split(/\s+/).map(id=>document.getElementById(id)?.textContent.trim()).filter(Boolean).join(' ');
     const label = el.getAttribute('aria-label') || el.labels?.[0]?.textContent ||
       el.querySelector('img[alt]')?.alt || el.querySelector('.card-label')?.textContent || el.textContent;
     const description = (el.getAttribute('aria-describedby') || '').split(/\s+/)
       .map(id => document.getElementById(id)?.textContent.trim()).filter(Boolean).join(' ');
-    const text = [label?.trim(), el.selectedOptions?.[0]?.textContent, description].filter(Boolean).join(' ');
+    const estado = el.matches('input[type=checkbox]') ? (el.checked ? 'Ativado.' : 'Desativado.') : '';
+    const valor = el.matches('textarea[readonly]') ? el.value : '';
+    const text = [...new Set([titulo, label?.trim(), el.selectedOptions?.[0]?.textContent, valor, estado, description].filter(Boolean))].join(' ');
     if (!text?.trim()) return;
     timer = setTimeout(() => {
       if (document.activeElement !== el) return;

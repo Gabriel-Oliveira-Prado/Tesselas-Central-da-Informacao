@@ -13,12 +13,12 @@ from kokoro_onnx import Kokoro
 PASTA = Path(__file__).resolve().parents[1] / "dist" / "modelo-voz"
 
 
-def carregar():
+def carregar(pasta=PASTA):
     opcoes = ort.SessionOptions()
     opcoes.intra_op_num_threads = 2
     opcoes.inter_op_num_threads = 1
-    sessao = ort.InferenceSession(str(PASTA / "kokoro-v1.0.int8.onnx"), opcoes, providers=["CPUExecutionProvider"])
-    return Kokoro.from_session(sessao, str(PASTA / "voices-v1.0.bin"))
+    sessao = ort.InferenceSession(str(pasta / "kokoro-v1.0.int8.onnx"), opcoes, providers=["CPUExecutionProvider"])
+    return Kokoro.from_session(sessao, str(pasta / "voices-v1.0.bin"))
 
 
 def sintetizar(modelo, texto, voz):

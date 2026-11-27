@@ -101,10 +101,10 @@ export async function atenderGemini(req, res, planejar = false) {
   res.once('close', () => cancelar.abort());
   try {
     const opcoes = {
-      chave: process.env.GEMINI_API_KEY, modelo: process.env.GEMINI_MODEL || undefined,
+      chave: process.env.GEMINI_API_KEY.trim(), modelo: process.env.GEMINI_MODEL || undefined,
       signal: cancelar.signal,
     };
-    const resultado = planejar ? await planejarConsultas(dados.afirmacao, {...opcoes, signal:AbortSignal.any([cancelar.signal, AbortSignal.timeout(9500)])})
+    const resultado = planejar ? await planejarConsultas(dados.afirmacao, {...opcoes, signal:AbortSignal.any([cancelar.signal, AbortSignal.timeout(24000)])})
       : await compararComNovaTentativa(dados.afirmacao, dados.fontes.map(({ titulo, trechos }) => ({ titulo, trechos })), opcoes);
     if (!res.destroyed) responder(200, resultado);
   } catch { if (!res.destroyed) responder(503, { status: 'indisponivel' }); }

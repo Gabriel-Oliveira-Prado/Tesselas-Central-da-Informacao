@@ -18,16 +18,17 @@ for (const target of ['site', 'extensao']) {
     for (const file of ['manifest.json', 'servico.js']) {
       await cp(new URL('extensao/' + file, root), new URL(file, output));
     }
-    const endereco = process.env.CENTRAL_PUBLIC_ORIGIN || (process.env.PORT && 'http://127.0.0.1:' + process.env.PORT);
+    const endereco = process.env.CENTRAL_PUBLIC_ORIGIN || (process.env.VERCEL_PROJECT_PRODUCTION_URL && 'https://' + process.env.VERCEL_PROJECT_PRODUCTION_URL) || (process.env.PORT && 'http://127.0.0.1:' + process.env.PORT);
     if (endereco) {
       const url = new URL(endereco);
       const local = url.protocol === 'http:' && url.hostname === '127.0.0.1';
       if ((!local && url.protocol !== 'https:') || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('Informe a origem HTTPS da Central ou a porta de desenvolvimento local.');
       const path = new URL('manifest.json', output);
       const manifest = JSON.parse(await readFile(path, 'utf8'));
+      const origemAnterior = new URL(manifest.homepage_url).origin;
       manifest.homepage_url = url.origin + '/web/index.html';
-      manifest.host_permissions = manifest.host_permissions.map(origin => origin === 'http://127.0.0.1/*' ? url.origin + '/*' : origin);
-      manifest.content_security_policy.extension_pages = manifest.content_security_policy.extension_pages.replace('http://127.0.0.1:4177', url.origin);
+      manifest.host_permissions = manifest.host_permissions.map(origin => origin === origemAnterior + '/*' ? url.protocol + '//' + url.hostname + '/*' : origin);
+      manifest.content_security_policy.extension_pages = manifest.content_security_policy.extension_pages.replace(origemAnterior, url.origin);
       await writeFile(path, JSON.stringify(manifest, null, 2));
     }
   }

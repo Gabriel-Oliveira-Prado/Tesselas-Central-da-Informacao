@@ -7,3 +7,4 @@ extensao/regras-negocio/
 .env
 .env.*
 __pycache__/
+.vercel/
