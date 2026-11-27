@@ -29,3 +29,14 @@ test('pesquisa também pelo fato sem a localização alterada e recusa citação
   assert.equal((await compararComGemini(base,fontes,{chave:'teste',enviar})).status,'sem-evidencia');
   assert.equal((await compararComGemini(base,fontes,{chave:'teste',enviar:async()=>new Response(null,{status:429})})).status,'quota');
 });
+
+test('resposta a pergunta aberta exige passagem e âncora encontradas na fonte', async () => {
+  const pergunta = 'Qual foi o local citado pela reportagem?';
+  for (const [ancora, status] of [['Rio de Janeiro','comparado'],['Outro local','sem-evidencia']]) {
+    const conteudo = {tipo:'resposta', passagem:'F0P0', ancora, explicacao:'A reportagem cita o Rio de Janeiro.'};
+    const enviar = async () => Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(conteudo)}]}}]});
+    const resultado = await compararComGemini(pergunta, fontes, {chave:'teste', enviar});
+    assert.equal(resultado.status, status);
+    if (status === 'comparado') assert.equal(resultado.tipo, 'answer');
+  }
+});

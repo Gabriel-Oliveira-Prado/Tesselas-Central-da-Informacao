@@ -23,7 +23,7 @@
           <div class="card-shell"><button class="action-card action-card-primary" id="analyze-page" type="button">
             <span class="card-number" aria-hidden="true">1</span><span class="card-icon" aria-hidden="true"><svg width="48" height="48" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8m-4-4v4M8 10l2.5 2.5L16 7"/></svg></span>
             <span class="card-label">Analisar tela</span>
-          </button><button class="card-info" type="button" aria-label="Sobre Analisar tela" aria-expanded="false" aria-controls="card-info-1"><svg width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></button><p id="card-info-1" class="card-description" hidden>Escolha uma aba, janela ou tela no navegador. A análise contínua lê as mudanças até você encerrar. Marque o áudio no seletor para incluir as falas. Ao encerrar, consulte os trechos e as fontes.</p></div>
+          </button><button class="card-info" type="button" aria-label="Sobre Analisar tela" aria-expanded="false" aria-controls="card-info-1"><svg width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></button><p id="card-info-1" class="card-description" hidden>Escolha uma aba, janela ou tela no navegador. A Central acompanha as mudanças até você encerrar. Marque o áudio no seletor para incluir as falas. Ao encerrar, consulte os trechos e as fontes.</p></div>
           <div class="card-shell"><button class="action-card" id="open-paste" type="button">
             <span class="card-number" aria-hidden="true">2</span><span class="card-icon" aria-hidden="true"><svg width="48" height="48" viewBox="0 0 24 24" fill="none"><path d="M9 5H6a2 2 0 0 0-2 2v13a1 1 0 0 0 1 1h13a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M8 12h8m-8 4h5"/></svg></span>
             <span class="card-label">Colar informação</span>
@@ -41,7 +41,6 @@
             <span class="card-label">Eleições</span>
           </button><button class="card-info" type="button" aria-label="Sobre Eleições" aria-expanded="false" aria-controls="card-info-5"><svg width="48" height="48" viewBox="0 0 24 24" aria-hidden="true" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></svg></button><p id="card-info-5" class="card-description" hidden>Verifique uma informação eleitoral por texto, link, áudio ou vídeo e consulte as fontes originais.</p></div>
         </div>
-        <label class="check-row" for="live-mode"><input id="live-mode" type="checkbox" checked><span>Análise contínua</span></label>
         <p class="loading-message" id="loading-message" hidden>Lendo a página…</p>
       </section>
 
@@ -192,11 +191,11 @@
         <select id="color-profile"><option value="normal">Padrão</option><option value="protanopia">Protanopia</option><option value="deuteranopia">Deuteranopia</option><option value="tritanopia">Tritanopia</option><option value="mono">Escala de cinza</option></select>
         <label class="check-row"><input id="speak-changes" type="checkbox">Ouvir avisos da análise ao vivo</label>
         <p><a class="libras-link" href="https://www.vlibras.gov.br/app2/" target="_blank" rel="noopener noreferrer">Abrir VLibras (nova aba)</a></p>
-        <label class="check-row"><input id="speak-focus" type="checkbox" checked>Ouvir ao navegar com Tab</label><label class="check-row"><input id="enable-libras" type="checkbox">Ativar Libras em todas as telas</label><p id="libras-global-status" role="status"></p><p class="small">O alto contraste vem ativado. Sua escolha fica salva neste dispositivo.</p>
+        <label class="check-row"><input id="speak-focus" type="checkbox" checked>Ouvir ao navegar com Tab e ao iniciar pesquisas</label><label class="check-row"><input id="enable-libras" type="checkbox">Ativar Libras em todas as telas</label><p id="libras-global-status" role="status"></p><p class="small">O alto contraste vem ativado. Sua escolha fica salva neste dispositivo.</p>
       </section>
       <p class="sr-only" id="app-status" role="status" aria-live="polite" aria-atomic="true"></p>
     </main>
-    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.14.0</span></footer>
+    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.15.0</span></footer>
   </div>
 </body>
 </html>

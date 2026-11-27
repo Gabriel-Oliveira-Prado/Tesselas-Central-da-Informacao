@@ -6,6 +6,26 @@ import { FACT_CHECKS, findFactChecks, relatedChecks } from '../regras-negocio/ch
 import { publishedChecks } from '../regras-negocio/noticias.js';
 import { newsEdition } from '../regras-negocio/edicao-noticias.js';
 import { conclusionFor } from '../regras-negocio/veredito.js';
+import { evidenceFor } from '../regras-negocio/pesquisa.js';
+import { searchPlan } from '../regras-negocio/fontes-pesquisa.js';
+
+test('perguntas por idade preservam número, obrigação e condições da consulta', () => {
+  for (const [texto, tipo] of [
+    ['votar com 16 anos e so se quiser?', 'true'],
+    ['Quem tem dezessete anos é obrigado a votar?', 'false'],
+    ['Qual a idade mínima para votar?', 'answer'],
+  ]) {
+    const conclusao = conclusionFor(evidenceFor(texto));
+    assert.equal(conclusao.kind, tipo);
+    assert.match(conclusao.explanation, /16/);
+  }
+  for (const texto of ['Com 16 anos posso votar em Portugal?', 'Tenho 16 anos, posso votar sem título?', 'Com 18 anos votar é opcional?']) {
+    assert.deepEqual(evidenceFor(texto).exact, []);
+  }
+  const plano = searchPlan('Qual o prazo para tirar o título aos 16 anos?');
+  assert.match(plano.sources[0].url, /manual-do-eleitor-jovens/);
+  assert.ok(plano.queries.some(q => /alistamento.*16/.test(q)));
+});
 
 test('consulta reconhece frases completas e mantém fonte e data do resultado', () => {
   const matches = findFactChecks('A URNA ELETRONICA E CONECTADA A INTERNET DURANTE A VOTACAO.');

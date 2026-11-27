@@ -12,8 +12,16 @@ export function enableAccessibleNavigation() {
   observer.observe(document.querySelector('main'), { childList: true, subtree: true });
   document.addEventListener('keydown', event => {
     if (event.key === 'Tab') keyboard = true;
+    if (event.defaultPrevented || event.isComposing) return;
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
         event.target.matches('input:not([type=checkbox]),textarea,select') || event.target.isContentEditable) return;
+    // Botões já aceitam ambas as teclas. Complete apenas a tecla ausente.
+    if ((event.key === ' ' && event.target.matches('a[href]')) ||
+        (event.key === 'Enter' && event.target.matches('input[type=checkbox]:enabled'))) {
+      event.preventDefault();
+      if (!event.repeat) event.target.click();
+      return;
+    }
     const buttons = [...document.querySelectorAll('.action-card')];
     const button = buttons[Number(event.key) - 1];
     if (/^[1-5]$/.test(event.key) && button && !document.getElementById('home-view')?.hidden) {
@@ -73,6 +81,15 @@ export function enableAccessibleNavigation() {
     const open = document.activeElement.closest('.card-shell')?.querySelector('.card-info[aria-expanded=true]');
     if (open) { open.click(); open.focus(); }
   });
+  return function anunciarPesquisa() {
+    if (document.body.dataset.speakFocus === 'false' || !globalThis.speechSynthesis || !globalThis.SpeechSynthesisUtterance) return;
+    clearTimeout(timer);
+    utterance = new SpeechSynthesisUtterance('Pesquisando a informação. Aguarde.');
+    utterance.lang = 'pt-BR';
+    utterance.voice = speechSynthesis.getVoices().find(v => v.localService && /^pt/i.test(v.lang)) || null;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
+  };
 }
 
 export function highlightSpeech(utterance, text, container) {

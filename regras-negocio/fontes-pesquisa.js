@@ -1,3 +1,5 @@
+import { fonteVotoJovem } from './idade-eleitoral.js';
+
 export const sources = [
   { name: 'TSE · Sigilo e liberdade de escolha', url: 'https://www.tse.jus.br/institucional/escola-judiciaria-eleitoral/publicacoes/revistas-da-eje/artigos/revista-eletronica-eje-n.-5-ano-4/protecao-ao-sigilo-do-voto', topics: ['votar','voto','escolha','candidato','proibido','direito','regiao'] },
   { name: 'Constituição Federal · Direitos políticos', url: 'https://www.tse.jus.br/legislacao/codigo-eleitoral/constituicao-federal/constituicao-da-republica-federativa-do-brasil', topics: ['votar','voto','direito','regiao','brasil','proibido'] },
@@ -20,7 +22,7 @@ const aliases = { votar:'voto', votacao:'voto', votam:'voto', vota:'voto', eleic
 const ignored = new Set('uma para pelo pela pelos pelas que como onde qual quais quando isso essa esse aqui sobre todos todas com dos das aos por ser nao sim pode posso proibido proibida verdade falso noticia'.split(' '));
 export const normalize = value => (typeof value === 'string' ? value : '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function keywords(text) {
-  return [...new Set((normalize(text).match(/[a-z0-9]{3,}/g) || []).filter(word => !ignored.has(word)).map(word => aliases[word] || word))];
+  return [...new Set((normalize(text).match(/[a-z0-9]{3,}|\b\d{1,2}\b/g) || []).filter(word => !ignored.has(word)).map(word => aliases[word] || word))];
 }
 
 export function searchPlan(text) {
@@ -42,6 +44,13 @@ export function searchPlan(text) {
     && tokens.every(word=>!['horario','17','fila','celular','documento','internet'].includes(word));
   const regional = tokens.includes('regiao') || /\bbrasil\b/.test(normalize(cleaned));
   const queries = [cleaned];
+  // Procure também o assunto sem o início coloquial, preservando a pergunta original para a comparação.
+  const assunto = cleaned.replace(/^(?:(?:eu )?(?:queria|quero|gostaria de) saber (?:se |sobre )?|(?:é|e) (?:verdade|verdadeiro) que |(?:voc[eê] )?(?:pode|consegue) (?:me )?(?:dizer|explicar) (?:se )?)/iu, '').trim();
+  if (assunto !== cleaned && keywords(assunto).length >= 2) queries.push(assunto);
+  const idadeEleitoral = /\b(?:voto|vota|votam|votar|eleitor|eleitora|eleitores|eleitorado|eleitoral|eleicao|eleicoes|alistamento|titulo)\b/.test(normalize(cleaned)) &&
+    /\b(?:idades?|anos|adolescentes?|jovens|dezesseis|dezessete)\b/.test(normalize(cleaned));
+  if (idadeEleitoral) queries.push('TSE idade para votar alistamento eleitoral voto facultativo obrigatório ' +
+    (cleaned.match(/\b\d{1,2}\b/g) || []).join(' '));
   const semAno = cleaned.replace(/\b(?:em\s+|no ano de\s+)?(?:19|20)\d{2}\b/gi, '').replace(/[,\s]+$/,'').trim();
   if (semAno !== cleaned && keywords(semAno).length >= 4) queries.push(semAno);
   const semLocal = cleaned.replace(/\s+(?:em|no|na)\s+(?!.*\s(?:em|no|na)\s)[\p{L}\s-]{3,45}[?.!]?$/iu,'').trim();
@@ -49,6 +58,7 @@ export function searchPlan(text) {
   if (civic) queries.push(regional ? 'direito voto sufrágio universal local de votação' : 'liberdade escolha candidato voto secreto');
   const ranked = sources.map(source => ({ source, score: source.topics.reduce((n, word) => n + (tokens.includes(aliases[word] || word) ? word==='voto'||word==='votar'?1:3:0), 0) })).filter(item => item.score > 0).sort((a,b)=>b.score-a.score).slice(0,3);
   const primary = electoral ? ranked.map(item=>item.source) : [];
+  if (idadeEleitoral) primary.unshift(fonteVotoJovem);
   if (civic && !primary.includes(sources.at(-1))) primary.push(sources.at(-1));
-  return { query: cleaned, queries: [...new Set(queries)].filter(Boolean), electoral, civic, regional, sources: primary };
+  return { query: cleaned, queries: [...new Set(queries)].filter(Boolean), electoral, civic, regional, idadeEleitoral, sources: primary };
 }

@@ -3,7 +3,7 @@ import { loadReadingPreferences, applyReadingPreferences } from './preferencias.
 import './legendas.js';
 import { openElectionNews } from './eleicoes.js';
 import { readPageContent } from './leitura-pagina.js';
-import { readSharedScreen, followScreen } from './captura-tela.js';
+import { followScreen } from './captura-tela.js';
 import { evidenceFor, showEvidence, renderVerdict } from './resultados.js';
 import { createVisualAssistant, describeFrame, visualAvailability } from './assistente-visual.js';
 import { findVisualReference } from './comparacao-visual.js';
@@ -41,7 +41,7 @@ let checkScope = 'general';
 let shareAction;
 let shareOrigin = 'screen';
 try { navigator.mediaDevices?.setCaptureHandleConfig?.({ handle: 'central-painel', permittedOrigins: ['*'] }); } catch { /* Disponibilidade varia com a superfície. */ }
-enableAccessibleNavigation();
+const anunciarPesquisa = enableAccessibleNavigation();
 const stopMediaInputs = setupMediaInputs({
   onShareRequest(action) { requestSharing(action, 'audio'); },
   onReview(text) { $('claim').value = text; $('claim').dispatchEvent(new Event('input')); $('claim').focus(); },
@@ -49,7 +49,7 @@ const stopMediaInputs = setupMediaInputs({
     activeResearch?.abort();
     activeResearch = new AbortController();
     const current = ++captureRevision;
-    progress('audio-input-status', true, 'Pesquisando o trecho reconhecido nas fontes…');
+    iniciarPesquisa('audio-input-status');
     try {
       const evidence = await research(text,undefined,{signal:activeResearch.signal});
       if (current === captureRevision) renderResult({ text, evidence });
@@ -84,6 +84,10 @@ function progress(id, busy, message) {
   status.dataset.busy = String(busy);
   status.textContent = message;
 }
+function iniciarPesquisa(id) {
+  progress(id, true, 'Pesquisando a informação. Aguarde.');
+  anunciarPesquisa();
+}
 function setLiveConclusion(evidence, pending) {
   const verdict = conclusionFor(evidence);
   renderVerdict($('live-verdict'), pending ? 'pending' : verdict.kind, pending ? 'Verificação em andamento' : verdict.label);
@@ -103,7 +107,7 @@ $('start-sharing').addEventListener('click', () => {
   action?.();
 });
 $('share-paste-alternative').addEventListener('click', () => openPaste());
-$('read-tab-alternative').addEventListener('click', () => analyze(false));
+$('read-tab-alternative').addEventListener('click', analyzeTab);
 
 function resetSpeech() {
   speech = null;
@@ -295,7 +299,7 @@ function reportCapture(message) {
   announce(message);
 }
 
-async function analyze(fromScreen) {
+async function analyzeTab() {
   resetSpeech();
   activeCapture?.abort();
   activeCapture = new AbortController();
@@ -304,14 +308,14 @@ async function analyze(fromScreen) {
   $('allow-tab').disabled = true;
   $('home-view').setAttribute('aria-busy', 'true');
   $('loading-message').hidden = false;
-  reportCapture(fromScreen ? 'Escolha uma aba, janela ou tela no navegador.' : 'Lendo o texto da aba…');
+  reportCapture('Lendo o texto da aba…');
   try {
-    const content = fromScreen ? await readSharedScreen(activeCapture.signal, reportCapture) : await captureTabText();
-    progress('research-status',true,'Pesquisando a informação reconhecida…');
+    const content = await captureTabText();
+    iniciarPesquisa('capture-help-status');
     content.evidence = await research(content.text,content.story,{signal:activeCapture.signal,onProgress:reportCapture});
     if (revision === captureRevision) renderResult(content);
   } catch (error) {
-    if (revision === captureRevision) showCaptureError(error, fromScreen);
+    if (revision === captureRevision) showCaptureError(error, false);
   } finally {
     if (revision === captureRevision || !activeCapture || activeCapture.signal.aborted) {
       $('analyze-page').disabled = false;
@@ -375,7 +379,7 @@ async function analyzeLive() {
   const enrich = (text, origin) => {
     if (pendingResearch || text.length < 15 || text === searchedText || evidenceFor(text).exact.length) return;
     searchedText = text;
-    progress('live-progress', true, 'Pesquisando fontes para este trecho…');
+    iniciarPesquisa('live-progress');
     pendingResearch = research(text, undefined, { signal }).then(evidence=>{
       if (signal.aborted) return;
       const item = sessionHistory.find(item=>item.text===text.slice(0,650) && item.origin===origin);
@@ -528,8 +532,8 @@ async function analyzeLive() {
     }
   }
 }
-$('analyze-page').addEventListener('click', () => { checkScope = 'general'; requestSharing(() => $('live-mode').checked ? analyzeLive() : analyze(true)); });
-$('allow-tab').addEventListener('click', () => analyze(false));
+$('analyze-page').addEventListener('click', () => { checkScope = 'general'; requestSharing(analyzeLive); });
+$('allow-tab').addEventListener('click', analyzeTab);
 $('edit-read-text').addEventListener('click', () => {
   $('claim').value = lastContent.text;
   clearError();
@@ -554,32 +558,33 @@ $('review-form').addEventListener('submit', async (event) => {
   const current = ++captureRevision;
   const submit = $('review-form').querySelector('[type=submit]');
   submit.setAttribute('aria-disabled', 'true');
-  progress('research-status',true,'Pesquisando nas fontes disponíveis…');
+  iniciarPesquisa('research-status');
   await new Promise(resolve => requestAnimationFrame(resolve));
-  let evidence;
+  const atual = () => current === captureRevision && $('claim').value.trim() === validation.text;
   try {
-    evidence = await research(validation.text, undefined, { signal:controller.signal, onProgress: message => { if (current === captureRevision) $('research-status').textContent = message; } });
-  } catch {
-    if (current === captureRevision) progress('research-status',false,'A pesquisa foi interrompida. Tente novamente.');
-    submit.removeAttribute('aria-disabled');
-    return;
-  }
-  submit.removeAttribute('aria-disabled');
-  if (current !== captureRevision || $('claim').value.trim() !== validation.text) return;
-  progress('research-status',false,'Consulta às fontes concluída.');
-  if (/^https?:\/\/\S+$/i.test(validation.text)) {
-    const url = articleUrl(validation.text);
-    if (!url) { $('claim-error').hidden = false; $('claim-error').textContent = 'Para este site, cole o trecho da notícia. Links do UOL Notícias, Terra, g1, Agência Brasil, TSE, Justiça Eleitoral e Aos Fatos podem ser lidos diretamente.'; return; }
-    const revision = ++captureRevision;
-    try {
+    let content = { text: validation.text };
+    if (/^https?:\/\/\S+$/i.test(validation.text)) {
+      const url = articleUrl(validation.text);
+      if (!url) throw new Error('Para este site, cole o trecho da notícia. Links do UOL Notícias, Terra, g1, Agência Brasil, TSE, Justiça Eleitoral e Aos Fatos podem ser lidos diretamente.');
       const story = await readArticle(url);
-      const text = [story.title, story.lead].filter(Boolean).join('\n');
-      const evidence = await research(text,story,{signal:controller.signal});
-      if (revision === captureRevision && $('claim').value.trim() === validation.text) renderResult({ text, evidence, url: story.url, title: story.title, story });
-    } catch (err) { if (revision === captureRevision) { $('claim-error').hidden = false; $('claim-error').textContent = err.message; } }
-    return;
+      if (!atual()) return;
+      content = { text: [story.title, story.lead].filter(Boolean).join('\n'), story, url: story.url, title: story.title };
+    }
+    content.evidence = await research(content.text, content.story, { signal: controller.signal, onProgress: message => {
+      if (atual()) $('research-status').textContent = message;
+    } });
+    if (atual()) renderResult(content);
+  } catch (erro) {
+    if (atual()) {
+      $('claim-error').hidden = false;
+      $('claim-error').textContent = /^https?:/i.test(validation.text) ? erro.message : 'A pesquisa foi interrompida. Tente novamente.';
+    }
+  } finally {
+    if (activeResearch === controller) {
+      submit.removeAttribute('aria-disabled');
+      progress('research-status', false, '');
+    }
   }
-  renderResult({ text: validation.text, evidence });
 });
 $('use-example').addEventListener('click', () => {
   $('claim').value = checkScope === 'elections' ? 'Dá para votar pelo celular se estiver chovendo?' : 'Vídeo mostra resgate de onça no rio Negro, em Manaus, em 2025';

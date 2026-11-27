@@ -18,59 +18,13 @@ function paragraphText(paragraph) {
   return text;
 }
 
-function chooseScreen(audio = false) {
+function chooseScreen() {
   if (!navigator.mediaDevices?.getDisplayMedia) throw new Error('sharing-unavailable');
   const controller = globalThis.CaptureController ? new CaptureController() : undefined;
   controller?.setFocusBehavior('no-focus-change');
   return navigator.mediaDevices.getDisplayMedia({
-    video: true, audio, selfBrowserSurface: 'exclude', surfaceSwitching: 'include', controller,
+    video: true, audio: true, selfBrowserSurface: 'exclude', surfaceSwitching: 'include', controller,
   });
-}
-
-export async function readSharedScreen(signal, onProgress) {
-  const stream = await chooseScreen();
-  const stop = () => stream.getTracks().forEach((track) => track.stop());
-  signal.addEventListener('abort', stop, { once: true });
-  let canvas;
-  try {
-    signal.throwIfAborted();
-    if (stream.getVideoTracks()[0].getCaptureHandle?.()?.handle === 'central-painel') throw new Error('own-panel');
-    const video = document.createElement('video');
-    video.muted = true;
-    video.playsInline = true;
-    video.srcObject = stream;
-    let timer;
-    try {
-      const frameReady = new Promise((resolve, reject) => {
-        video.requestVideoFrameCallback(resolve);
-        stream.getVideoTracks()[0].addEventListener('ended', () => reject(new Error('capture-ended')), { once: true });
-        timer = setTimeout(() => reject(new Error('capture-ended')), 8000);
-      });
-      await Promise.all([video.play(), frameReady]);
-      signal.throwIfAborted();
-      canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-    } finally {
-      clearTimeout(timer);
-      video.srcObject = null;
-    }
-  } finally {
-    stop();
-    signal.removeEventListener('abort', stop);
-  }
-
-  onProgress('Compartilhamento encerrado. Lendo o texto da imagem…');
-  const worker = await createReader(signal);
-  try {
-    const content = await readFrame(worker, canvas, signal);
-    if (!content.text) throw new Error('no-text');
-    return content;
-  } finally {
-    canvas.width = canvas.height = 0;
-    await worker.terminate();
-  }
 }
 
 export async function createReader(signal) {
@@ -115,7 +69,7 @@ export async function readFrame(worker, canvas, signal, centralContent = false) 
 
 export async function followScreen(controller, { onStart, onFrame, onPreview = () => {}, onProgress = () => {} }) {
   const { signal } = controller;
-  const stream = await chooseScreen(true);
+  const stream = await chooseScreen();
   const video = document.createElement('video');
   const canvas = document.createElement('canvas');
   const track = stream.getVideoTracks()[0];

@@ -103,3 +103,32 @@ test('legenda da fala destaca a palavra recebida do sintetizador', async ({ page
   });
   await expect(page.locator('[data-spoken-word]')).toHaveText('presencial');
 });
+test('Espaço e Enter ativam os controles e a pesquisa anuncia o início uma vez', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.avisos = [];
+    Object.defineProperty(window, 'speechSynthesis', { value: {
+      getVoices: () => [], cancel() {}, speak: fala => window.avisos.push(fala.text),
+    } });
+  });
+  await page.route('**/pesquisa/fonte?*', route => route.fulfill({ status: 503 }));
+  await page.goto('/web/index.html');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Space');
+  await expect(page.locator('#analyze-page')).toBeFocused();
+  await page.keyboard.press('4');
+  await page.keyboard.press('Enter');
+  const voz = page.locator('#speak-focus');
+  await voz.press('Enter');
+  await expect(voz).not.toBeChecked();
+  await voz.press('Space');
+  await expect(voz).toBeChecked();
+  await page.locator('#settings-view [data-back]').press('Enter');
+  await page.keyboard.press('2');
+  await page.keyboard.press('Space');
+  await page.locator('#claim').fill('votar com 16 anos e so se quiser?');
+  await page.locator('#review-form [type=submit]').press('Enter');
+  await expect(page.locator('#result-title')).toHaveText('Verdadeiro');
+  await expect(page.locator('#result-summary')).toContainText('Sim. No Brasil, quem tem 16 ou 17 anos pode escolher');
+  await expect(page.locator('#result-title')).toBeFocused();
+  expect(await page.evaluate(() => window.avisos.filter(texto => texto.startsWith('Pesquisando')))).toEqual(['Pesquisando a informação. Aguarde.']);
+});

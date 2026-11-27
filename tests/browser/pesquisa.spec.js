@@ -58,7 +58,7 @@ test('orientação de voto é sustentada por página consultada e botão permite
   await page.locator('#open-paste').click();
   await page.locator('#claim').fill('É proibido votar no Nordeste?');
   await page.locator('#review-form [type=submit]').click();
-  await expect(page.locator('#result-title')).toHaveText('Não verificado');
+  await expect(page.locator('#result-title')).toHaveText('Orientação da fonte');
   await expect(page.locator('#result-matches')).toContainText('O direito de voto vale em todo o Brasil');
   await expect(page.locator('#result-matches a').first()).toHaveAttribute('href',/tse.jus.br/);
   const button = page.locator('#new-query');
@@ -91,7 +91,7 @@ test('recusa de um portal permite ler a Constituição em outra fonte oficial co
   await page.locator('#open-paste').click();
   await page.locator('#claim').fill('Posso votar no Lula?');
   await page.locator('#review-form [type=submit]').click();
-  await expect(page.locator('#result-title')).toHaveText('Não verificado');
+  await expect(page.locator('#result-title')).toHaveText('Orientação da fonte');
   await expect(page.locator('#result-matches')).toContainText('candidaturas válidas');
   await expect(page.locator('#result-matches blockquote')).toContainText('sufrágio universal');
   await expect(page.locator('#result-matches a').first()).toHaveAttribute('href',/planalto.gov.br/);

@@ -1,5 +1,8 @@
 // Uma publicação relacionada não comprova nem desmente a afirmação.
-export function conclusionFor({ exact = [], ia } = {}) {
+export function conclusionFor({ exact = [], ia, orientation } = {}) {
+  if (!exact.length && orientation?.source && orientation.explanation) {
+    return { kind:'answer', label:'Orientação da fonte', explanation:orientation.explanation };
+  }
   if (!exact.length && ia?.status === 'sem-evidencia' && ia.detalhe) {
     return { kind:'unverified', label:'Não verificado', explanation:ia.detalhe };
   }
@@ -10,7 +13,7 @@ export function conclusionFor({ exact = [], ia } = {}) {
   const kinds = new Set(exact.map(record => record.kind));
   if (kinds.size === 1) {
     const kind = exact[0].kind;
-    const labels = { false: 'Falso', true: 'Verdadeiro', context: 'Fora de contexto' };
+    const labels = { false: 'Falso', true: 'Verdadeiro', context: 'Fora de contexto', answer: 'Resposta da fonte' };
     if (labels[kind]) return { kind, label: labels[kind], explanation: exact.map(record => record.explanation).join(' ') };
   }
   return { kind: 'unverified', label: 'Não verificado', explanation: kinds.size > 1

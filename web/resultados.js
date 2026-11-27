@@ -24,7 +24,7 @@ export function showEvidence(container, { exact, related, news = [], orientation
     const article = document.createElement('article');
     article.className = 'evidence verdict-' + record.kind;
     const label = node('p', '', 'verdict-label');
-    const icon = node('span', { false: '×', true: '✓', context: '◷', conditional:'◷' }[record.kind], 'verdict-icon');
+    const icon = node('span', { false: '×', true: '✓', context: '◷', conditional:'◷', answer:'i' }[record.kind], 'verdict-icon');
     icon.setAttribute('aria-hidden', 'true');
     label.append(icon, node('strong', record.finding, 'finding'));
     article.append(label, node('h2', record.claim), node('p', record.explanation));

@@ -13,7 +13,7 @@ export async function compararFontes(afirmacao, artigos, signal) {
     const dado = await resposta.json();
     if (!resposta.ok || dado.status !== 'comparado') return { status:dado.status, detalhe:dado.detalhe };
     const fonte = fontes[dado.indice];
-    if (!fonte || !['true','false','context'].includes(dado.tipo) || !dado.trecho || !fonte.passages.some(t=>t.includes(dado.trecho))) return {};
+    if (!fonte || !['true','false','context','answer'].includes(dado.tipo) || !dado.trecho || !fonte.passages.some(t=>t.includes(dado.trecho))) return {};
     return { status:'comparado', registro:{ id:'gemini:'+fonte.url, kind:dado.tipo, claim:afirmacao,
       finding:'Comparação com fonte · Gemini', explanation:dado.explicacao, quote:dado.trecho,
       topic:fonte.title, url:fonte.url, source:fonte.source, published:fonte.date,

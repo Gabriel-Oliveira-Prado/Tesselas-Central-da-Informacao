@@ -2,9 +2,12 @@ import { findFactChecks, relatedChecks } from './checagens.js';
 import { contextFor, publishedChecks, refreshContext } from './noticias.js';
 import { searchOnline } from './busca-online.js';
 import { compararFontes } from './comparacao.js';
+import { checarVotoJovem } from './idade-eleitoral.js';
 
 export function evidenceFor(text, story) {
   const exact = [...findFactChecks(text), ...publishedChecks(text, story)];
+  const votoJovem = typeof text === 'string' && checarVotoJovem(text.slice(0, 8000));
+  if (votoJovem) exact.push(votoJovem);
   return { exact, related: exact.length ? [] : relatedChecks(text), news: exact.length ? [] : contextFor(text) };
 }
 
