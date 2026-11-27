@@ -5,8 +5,10 @@ import { resolve, sep, extname } from 'node:path';
 import { electionSources } from '../regras-negocio/fontes-eleitorais.js';
 import { articleUrl, newsFeeds } from '../regras-negocio/noticias.js';
 import { allowedSearchUrl } from '../regras-negocio/busca-online.js';
+import { atenderGemini } from './gemini.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+try { process.loadEnvFile(resolve(root, '.env')); } catch (err) { if (err.code !== 'ENOENT') throw err; }
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json; charset=utf-8', '.webm': 'video/webm', '.wav': 'audio/wav', '.wasm': 'application/wasm', '.ttf': 'font/ttf' };
 let port = Number(process.env.PORT || 4173);
 const initialPort = port;
@@ -14,6 +16,10 @@ const initialPort = port;
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
+    if (url.pathname === '/api/comparar') {
+      await atenderGemini(request, response);
+      return;
+    }
     if (url.pathname === '/') {
       response.writeHead(302, { Location: '/web/index.html' }).end();
       return;
@@ -78,11 +84,11 @@ const server = createServer(async (request, response) => {
 server.on('error', error => {
   if (error.code === 'EADDRINUSE' && !process.env.PORT && port < initialPort + 10) {
     port += 1;
-    server.listen(port, '127.0.0.1');
+    server.listen(port, process.env.HOST || '127.0.0.1');
   } else throw error;
 });
 server.on('listening', () => {
   console.log(`Prévia da Central da Informação: http://127.0.0.1:${port}/web/index.html`);
   console.log(`Página de teste: http://127.0.0.1:${port}/demo/noticia.html`);
 });
-server.listen(port, '127.0.0.1');
+server.listen(port, process.env.HOST || '127.0.0.1');

@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "Central da Informação",
   "short_name": "Central",
-  "version": "0.12.0",
+  "homepage_url": "http://127.0.0.1:4177/web/index.html",
+  "version": "0.13.0",
   "description": "Site e extensão acessíveis para verificar notícias, texto, áudio e vídeo com fontes.",
   "minimum_chrome_version": "116",
   "permissions": [
@@ -12,6 +13,9 @@
     "sidePanel"
   ],
   "host_permissions": [
+    "http://127.0.0.1/*",
+    "https://noticias.uol.com.br/*",
+    "https://www.terra.com.br/*",
     "https://g1.globo.com/*",
     "https://agenciabrasil.ebc.com.br/*",
     "https://www.bing.com/*",
@@ -50,6 +54,6 @@
     }
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'none'; connect-src 'self' https://www.bing.com https://news.google.com https://www.planalto.gov.br https://www.tse.jus.br https://agenciabrasil.ebc.com.br https://g1.globo.com https://www.aosfatos.org https://www.justicaeleitoral.jus.br https://vlibras.gov.br https://*.vlibras.gov.br; frame-src https://vlibras.gov.br https://www.vlibras.gov.br; font-src 'self' https://vlibras.gov.br https://cdn.jsdelivr.net; img-src 'self' data: https://vlibras.gov.br https://*.vlibras.gov.br https://cdn.jsdelivr.net"
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'none'; connect-src 'self' http://127.0.0.1:4177 https://noticias.uol.com.br https://www.terra.com.br https://www.bing.com https://news.google.com https://www.planalto.gov.br https://www.tse.jus.br https://agenciabrasil.ebc.com.br https://g1.globo.com https://www.aosfatos.org https://www.justicaeleitoral.jus.br https://vlibras.gov.br https://*.vlibras.gov.br; frame-src https://vlibras.gov.br https://www.vlibras.gov.br; font-src 'self' https://vlibras.gov.br https://cdn.jsdelivr.net; img-src 'self' data: https://vlibras.gov.br https://*.vlibras.gov.br https://cdn.jsdelivr.net"
   }
 }

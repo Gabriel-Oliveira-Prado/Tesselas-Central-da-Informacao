@@ -1,5 +1,8 @@
 // Uma publicação relacionada não comprova nem desmente a afirmação.
-export function conclusionFor({ exact = [] } = {}) {
+export function conclusionFor({ exact = [], ia } = {}) {
+  if (!exact.length && ia?.status === 'sem-evidencia' && ia.detalhe) {
+    return { kind:'unverified', label:'Não verificado', explanation:ia.detalhe };
+  }
   if(exact.some(record=>record.kind==='conditional')) return {
     kind:'unverified',label:'Não verificado',
     explanation:'A resposta depende das condições do caso. '+exact.map(record=>record.explanation).join(' '),

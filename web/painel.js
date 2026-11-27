@@ -245,6 +245,8 @@ function renderResult(content) {
   $('result-summary').textContent = conclusion.explanation;
   $('result-scope').textContent = matches.length ? 'Esta checagem se refere ao trecho indicado, não à página inteira.' : 'Você pode consultar outras fontes abaixo.';
   if (evidence.search?.status === 'unavailable') $('result-scope').textContent += ' As fontes online estão indisponíveis neste momento. Você pode tentar pesquisar novamente.';
+  const avisosIA = { 'sem-chave':'A comparação por IA ainda não foi ativada neste servidor.', quota:'A cota de comparação por IA foi atingida.', indisponivel:'A comparação por IA está indisponível agora.' };
+  if (avisosIA[evidence.ia?.status]) $('result-scope').textContent += ' ' + avisosIA[evidence.ia.status];
   if (content.truncated) $('result-scope').textContent += ' Foram lidos apenas os primeiros 8.000 caracteres.';
   $('allow-tab').hidden = true;
   if (content.screen) $('result-scope').textContent += ' Confira o texto lido na imagem. Você pode corrigir uma palavra e consultar novamente.';
@@ -567,7 +569,7 @@ $('review-form').addEventListener('submit', async (event) => {
   progress('research-status',false,'Consulta às fontes concluída.');
   if (/^https?:\/\/\S+$/i.test(validation.text)) {
     const url = articleUrl(validation.text);
-    if (!url) { $('claim-error').hidden = false; $('claim-error').textContent = 'Para este site, cole o trecho da notícia. Links do g1, Agência Brasil, TSE, Justiça Eleitoral e Aos Fatos podem ser lidos diretamente.'; return; }
+    if (!url) { $('claim-error').hidden = false; $('claim-error').textContent = 'Para este site, cole o trecho da notícia. Links do UOL Notícias, Terra, g1, Agência Brasil, TSE, Justiça Eleitoral e Aos Fatos podem ser lidos diretamente.'; return; }
     const revision = ++captureRevision;
     try {
       const story = await readArticle(url);

@@ -28,6 +28,7 @@ export function showEvidence(container, { exact, related, news = [], orientation
     icon.setAttribute('aria-hidden', 'true');
     label.append(icon, node('strong', record.finding, 'finding'));
     article.append(label, node('h2', record.claim), node('p', record.explanation));
+    if (record.quote) article.append(node('blockquote', record.quote));
     appendSource(article, record);
     return article;
   });

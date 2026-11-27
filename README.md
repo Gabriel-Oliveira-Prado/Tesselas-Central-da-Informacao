@@ -2,9 +2,9 @@
 
 # Central da Informação
 
-**Versão 0.12.0** · Site e extensão para Chrome de computador.
+**Versão 0.13.0** · Site e extensão para Chrome de computador.
 
-A Central da Informação verifica notícias de qualquer tema e mostra primeiro a conclusão, seguida da afirmação, da explicação e da fonte. Os resultados são Falso, Verdadeiro, Fora de contexto ou Não verificado quando faltam evidências. Ela acompanha a área de tela escolhida e reconhece texto e fala em português. O reconhecimento ocorre no dispositivo. A pesquisa consulta páginas online por assunto e dispensa uma chave de API nesta versão.
+A Central da Informação verifica notícias de qualquer tema e mostra primeiro a conclusão, seguida da afirmação, da explicação e da fonte. Os resultados são Falso, Verdadeiro, Fora de contexto ou Não verificado quando faltam evidências. Ela acompanha a área de tela escolhida e reconhece texto e fala em português. O reconhecimento ocorre no dispositivo. A pesquisa consulta páginas online por assunto e usa a chave do servidor quando a comparação por Gemini está disponível.
 
 <p align="center"><img src="docs/inicio.png" width="320" height="549" alt="Painel inicial com cinco botões e acompanhamento da tela ativado."> <img src="docs/checagem.png" width="320" height="549" alt="Resultado Verdadeiro de uma checagem do g1 sobre resgate de onça, com explicação e fonte."></p>
 
@@ -26,6 +26,14 @@ Execute `npm run build`. No Chrome, abra `chrome://extensions`, ative Modo do de
 - `dist/site` e `dist/extensao` são gerados pelo mesmo código. Alterações devem ser feitas nos arquivos-fonte.
 
 O site em atualização online usa o servidor de `npm start`. O pacote estático mantém a edição de notícias incluída quando as fontes online estão indisponíveis.
+
+## Comparação de contexto com Gemini
+
+O site e a extensão usam a mesma comparação. A pesquisa também procura o acontecimento sem a localização final. O servidor chama o Gemini com a afirmação e parágrafos lidos das reportagens. Para exibir um veredito da IA, a aplicação exige uma fonte identificada e confere se a citação está presente no texto recuperado. Sem chave ou sem cota, a pesquisa comum continua disponível.
+
+Para desenvolver, crie uma chave no [Google AI Studio](https://aistudio.google.com/api-keys) e salve-a no arquivo local `.env` da raiz como `GEMINI_API_KEY=sua_chave`. Reinicie o servidor. O modelo padrão é `gemini-3.1-flash-lite`, substituível por `GEMINI_MODEL`. No PowerShell use `$env:PORT='4177'` antes de `npm start` para testar a extensão local.
+
+Para distribuir, hospede o servidor Node por HTTPS com a chave em um segredo da hospedagem. Use `HOST=0.0.0.0` se a plataforma exigir e configure `PORT` conforme a plataforma. Defina `CENTRAL_PUBLIC_ORIGIN` com a origem HTTPS ao executar `npm run build` e distribua **dist/extensao**. O empacotador inclui somente a origem no manifesto. A pasta **extensao** da raiz aponta para o servidor de desenvolvimento. As pessoas usuárias acessam o site hospedado ou instalam o pacote da extensão sem configurar a API.
 
 ## Pesquisa online por assunto
 
@@ -52,7 +60,7 @@ Abra http://127.0.0.1:4173/web/index.html no Chrome ou Edge de computador. Para 
 ## Os cinco cards
 
 - **Analisar tela** usa reconhecimento de texto, comparação com duas artes conhecidas e transcrição em português. O reconhecimento de objetos inicia automaticamente nos computadores que disponibilizam o modelo do Chrome. Ao encerrar, os trechos e suas fontes ficam na tela Resultados do acompanhamento. O navegador pode precisar baixá-lo.
-- **Colar informação** recebe texto ou um link do g1, Agência Brasil, TSE, Justiça Eleitoral ou Aos Fatos. O card de arquivos aceita áudio, vídeo e legendas SRT ou VTT. Confira o texto reconhecido antes de verificar.
+- **Colar informação** recebe texto ou um link do UOL Notícias, Terra, g1, Agência Brasil, TSE, Justiça Eleitoral ou Aos Fatos. O card de arquivos aceita áudio, vídeo e legendas SRT ou VTT. Confira o texto reconhecido antes de verificar.
 - **Ouvir conteúdo** recebe arquivo, microfone ou som da aba. Ao escolher o microfone, você também pode dizer “abrir eleições”, “abrir acessibilidade”, “colar informação” ou “voltar ao início”. A leitura em voz alta tem velocidade, pausa e parada, com destaque de palavra quando a voz do navegador informa os marcadores de leitura.
 - **Acessibilidade** permite ampliar até 400%, escolher a distância entre letras e palavras, usar cores suaves, escolher paletas para protanopia, deuteranopia e tritanopia ou escala de cinza, ativar avisos falados e consultar o VLibras. A fonte Atkinson Hyperlegible Next acompanha a extensão.
 
@@ -76,7 +84,7 @@ O VLibras é gratuito. A API comercial Hand Talk for Devs requer uma chave contr
 
 ## Privacidade e permissões
 
-O manifesto autoriza consultas ao Bing, Google Notícias, g1, Agência Brasil, TSE, Justiça Eleitoral, Aos Fatos e Planalto. Não solicita acesso permanente a todos os sites. O seletor de tela e o microfone exigem autorização do navegador. A transcrição usa o Vosk local e o modelo de português incluído. A pesquisa por assunto envia um trecho de texto ou fala aos buscadores e portais consultados. Imagens e arquivos permanecem no dispositivo. As perguntas e os resultados da pesquisa ficam na memória da sessão.
+O manifesto autoriza consultas ao servidor da Central, UOL Notícias, Terra, Bing, Google Notícias, g1, Agência Brasil, TSE, Justiça Eleitoral, Aos Fatos e Planalto. Não solicita acesso permanente a todos os sites. O seletor de tela e o microfone exigem autorização do navegador. A transcrição usa o Vosk local e o modelo de português incluído. A pesquisa por assunto envia um trecho de texto ou fala aos buscadores e portais consultados. Imagens e arquivos permanecem no dispositivo. As perguntas e os resultados da pesquisa ficam na memória da sessão.
 
 O texto fica na memória do painel; recarregá-lo apaga o conteúdo. Apenas os ajustes de leitura são armazenados localmente. A comparação editorial é local. A pesquisa online transmite a consulta aos provedores indicados na interface. Ao abrir uma busca adicional, o trecho visível no campo correspondente é enviado ao Google. Os links informam abertura de nova aba. Vozes podem usar serviços do navegador/sistema; vozes locais em português são priorizadas quando disponíveis.
 
@@ -99,10 +107,6 @@ npm test
 Os testes exercitam os cinco cards, teclado e retorno do foco, erros, contraste, ampliação, áudio simulado, cancelamento de capturas antigas ao navegar, exclusão de campos privados, persistência mínima, pesquisa online, correspondências conservadoras e captura real da extensão em um perfil isolado. A avaliação automática usa axe-core e não substitui leitores de tela nem testes com pessoas.
 
 `npm start` não exige instalar pacotes. As dependências são apenas de desenvolvimento. Os ícones já estão incluídos; para regenerá-los, execute `node scripts/gerar-icones.mjs` com as dependências de desenvolvimento e o Chromium do Playwright instalados.
-
-## Próxima etapa possível
-
-Ampliar e manter a base de checagens ou conectar um serviço de busca com fonte, data e revisão humana. Um serviço de IA poderá ajudar a extrair afirmações ou localizar checagens; a conclusão precisará de evidências rastreáveis e opção de resultado inconclusivo. Nenhuma credencial deve ser colocada dentro de uma extensão distribuída.
 
 ## Referências
 

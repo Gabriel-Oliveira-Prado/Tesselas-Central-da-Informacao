@@ -1,4 +1,5 @@
 import { newsEdition } from './edicao-noticias.js';
+import { portaisAdicionais } from './fontes-pesquisa.js';
 
 export const newsFeeds = [
   { id: 'g1', name: 'g1 · Fato ou Fake', url: 'https://g1.globo.com/rss/g1/fato-ou-fake/' },
@@ -8,7 +9,7 @@ const hosts = ['g1.globo.com', 'agenciabrasil.ebc.com.br', 'www.aosfatos.org', '
 export function articleUrl(value) {
   try {
     const url = new URL(value);
-    if (url.protocol === 'https:' && !url.username && !url.password && !url.port && hosts.includes(url.hostname)) return url;
+    if (url.protocol === 'https:' && !url.username && !url.password && !url.port && (hosts.includes(url.hostname) || portaisAdicionais.includes(url.hostname))) return url;
   } catch { /* Campo de texto livre. */ }
 }
 

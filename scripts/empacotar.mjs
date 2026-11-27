@@ -1,4 +1,4 @@
-import { cp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { cp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { resolve, sep } from 'node:path';
 
@@ -16,6 +16,16 @@ for (const target of ['site', 'extensao']) {
   if (target === 'extensao') {
     for (const file of ['manifest.json', 'servico.js']) {
       await cp(new URL('extensao/' + file, root), new URL(file, output));
+    }
+    if (process.env.CENTRAL_PUBLIC_ORIGIN) {
+      const url = new URL(process.env.CENTRAL_PUBLIC_ORIGIN);
+      if (url.protocol !== 'https:' || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('Informe somente a origem HTTPS da Central.');
+      const path = new URL('manifest.json', output);
+      const manifest = JSON.parse(await readFile(path, 'utf8'));
+      manifest.homepage_url = url.origin + '/web/index.html';
+      manifest.host_permissions = manifest.host_permissions.map(origin => origin === 'http://127.0.0.1/*' ? url.origin + '/*' : origin);
+      manifest.content_security_policy.extension_pages = manifest.content_security_policy.extension_pages.replace('http://127.0.0.1:4177', url.origin);
+      await writeFile(path, JSON.stringify(manifest, null, 2));
     }
   }
   else {

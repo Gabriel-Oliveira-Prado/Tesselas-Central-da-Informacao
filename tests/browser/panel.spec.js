@@ -188,6 +188,7 @@ test('a descrição visual opcional permanece separada da checagem e libera o mo
 });
 
 test('colar texto informa erros e mantém resultado inconclusivo para conteúdo desconhecido', async ({ page }) => {
+  await page.route('**/pesquisa/fonte?*', route => route.fulfill({body:'<rss><channel></channel></rss>'}));
   await page.goto(panelPath);
   await page.getByRole('button', { name: 'Colar informação', exact: true }).click();
   await page.getByRole('button', { name: 'Pesquisar informação', exact: true }).click();

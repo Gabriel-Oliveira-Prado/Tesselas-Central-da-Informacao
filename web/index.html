@@ -68,7 +68,7 @@
 
       <section id="capture-help-view" class="view tool-view" aria-labelledby="capture-help-title" hidden>
         <div class="view-heading"><button class="back-button" type="button" data-back><span aria-hidden="true">←</span> Voltar</button><h1 id="capture-help-title" tabindex="-1">Antes de compartilhar</h1></div>
-        <p>A próxima janela pertence ao navegador. A Central só começa a ler depois que você confirmar o compartilhamento.</p>
+        <p>A próxima janela pertence ao navegador. Depois que você confirmar, a Central poderá pesquisar o texto reconhecido e compará-lo com fontes usando o Gemini.</p>
         <ol><li>Use Tab ou Shift + Tab para percorrer os controles. Use as setas para escolher a aba, janela ou tela que contém a notícia.</li><li>Se precisar do som, marque Compartilhar áudio. Essa opção varia entre navegadores e superfícies.</li><li>Confirme em Compartilhar. Para cancelar a janela, pressione Escape.</li></ol>
         <p>Se o leitor de tela não anunciar as opções, cancele e cole a informação ou adicione um arquivo. Na extensão, você também pode autorizar a leitura do texto da aba aberta, sem usar esse seletor.</p>
         <p id="capture-help-status" class="research-progress" role="status"></p>
@@ -82,7 +82,7 @@
         <p id="live-progress" class="research-progress" role="status" aria-atomic="true"></p>
         <p class="capture-status" id="live-state"></p>
         <div id="live-matches"></div>
-        <p class="small">A pesquisa online envia um trecho do texto ou da fala às fontes de busca.</p>
+        <p class="small">O texto reconhecido pode ser enviado aos buscadores e ao Gemini para comparação com reportagens.</p>
         <button id="stop-live" class="button button-primary" type="button"><svg class="pictograma" aria-hidden="true"><use href="assets/acoes.svg#parar"></use></svg>Encerrar acompanhamento</button>
         <h2 class="field-label" id="excerpt-title">Trecho em análise</h2>
         <p class="live-excerpt" id="live-text" tabindex="0" aria-labelledby="excerpt-title" role="region"></p>
@@ -99,7 +99,7 @@
         <div id="paste-entry"><div id="checker-entry"><form id="review-form" novalidate>
           <label class="field-label" for="claim">O que você quer conferir?</label>
           <textarea id="claim" name="claim" rows="6" maxlength="8000" required aria-describedby="claim-help claim-error" placeholder="Cole a afirmação ou o link que deseja verificar."></textarea>
-          <p class="small" id="claim-help">Escreva uma frase ou cole um link. A pesquisa envia um trecho ao Bing, Google Notícias e às fontes consultadas.</p>
+          <p class="small" id="claim-help">Escreva uma frase ou cole um link. A Central pesquisa nas fontes e pode enviar o texto ao Gemini para comparar os detalhes.</p>
           <button type="button" class="button button-secondary" id="use-example">Usar a pergunta de exemplo</button>
           <p class="field-error" id="claim-error" hidden></p>
           <button class="button button-primary" type="submit"><svg class="pictograma" aria-hidden="true"><use href="assets/acoes.svg#buscar"></use></svg>Pesquisar informação</button><p id="research-status" class="research-progress" role="status" aria-atomic="true"></p>
@@ -154,6 +154,7 @@
 
       <section id="audio-view" class="view tool-view" aria-labelledby="audio-title" hidden>
         <div class="view-heading">        <button class="back-button" type="button" data-back><span aria-hidden="true">←</span> Voltar</button><h1 id="audio-title" tabindex="-1">Ouvir conteúdo</h1></div>
+        <p class="small">O áudio fica no dispositivo. A transcrição pode ser comparada com reportagens pelo Gemini.</p>
         <div class="audio-inputs">
           <label class="file-card" for="audio-file"><strong><svg class="pictograma" aria-hidden="true"><use href="assets/acoes.svg#arquivo"></use></svg>Adicionar áudio</strong><input id="audio-file" type="file" accept="audio/*,video/*"></label>
           <button class="button button-secondary" id="mic-input" type="button"><svg class="pictograma" aria-hidden="true"><use href="assets/acoes.svg#microfone"></use></svg>Falar ao microfone</button>
@@ -197,7 +198,7 @@
       </section>
       <p class="sr-only" id="app-status" role="status" aria-live="polite" aria-atomic="true"></p>
     </main>
-    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.12.0</span></footer>
+    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.13.0</span></footer>
   </div>
 </body>
 </html>

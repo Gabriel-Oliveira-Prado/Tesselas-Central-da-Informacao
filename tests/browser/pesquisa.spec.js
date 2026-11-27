@@ -1,6 +1,30 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
+test('comparação usa passagens recuperadas para uma notícia fora do acervo', async ({ page }) => {
+  const titulo = 'Museu recebe exposição de cerâmica em Santos';
+  const trecho = 'A exposição de cerâmica abriu na terça-feira no museu de Santos e seguirá em cartaz até dezembro.';
+  await page.route('**/pesquisa/fonte?*', route => {
+    const url = new URL(new URL(route.request().url()).searchParams.get('url'));
+    const body = url.hostname === 'g1.globo.com' ? '<main><h1>'+titulo+'</h1><p>'+trecho+'</p></main>' :
+      '<rss><channel><item><title>'+titulo+'</title><link>https://g1.globo.com/cultura/exposicao.html</link></item></channel></rss>';
+    return route.fulfill({body});
+  });
+  await page.route('**/api/comparar', route => {
+    const envio = route.request().postDataJSON();
+    expect(envio.fontes[0].trechos).toContain(trecho);
+    expect(envio.afirmacao).toContain('Curitiba');
+    return route.fulfill({json:{status:'comparado',tipo:'context',indice:0,trecho,explicacao:'A reportagem situa a exposição em Santos.'}});
+  });
+  await page.goto('/web/index.html');
+  await page.locator('#open-paste').click();
+  await page.locator('#claim').fill('Museu recebe exposição de cerâmica em Curitiba');
+  await page.locator('#review-form [type=submit]').click();
+  await expect(page.locator('#result-title')).toHaveText('Fora de contexto');
+  await expect(page.locator('.verdict-context blockquote')).toHaveText(trecho);
+  await expect(page.locator('.verdict-context a')).toHaveAttribute('href','https://g1.globo.com/cultura/exposicao.html');
+});
+
 test('pergunta inédita consulta buscadores e lê a página retornada, sem guardar a consulta', async ({ page }) => {
   const queries = [];
   await page.route('**/pesquisa/fonte?*', async route => {

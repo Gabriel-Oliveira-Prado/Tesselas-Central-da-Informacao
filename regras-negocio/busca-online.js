@@ -1,11 +1,11 @@
-import { sources, searchOrigins, newsPublishers, searchPlan, keywords } from './fontes-pesquisa.js';
+import { sources, searchOrigins, newsPublishers, portaisAdicionais, reportagens, searchPlan, keywords } from './fontes-pesquisa.js';
 
 const installed = globalThis.location?.protocol === 'chrome-extension:';
 export function allowedSearchUrl(value) {
   try {
     const url = new URL(value);
     if (url.protocol !== 'https:' || url.username || url.password || url.port) return;
-    if (searchOrigins.some(origin => new URL(origin).hostname === url.hostname)) return url;
+    if (searchOrigins.some(origin => new URL(origin).hostname === url.hostname) || portaisAdicionais.includes(url.hostname)) return url;
   } catch { /* Endereço inválido. */ }
 }
 function text(html) {
@@ -42,8 +42,16 @@ export function decodePage(bytes, type = '') {
 }
 
 async function load(url, signal) {
-  const path = installed ? url.href : '/pesquisa/fonte?url=' + encodeURIComponent(url.href);
-  const response = await fetch(path, { signal: AbortSignal.any([signal, AbortSignal.timeout(6500)]), credentials:'omit', referrerPolicy:'no-referrer', redirect:'error', cache:'no-store' });
+  const path = '/pesquisa/fonte?url=' + encodeURIComponent(url.href);
+  const opcoes = { signal: AbortSignal.any([signal, AbortSignal.timeout(6500)]), credentials:'omit', referrerPolicy:'no-referrer', redirect:'error', cache:'no-store' };
+  let response;
+  if (installed) {
+    try { response = await fetch(url.href, opcoes); } catch { signal.throwIfAborted(); }
+  }
+  if (!response?.ok) {
+    const servidor = installed ? chrome.runtime.getManifest().homepage_url : location.origin;
+    response = await fetch(new URL(path, servidor), opcoes);
+  }
   if (!response.ok) throw new Error('source-unavailable');
   const bytes = new Uint8Array(await response.arrayBuffer());
   return decodePage(bytes,response.headers.get('content-type') || '');
@@ -63,7 +71,7 @@ export function extractPage(html, url, query) {
     .filter(value=>value.length>=55 && value.length<2200 && !/cookies|gestor respons|acesse nossas redes/i.test(value));
   const candidates = /\/constituicao(?:-|\.|\/)/i.test(url.pathname) ? paragraphs.filter(value=>/^Art\.\s*14\b|sufr[aá]gio universal/i.test(value)) : paragraphs;
   const ranked = [...new Set(candidates)].map((value,order)=>({value,order,score:keywords(value).filter(word=>tokens.includes(word)).length + (plan.civic && /sufr[aá]gio universal|liberdade de escolha|livre exerc[ií]cio/i.test(value)?4:0)}))
-    .filter(item=>item.score>0).sort((a,b)=>b.score-a.score||a.order-b.order).slice(0,2);
+    .filter(item=>item.score>0).sort((a,b)=>b.score-a.score||a.order-b.order).slice(0,4);
   const dateValue = doc.querySelector('meta[property="article:published_time"],meta[property="article:modified_time"]')?.content;
   const date = dateValue && Number.isFinite(Date.parse(dateValue)) ? dateValue.slice(0,10) : null;
   return {title:text(title),url:url.href,source:sources.find(source=>source.url===url.href)?.name || url.hostname,date,passages:ranked.map(item=>item.value.slice(0,700)),lead:ranked[0]?.value.slice(0,400)||'',retrievedAt:new Date().toISOString()};
@@ -74,21 +82,22 @@ export async function searchOnline(value, { signal = new AbortController().signa
   if (!plan.query) return { articles:[],status:'empty',query:'' };
   onProgress('Buscando publicações e orientações na internet…');
   const requests = plan.queries.flatMap(query=>{
-    const bing = new URL('https://www.bing.com/search');bing.searchParams.set('q',query+' (site:tse.jus.br OR site:g1.globo.com OR site:agenciabrasil.ebc.com.br OR site:aosfatos.org)');bing.searchParams.set('format','rss');
+    const bing = new URL('https://www.bing.com/search');bing.searchParams.set('q',query+' (site:tse.jus.br OR site:g1.globo.com OR site:agenciabrasil.ebc.com.br OR site:aosfatos.org OR site:terra.com.br OR site:noticias.uol.com.br)');bing.searchParams.set('format','rss');
     const google = new URL('https://news.google.com/rss/search');google.searchParams.set('q',query);google.searchParams.set('hl','pt-BR');google.searchParams.set('gl','BR');google.searchParams.set('ceid','BR:pt-419');
     return [{url:bing,engine:'bing'},{url:google,engine:'google'}];
   });
   const results = await Promise.allSettled(requests.map(async request=>parseSearch(await load(request.url,signal),request.engine)));
   signal.throwIfAborted();
   const tokens = keywords(plan.civic ? plan.queries.join(' ') : plan.query);
-  const names = (plan.query.match(/(?<=\s)[A-ZÀ-Ý][a-zà-ÿ-]{2,}/g) || []).map(word=>word.toLocaleLowerCase('pt-BR'));
+  const names = ((plan.queries[1] && !plan.civic ? plan.queries[1] : plan.query).match(/(?<=\s)[A-ZÀ-Ý][a-zà-ÿ-]{2,}/g) || []).map(word=>word.toLocaleLowerCase('pt-BR'));
   const mentionsNames = row => !names.length || names.every(name=>(row.title+' '+(row.lead||'')).toLocaleLowerCase('pt-BR').includes(name));
   const articles = results.flatMap(result=>result.status==='fulfilled'?result.value:[]);
   const minimum = Math.min(tokens.length,Math.max(2,Math.min(4,Math.ceil(tokens.length/4))));
   const unique = [...new Map(articles.map(row=>[row.url,row])).values()].map(row=>({...row,score:keywords(row.title+' '+row.lead).filter(word=>tokens.includes(word)).length}))
     .filter(row=>row.score>=minimum && (plan.civic || mentionsNames(row))).sort((a,b)=>b.score-a.score).slice(0,4);
   onProgress('Lendo os trechos das fontes encontradas…');
-  const pages = [...new Map([...plan.sources.map(source=>({url:source.url})),...unique.filter(row=>!row.url.startsWith('https://news.google.com/'))].map(row=>[row.url,row])).values()].slice(0,5);
+  const referencias = reportagens.map(row=>({...row,score:keywords(row.titulo).filter(k=>tokens.includes(k)).length})).filter(row=>row.score >= 5);
+  const pages = [...new Map([...referencias,...unique.filter(row=>!row.url.startsWith('https://news.google.com/')),...plan.sources].map(row=>[row.url,row])).values()].slice(0,6);
   const extracted = await Promise.allSettled(pages.map(async row=>{
     const page = extractPage(await load(new URL(row.url),signal),new URL(row.url),plan.query);
     return page ? {...page,score:row.score || 0} : undefined;
@@ -110,5 +119,5 @@ export async function searchOnline(value, { signal = new AbortController().signa
     explanation:'O voto é pessoal e secreto. Você pode escolher entre as candidaturas válidas para aquele cargo e eleição. Para confirmar um nome específico, é preciso conferir a eleição, o turno e o registro da candidatura no TSE.',
     source:choice || rights, candidateLookup:'https://divulgacandcontas.tse.jus.br/divulga/#/',
   };
-  return {articles:orientation ? passages.slice(0,2) : combined,orientation,status:combined.length?'found':results.every(result=>result.status==='rejected')?'unavailable':'not-found',query:plan.query, checkedAt:new Date().toISOString()};
+  return {articles:orientation ? passages.slice(0,2) : combined, paginasLidas:passages, orientation,status:combined.length?'found':results.every(result=>result.status==='rejected')?'unavailable':'not-found',query:plan.query, checkedAt:new Date().toISOString()};
 }
