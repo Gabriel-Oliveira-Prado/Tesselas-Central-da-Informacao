@@ -171,12 +171,13 @@
         <p class="small">O áudio fica no dispositivo. A transcrição pode ser comparada com reportagens pela Central.</p>
         <div class="audio-inputs">
           <label class="file-card" for="audio-file"><strong><svg class="pictograma" aria-hidden="true"><use href="assets/acoes.svg#arquivo"></use></svg>Adicionar áudio</strong><input id="audio-file" type="file" accept="audio/*,video/*"></label>
-          <button class="button button-secondary" id="mic-input" type="button"><svg class="pictograma" aria-hidden="true"><use href="assets/acoes.svg#microfone"></use></svg>Falar ao microfone</button>
+          <button class="button button-secondary" id="mic-input" type="button" aria-describedby="microphone-help"><svg class="pictograma" aria-hidden="true"><use href="assets/acoes.svg#microfone"></use></svg>Falar ao microfone</button>
           <button class="button button-secondary" id="tab-input" type="button"><svg class="pictograma" aria-hidden="true"><use href="assets/acoes.svg#tela"></use></svg>Compartilhar tela e ouvir</button>
         </div>
+        <p id="microphone-help">Fale sua informação. Quando terminar, toque em Encerrar microfone e pesquisar.</p>
         <p id="audio-input-status" class="notice-message" role="status"></p>
-        <p id="audio-transcript"></p>
         <button id="audio-input-stop" class="button button-primary" type="button" hidden>Concluir e verificar</button>
+        <p id="audio-transcript" tabindex="0" aria-label="Texto reconhecido"></p>
 
         <p id="audio-description">Ouça o último texto analisado ou a página atual.</p>
         <label class="field-label" for="speech-rate">Velocidade da voz</label>
@@ -216,7 +217,7 @@
       </section>
       <p class="sr-only" id="app-status" role="status" aria-live="polite" aria-atomic="true"></p>
     </main>
-    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.22.0</span></footer>
+    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.22.1</span></footer>
   </div>
 </body>
 </html>

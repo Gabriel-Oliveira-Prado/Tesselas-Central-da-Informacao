@@ -58,6 +58,6 @@ await mkdir(downloads, {recursive:true});
 await writeFile(new URL('central-da-informacao.zip', downloads), zipSync(entradas, {level: 3}));
 const demonstracoes = new URL('dist/site/demonstracoes/', root);
 await mkdir(demonstracoes, {recursive:true});
-for (const nome of ['demonstracao.mp4','demonstracao.vtt']) {
+for (const nome of ['demonstracao.mp4','demonstracao.vtt','celular-5s.mp4','celular-5s.gif','celular-5s.vtt']) {
   await cp(new URL('docs/gravacoes/' + nome, root), new URL(nome, demonstracoes));
 }

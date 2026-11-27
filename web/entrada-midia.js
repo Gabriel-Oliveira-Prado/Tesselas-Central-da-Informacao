@@ -5,6 +5,7 @@ import { MAX_TEXT_LENGTH } from '../regras-negocio/validacao.js';
 export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest = action => action() }) {
   const $ = id => document.getElementById(id);
   let active;
+  $('tab-input').hidden = typeof navigator.mediaDevices?.getDisplayMedia !== 'function';
   async function begin(kind, file, paste = false) {
     active?.abort();
     const owner = new AbortController();
@@ -47,12 +48,14 @@ export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest
       if (objectURL) URL.revokeObjectURL(objectURL);
       if (reader) void reader.terminate();
       stop.hidden = true;
+      stop.disabled = false;
       stop.onclick = null;
     }
     signal.addEventListener('abort', cleanup, { once: true });
     async function complete() {
       if (finishing || signal.aborted) return;
       finishing = true;
+      stop.disabled = true;
       if (kind === 'mic') stream.getTracks().forEach(track => track.stop());
       status.dataset.busy = 'true';
       status.textContent = kind === 'mic' ? 'Microfone encerrado. Lendo sua fala…' : 'Concluindo a transcrição. Aguarde…';

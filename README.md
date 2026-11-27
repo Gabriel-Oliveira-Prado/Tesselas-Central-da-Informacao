@@ -4,7 +4,11 @@
 
 [Abrir o site da Central](https://tesselas-central-da-informacao.vercel.app) · [Instalar a extensão](https://tesselas-central-da-informacao.vercel.app/web/extensao.html)
 
-**Versão 0.22.0** · Site para celular e computador e extensão para Chrome de computador.
+**Versão 0.22.1** · Site para celular e computador e extensão para Chrome de computador.
+
+[Demonstração de 5 segundos em vídeo](docs/gravacoes/celular-5s.mp4) · [GIF](docs/gravacoes/celular-5s.gif) · [Legendas](docs/gravacoes/celular-5s.vtt)
+
+A demonstração reúne cinco telas reais do navegador em formato de celular. Mostra o envio de uma captura, o resultado, as opções de acessibilidade e a gravação pelo microfone. A fala usada no teste vem de uma amostra de áudio. O vídeo tem narração com Dora. A validação em aparelho físico com TalkBack ou VoiceOver continua pendente.
 
 A Central da Informação verifica notícias de qualquer tema. O resultado começa com **Verdadeiro** ou **Falso** e explica o que a fonte confirmou sobre a afirmação. Quando a evidência é insuficiente ou contraditória, aparece **Não verificado**. A Central acompanha a área de tela escolhida e reconhece texto e fala em português no dispositivo. A pesquisa consulta páginas online por assunto e usa a chave do servidor quando a comparação por Gemini está disponível.
 
