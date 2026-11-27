@@ -36,3 +36,22 @@ test.describe('captura pelo celular', () => {
     await expect(page.locator('#reviewed-claim')).toHaveValue(/cabine de vota/i);
   });
 });
+test('falha de compartilhamento no celular oferece a galeria com foco', async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true,
+  });
+  try {
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      navigator.mediaDevices.getDisplayMedia = async () => {
+        throw new DOMException('Não disponível', 'NotAllowedError');
+      };
+    });
+    await page.goto('/web/index.html');
+    await page.locator('#analyze-page').tap();
+    await page.locator('#start-sharing').tap();
+    await expect(page.getByLabel('Escolher captura de tela')).toBeFocused();
+    await expect(page.locator('#capture-help-status')).toContainText('galeria');
+    await expect(page.locator('#start-sharing')).toBeHidden();
+  } finally { await context.close(); }
+});

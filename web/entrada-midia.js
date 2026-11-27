@@ -2,7 +2,7 @@ import { transcribe } from './transcricao.js';
 import { createReader, readFrame } from './captura-tela.js';
 import { MAX_TEXT_LENGTH } from '../regras-negocio/validacao.js';
 
-export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest = action => action() }) {
+export function setupMediaInputs({ onReview, onResult, onCommand, onMicrophoneStart = () => {}, onShareRequest = action => action() }) {
   const $ = id => document.getElementById(id);
   let active;
   $('tab-input').hidden = typeof navigator.mediaDevices?.getDisplayMedia !== 'function';
@@ -16,7 +16,7 @@ export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest
     status.dataset.busy = 'true';
     const stop = $(paste ? 'paste-media-stop' : 'audio-input-stop');
     const transcript = $(paste ? 'claim' : 'audio-transcript');
-    let stream, player, objectURL, reader, timer, audioReady, inFrame, finishing = false;
+    let microphoneContext, stream, player, objectURL, reader, timer, audioReady, inFrame, finishing = false;
     let collected = '', lastFrame = '', reachedLimit = false, speechText = '';
     const visualTexts = [];
     const display = text => { if (paste) transcript.value = text; else transcript.textContent = text; };
@@ -43,6 +43,7 @@ export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest
     function cleanup() {
       status.dataset.busy = 'false';
       clearTimeout(timer);
+      if (microphoneContext && microphoneContext.state !== 'closed') void microphoneContext.close().catch(() => {});
       stream?.getTracks().forEach(track => track.stop());
       if (player) { player.onended = player.onerror = null; player.pause(); player.removeAttribute('src'); player.load(); }
       if (objectURL) URL.revokeObjectURL(objectURL);
@@ -78,7 +79,13 @@ export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest
     status.textContent = file ? 'Abrindo ' + file.name + '…' : 'Aguardando sua permissão…';
     display('');
     try {
-      if (kind === 'mic') stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (kind === 'mic') {
+        onMicrophoneStart();
+        // O contexto precisa ser liberado pelo toque, antes da permissão assíncrona.
+        microphoneContext = new AudioContext();
+        void microphoneContext.resume().catch(() => {});
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
       if (kind === 'tab') {
         stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true, selfBrowserSurface: 'exclude' });
         if (!stream.getAudioTracks().length) throw new Error('Escolha uma aba e marque Compartilhar áudio da aba.');
@@ -95,14 +102,14 @@ export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest
       stop.hidden = false;
       stop.onclick = complete;
       stop.textContent = kind === 'mic' ? 'Encerrar microfone e pesquisar' : 'Concluir e verificar';
-      if (kind !== 'mic') status.textContent = 'Preparando a transcrição em português…';
+      if (kind !== 'mic') status.textContent = 'Lendo o áudio. Aguarde…';
       audioReady = transcribe(input, signal, (words, final) => {
         if (final) append(words,true); else display((speechText + ' ' + words + '\n' + visualTexts.join('\n')).trim().slice(0, MAX_TEXT_LENGTH));
       }, () => {
         if (kind !== 'mic' || finishing) return;
         status.dataset.busy = 'false';
         status.textContent = 'Escutando. Fale agora e toque em Encerrar microfone e pesquisar quando terminar.';
-      });
+      }, microphoneContext);
       await audioReady;
       if (signal.aborted || finishing) return;
       if (player) {

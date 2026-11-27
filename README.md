@@ -4,9 +4,11 @@
 
 [Abrir o site da Central](https://tesselas-central-da-informacao.vercel.app) · [Instalar a extensão](https://tesselas-central-da-informacao.vercel.app/web/extensao.html)
 
-**Versão 0.22.1** · Site para celular e computador e extensão para Chrome de computador.
+**Versão 0.22.2** · Site para celular e computador e extensão para Chrome de computador.
 
 [Demonstração de 5 segundos em vídeo](docs/gravacoes/celular-5s.mp4) · [GIF](docs/gravacoes/celular-5s.gif) · [Legendas](docs/gravacoes/celular-5s.vtt)
+
+Baixe para compartilhar pelo celular. [Arquivo MP4](https://tesselas-central-da-informacao.vercel.app/downloads/central-celular.mp4) · [Arquivo GIF](https://tesselas-central-da-informacao.vercel.app/downloads/central-celular.gif)
 
 A demonstração reúne cinco telas reais do navegador em formato de celular. Mostra o envio de uma captura, o resultado, as opções de acessibilidade e a gravação pelo microfone. A fala usada no teste vem de uma amostra de áudio. O vídeo tem narração com Dora. A validação em aparelho físico com TalkBack ou VoiceOver continua pendente.
 

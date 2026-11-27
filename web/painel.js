@@ -61,6 +61,7 @@ $('sobre-central').addEventListener('close', () => {
   $('abrir-sobre').focus();
 });
 const stopMediaInputs = setupMediaInputs({
+  onMicrophoneStart: resetSpeech,
   onShareRequest(action) { requestSharing(action, 'audio'); },
   onReview(text) { $('claim').value = text; $('claim').dispatchEvent(new Event('input')); $('claim').focus(); },
   async onResult(text) {
@@ -340,6 +341,19 @@ function renderResult(content) {
 }
 
 function showCaptureError(error, fromScreen) {
+  const unsupported = error.message === 'sharing-unavailable' || error.name === 'NotSupportedError';
+  const mobileDenied = matchMedia('(pointer: coarse)').matches && error.name === 'NotAllowedError';
+  if (fromScreen && (unsupported || mobileDenied)) {
+    requestSharing(analyzeLive);
+    $('screen-sharing-guide').hidden = true;
+    $('start-sharing').hidden = true;
+    $('capture-help-title').textContent = 'Analisar uma captura de tela';
+    const message = 'O navegador não liberou a captura ao vivo. Escolha uma captura da galeria para verificar o texto da notícia.';
+    progress('capture-help-status', false, message);
+    $('screen-image').focus();
+    anunciarAutomaticamente(message);
+    return;
+  }
   lastContent = null;
   $('listen-result').hidden = true;
   $('result-tools').hidden = true;

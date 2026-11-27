@@ -61,3 +61,7 @@ await mkdir(demonstracoes, {recursive:true});
 for (const nome of ['demonstracao.mp4','demonstracao.vtt','celular-5s.mp4','celular-5s.gif','celular-5s.vtt']) {
   await cp(new URL('docs/gravacoes/' + nome, root), new URL(nome, demonstracoes));
 }
+
+for (const formato of ['mp4', 'gif']) {
+  await cp(new URL('docs/gravacoes/celular-5s.' + formato, root), new URL('central-celular.' + formato, downloads));
+}

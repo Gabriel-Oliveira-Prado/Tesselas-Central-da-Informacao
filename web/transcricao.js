@@ -1,7 +1,7 @@
 const modelURL = new URL('./vendor/speech/pt.tar.gz', import.meta.url).href;
 
-export async function transcribe(input, signal, onWords, onListening) {
-  const context = new AudioContext(input instanceof MediaStream ? undefined : { sampleRate: 16000 });
+export async function transcribe(input, signal, onWords, onListening, audioContext) {
+  const context = audioContext || new AudioContext(input instanceof MediaStream ? undefined : { sampleRate: 16000 });
   let model, recognizer, source, node, drained, final;
   const close = () => {
     node?.disconnect();
