@@ -185,3 +185,8 @@ body[data-extra-large] :is(.evidence,.research-progress,.conclusion-banner,.file
 body[data-extra-large] .verdict-label { display: block; }
 body[data-extra-large] .check-row { gap: 8px; flex-wrap: wrap; }
 body[data-extra-large] .skip-link:focus { inset: 4px 4px auto; padding: 4px; }
+#listen-result { width: 52px; min-height: 52px; padding: 12px; }
+#listen-result[aria-pressed="true"] { background: var(--ink); color: white; outline: 3px solid currentColor; }
+@media (max-width: 480px) {
+  #history-view .view-heading { flex-wrap: wrap; }
+}

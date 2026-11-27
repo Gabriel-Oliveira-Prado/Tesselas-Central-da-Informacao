@@ -15,7 +15,7 @@ export async function compararFontes(afirmacao, artigos, signal) {
     const fonte = fontes[dado.indice];
     if (!fonte || !['true','false','context','answer'].includes(dado.tipo) || !dado.trecho || !fonte.passages.some(t=>t.includes(dado.trecho))) return {};
     return { status:'comparado', registro:{ id:'gemini:'+fonte.url, kind:dado.tipo, claim:afirmacao,
-      finding:'Comparação com fonte · Gemini', explanation:dado.explicacao, quote:dado.trecho,
+      finding:'Comparação com fonte · Central', explanation:dado.explicacao, quote:dado.trecho,
       topic:fonte.title, url:fonte.url, source:fonte.source, published:fonte.date,
       consultedAt:new Date().toISOString().slice(0,10) } };
   } catch { signal?.throwIfAborted(); return { status:'indisponivel' }; }

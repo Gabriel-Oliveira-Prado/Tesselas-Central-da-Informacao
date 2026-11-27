@@ -79,7 +79,10 @@ async function gravarExtensao() {
     await fonte.bringToFront();
     await painel.bringToFront();
     for (const [ano, veredito] of [[2020, 'Fora de contexto'], [2025, 'Verdadeiro']]) {
-      if (ano === 2025) await fonte.locator('main').evaluate((el, texto) => { el.textContent = texto; }, trecho(ano));
+      if (ano === 2025) {
+        await fonte.locator('main').evaluate((el, texto) => { el.textContent = texto; }, trecho(ano));
+        await painel.locator('#continue-live').click();
+      }
       await expect(painel.locator('#live-text')).toContainText(String(ano), { timeout: 35000 });
       await expect(painel.locator('#live-verdict')).toHaveText(veredito, { timeout: 15000 });
       if (ano === 2020) await expect(painel.locator('#live-matches')).toContainText('A checagem confirma 2025');

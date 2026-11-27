@@ -43,6 +43,10 @@ export function showEvidence(container, { exact, related, news = [], orientation
       candidates.href=orientation.candidateLookup;candidates.target='_blank';candidates.rel='noopener noreferrer';article.append(candidates);
     }
   }
+  if (related.length || news.length) {
+    cards.push(node('h2', 'Outras fontes para consultar'));
+    cards.push(node('p', 'Estas publicações ajudam a investigar o assunto. Confira o resultado da checagem acima.'));
+  }
   for (const record of related) {
     const article = node('article', '', 'evidence');
     article.append(node('h2', 'Leitura sobre ' + record.topic), node('p', record.explanation));

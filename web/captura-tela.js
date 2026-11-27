@@ -67,7 +67,7 @@ export async function readFrame(worker, canvas, signal, centralContent = false) 
   return { text: text.slice(0, MAX_TEXT_LENGTH), truncated: text.length > MAX_TEXT_LENGTH, screen: true };
 }
 
-export async function followScreen(controller, { onStart, onFrame, onPreview = () => {}, onProgress = () => {} }) {
+export async function followScreen(controller, { onStart, onFrame, onPreview = () => {}, onProgress = () => {}, isPaused = () => false }) {
   const { signal } = controller;
   const stream = await chooseScreen();
   const video = document.createElement('video');
@@ -94,7 +94,7 @@ export async function followScreen(controller, { onStart, onFrame, onPreview = (
     worker = await createReader(signal);
     onProgress('Reconhecendo o primeiro quadro…');
     while (!signal.aborted) {
-      if (video.readyState >= 2 && video.videoWidth) {
+      if (!isPaused() && video.readyState >= 2 && video.videoWidth) {
         const scale = Math.min(1, 1920 / Math.max(video.videoWidth, video.videoHeight));
         canvas.width = Math.round(video.videoWidth * scale);
         canvas.height = Math.round(video.videoHeight * scale);

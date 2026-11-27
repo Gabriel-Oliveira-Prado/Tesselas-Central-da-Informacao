@@ -8,6 +8,13 @@ import { newsEdition } from '../regras-negocio/edicao-noticias.js';
 import { conclusionFor } from '../regras-negocio/veredito.js';
 import { evidenceFor } from '../regras-negocio/pesquisa.js';
 import { searchPlan } from '../regras-negocio/fontes-pesquisa.js';
+import { trechoDaTela } from '../regras-negocio/trecho-da-tela.js';
+
+test('manchete reconhecida mantém o local e descarta controles de autenticação', () => {
+  const manchete = 'Flávio Bolsonaro perde para Lula na seção eleitoral em que vota no Rio de Janeiro';
+  assert.equal(trechoDaTela(manchete + ' [ entrar) Cadastre-se Seguir comentários e outras notícias'), manchete);
+  assert.equal(trechoDaTela(manchete.replace('Rio de Janeiro', 'São Paulo')), manchete.replace('Rio de Janeiro', 'São Paulo'));
+});
 
 test('perguntas por idade preservam número, obrigação e condições da consulta', () => {
   for (const [texto, tipo] of [

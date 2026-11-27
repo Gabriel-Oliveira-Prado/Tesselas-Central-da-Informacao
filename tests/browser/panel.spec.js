@@ -129,6 +129,8 @@ test('vídeo reproduzido ao vivo muda o veredito e descarta o anterior, sem envi
   const verdict = page.locator('#live-matches .finding');
   for (const label of ['Falso, segundo a fonte', 'Confirmado pela fonte', 'Fora de contexto']) {
     await expect(verdict).toHaveText(label, { timeout: 11000 });
+    await expect(page.locator('#continue-live')).toBeVisible();
+    await page.locator('#continue-live').click();
   }
   await expect(page.locator('#live-summary')).toContainText('evidência suficiente', { timeout: 11000 });
   await expect(verdict).toHaveCount(0);
@@ -142,7 +144,7 @@ test('vídeo reproduzido ao vivo muda o veredito e descarta o anterior, sem envi
 test('pergunta de exemplo e tema relacionado têm tratamentos distintos', async ({ page }) => {
   await page.goto(panelPath);
   await page.locator('#open-paste').click();
-  await page.locator('#use-example').click();
+  await page.locator('#claim').fill('Vídeo mostra resgate de onça no rio Negro, em Manaus, em 2025');
   await page.getByRole('button', { name: 'Pesquisar informação' }).click();
   await expect(page.locator('#result-title')).toHaveText('Verdadeiro');
   await expect(page.locator('#result-matches .verdict-true')).toContainText('resgate de onça');
@@ -176,7 +178,7 @@ test('a descrição visual opcional permanece separada da checagem e libera o mo
   await page.goto(panelPath);
   await page.locator('#analyze-page').click();
   await page.locator('#start-sharing').click();
-  await expect(page.locator('#live-view button')).toHaveCount(1);
+  await expect(page.locator('#live-view button')).toHaveCount(2);
   await expect(page.locator('#vision-result')).toHaveText('Possível aparelho celular.', { timeout: 10000 });
   await expect(page.locator('#live-summary')).toContainText('evidência suficiente');
   await expect(page.locator('#live-matches .finding')).toHaveCount(0);
@@ -268,6 +270,11 @@ test('voz tem acionamento explícito, lê a explicação e permite pausa e parad
   await page.locator('#audio-view [data-back]').click();
   await pasteAndVerify(page, knownClaim);
   await page.locator('#listen-result').click();
+  await expect(page.locator('#result-view')).toBeVisible();
+  await expect(page.locator('#listen-result')).toHaveAttribute('aria-pressed','true');
+  await page.locator('#listen-result').click();
+  await page.locator('#open-audio').evaluate(el => el.click());
+  await page.locator('#speak').click();
   await expect(page.getByRole('button', { name: 'Pausar', exact: true })).toBeFocused();
   expect(await page.evaluate(() => window.spokenText)).toContain('Falso, segundo a fonte');
   await page.keyboard.press('Enter');
@@ -275,9 +282,9 @@ test('voz tem acionamento explícito, lê a explicação e permite pausa e parad
   await page.keyboard.press('Enter');
   await page.getByRole('button', { name: 'Parar', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Ouvir última informação', exact: true })).toBeFocused();
-  expect(await page.evaluate(() => window.voiceActions.filter((action) => action !== 'cancel'))).toEqual(['speak', 'speak', 'pause', 'resume']);
+  expect(await page.evaluate(() => window.voiceActions.filter((action) => action !== 'cancel'))).toEqual(['speak', 'speak', 'speak', 'pause', 'resume']);
   await page.getByRole('button', { name: 'Voltar', exact: true }).click();
-  await expect(page.locator('#listen-result')).toBeFocused();
+  await expect(page.locator('#open-audio')).toBeFocused();
 });
 
 test('mudar de opção durante a captura não troca a tela nem rouba o foco depois', async ({ page }) => {
@@ -375,6 +382,7 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     await extensionPage.locator('#live-preview').screenshot({path:'test-results/previa-real.png'});
     await expect(extensionPage.locator('.finding')).toHaveText('Falso, segundo a fonte', { timeout: 20000 });
     await expect(extensionPage.locator('#live-text')).toContainText(knownClaim);
+    await extensionPage.locator('#continue-live').click();
     await demoPage.evaluate(() => { document.body.innerHTML = '<main style="padding:45px;font:32px Arial">Dá para votar pelo celular se estiver chovendo?</main>'; });
     await expect(extensionPage.locator('#live-matches')).toContainText('votação é presencial', { timeout: 15000 });
     await extensionPage.locator('#stop-live').click();
@@ -487,9 +495,11 @@ test('resultado falado tem equivalente escrito, velocidade ajustável e retorno 
   await page.goto(panelPath);
   await pasteAndVerify(page, knownClaim);
   await page.getByRole('button', { name: 'Ouvir resultado' }).press('Enter');
-  await expect(page.locator('#pause-speech')).toBeFocused();
-  await expect(page.locator('#speech-help')).toContainText('Leitura iniciada');
-  await page.locator('#stop-speech').press('Enter');
+  await expect(page.locator('#result-view')).toBeVisible();
+  await expect(page.locator('#listen-result')).toHaveAttribute('aria-pressed','true');
+  await page.locator('#listen-result').press('Space');
+  await page.locator('#result-view [data-back]').click();
+  await page.locator('#open-audio').click();
   await page.getByLabel('Velocidade da voz').selectOption('0.75');
   await page.locator('#speak').press('Enter');
   const spoken = await page.evaluate(() => window.lastSpeech);
@@ -497,7 +507,7 @@ test('resultado falado tem equivalente escrito, velocidade ajustável e retorno 
   expect(spoken.text).toContain('Falso, segundo a fonte');
   await expect(page.getByText('Ver texto para ouvir', { exact: true })).toHaveCount(0);
   await page.locator('#audio-view [data-back]').press('Enter');
-  await expect(page.getByRole('button', { name: 'Ouvir resultado' })).toBeFocused();
+  await expect(page.locator('#open-audio')).toBeFocused();
 });
 
 test('cards com rótulos, alvo amplo, contraste e foco em cores forçadas', async ({ page }) => {

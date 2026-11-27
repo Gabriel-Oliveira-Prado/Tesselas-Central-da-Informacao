@@ -16,8 +16,10 @@ import { research } from '../regras-negocio/pesquisa.js';
 import { enableAccessibleNavigation, highlightSpeech } from './navegacao-acessivel.js';
 import { setLibras } from './libras.js';
 import { conclusionFor } from '../regras-negocio/veredito.js';
+import { trechoDaTela } from '../regras-negocio/trecho-da-tela.js';
 
 const $ = (id) => document.getElementById(id);
+const novaConsulta = $('new-query');
 const extension = Boolean(globalThis.chrome?.runtime?.id && globalThis.chrome?.scripting);
 document.body.classList.remove('no-js');
 if (extension) $('project-version').textContent = `Versão ${chrome.runtime.getManifest().version}`;
@@ -36,6 +38,9 @@ let activeCapture;
 let activeResearch;
 let liveSession;
 let finishLiveAudio;
+let finishLiveResearch;
+let continueLive;
+$('continue-live').addEventListener('click', () => continueLive?.());
 let sessionHistory = [];
 let checkScope = 'general';
 let shareAction;
@@ -110,6 +115,7 @@ $('share-paste-alternative').addEventListener('click', () => openPaste());
 $('read-tab-alternative').addEventListener('click', analyzeTab);
 
 function resetSpeech() {
+  $('listen-result').setAttribute('aria-pressed', 'false');
   speech = null;
   speechPaused = false;
   if (voiceAvailable) window.speechSynthesis.cancel();
@@ -177,10 +183,15 @@ function prepareAudio(fromResult) {
 }
 $('open-audio').addEventListener('click', () => prepareAudio(false));
 $('listen-result').addEventListener('click', () => {
-  prepareAudio(true);
-  $('speak').click();
+  if (speech) { resetSpeech(); return; }
+  const utterance = new SpeechSynthesisUtterance(readingText(lastContent));
+  utterance.lang = 'pt-BR';
+  speech = utterance;
+  $('listen-result').setAttribute('aria-pressed', 'true');
+  utterance.onend = utterance.onerror = () => { if (speech === utterance) resetSpeech(); };
+  speechSynthesis.speak(utterance);
 });
-$('new-query').addEventListener('click', () => {
+novaConsulta.addEventListener('click', () => {
   $('claim').value = '';
   clearError();
   progress('research-status',false,'');
@@ -238,6 +249,7 @@ function renderSearchLinks() {
 $('search-query').addEventListener('input', renderSearchLinks);
 
 function renderResult(content) {
+  $('result-matches').before(novaConsulta);
   lastContent = content;
   const evidence = content.evidence || evidenceFor(content.text, content.story);
   if (content.story && !evidence.exact.some(item => item.url === content.story.url)) evidence.news = [content.story, ...evidence.news.filter(n => n.url !== content.story.url)];
@@ -260,6 +272,9 @@ function renderResult(content) {
   $('libras-status').textContent = '';
   $('libras-text').value = evidence.orientation ? evidence.orientation.explanation : matches.length ? matches.map((item) => `${item.claim} ${item.finding}. ${item.explanation} Fonte: ${item.source}.`).join('\n\n') : [$('result-title').textContent, $('result-summary').textContent, ...evidence.related.map(r => r.explanation), ...evidence.news.map(r => r.title + '. ' + r.source)].join(' ');
   showEvidence($('result-matches'), evidence);
+  const principal = [...$('result-matches').querySelectorAll(':scope > article[class*="verdict-"]')].at(-1);
+  if (principal) principal.after(novaConsulta);
+  else $('result-matches').prepend(novaConsulta);
   $('reviewed-claim').value = content.text;
   $('source-context').hidden = !content.url;
   $('source-context').textContent = content.url ? `Origem: ${content.title || content.url}. ${content.url}` : '';
@@ -336,6 +351,7 @@ $('stop-live').addEventListener('click', async () => {
   const session = liveSession;
   $('stop-live').setAttribute('aria-disabled', 'true');
   try { await finishLiveAudio?.(); } catch { /* Os trechos já concluídos ficam no histórico. */ }
+  try { await finishLiveResearch?.(); } catch { /* Os resultados concluídos ficam no histórico. */ }
   if (session !== liveSession) return;
   session?.abort();
   $('stop-live').removeAttribute('aria-disabled');
@@ -368,6 +384,7 @@ async function analyzeLive() {
   liveSession?.abort();
   liveSession = session;
   finishLiveAudio = undefined;
+  $('continue-live').hidden = true;
   sessionHistory = [];
   const remember = (text, evidence, origin, time) => {
     if (!text || sessionHistory.some(item => item.text === text.slice(0,650) && item.origin === origin)) return;
@@ -375,7 +392,27 @@ async function analyzeLive() {
     if (sessionHistory.length > 50) sessionHistory.shift();
   };
   let lastKey, heard = '', heardAt = 0, track, audioTrack, listening = false, failedAudio = false, badge;
-  let pendingResearch, currentText = '', searchedText = '';
+  let pendingResearch, currentText = '', searchedText = '', paused = false;
+  let resolvedEvidence, resolvedText = '', previousText = '';
+  const pause = () => {
+    paused = true;
+    $('continue-live').hidden = false;
+    progress('live-progress', false, 'Trecho analisado. Escolha Continuar análise para mostrar mais conteúdo.');
+    $('live-state').textContent = 'Análise pausada · compartilhamento ativo';
+    badge?.(track, 'Central · análise pausada');
+  };
+  continueLive = () => {
+    previousText = currentText;
+    paused = false;
+    heard = '';
+    heardAt = 0;
+    lastKey = undefined;
+    searchedText = '';
+    resolvedText = '';
+    $('continue-live').hidden = true;
+    progress('live-progress', true, 'Lendo o próximo trecho…');
+  };
+  finishLiveResearch = () => pendingResearch;
   const enrich = (text, origin) => {
     if (pendingResearch || text.length < 15 || text === searchedText || evidenceFor(text).exact.length) return;
     searchedText = text;
@@ -385,12 +422,15 @@ async function analyzeLive() {
       const item = sessionHistory.find(item=>item.text===text.slice(0,650) && item.origin===origin);
       if (item) item.evidence = evidence;
       if (currentText===text) {
+        resolvedText = text;
+        resolvedEvidence = evidence;
         setLiveConclusion(evidence, false);
         showEvidence($('live-matches'), evidence);
         $('live-summary').textContent = conclusionFor(evidence).explanation;
         if (lastContent) lastContent.evidence = evidence;
+        pause();
       }
-    }).catch(()=>{if (!signal.aborted && currentText === text) progress('live-progress',false,'Pesquisa interrompida. O trecho ainda não foi verificado.');}).finally(()=>{pendingResearch=undefined;});
+    }).catch(()=>{if (!signal.aborted && currentText === text) { pause(); progress('live-progress',false,'Pesquisa interrompida. Escolha Continuar análise para tentar outro trecho.'); }}).finally(()=>{pendingResearch=undefined;});
   };
   const state = () => listening && audioTrack?.readyState === 'live' && !audioTrack.muted ? 'Lendo tela e escutando áudio' : failedAudio ? 'Lendo tela · áudio indisponível' : 'Lendo tela';
   const indicate = () => { if (!signal.aborted && track) { $('live-state').textContent = state(); badge?.(track, 'Central · ' + state()); } };
@@ -421,6 +461,7 @@ async function analyzeLive() {
   }, { once: true });
   try {
     await followScreen(session, {
+      isPaused: () => paused,
       onProgress(message) { if (!signal.aborted) progress('live-progress',true,message); },
       onPreview(canvas,time) {
         if(signal.aborted) return;
@@ -449,7 +490,7 @@ async function analyzeLive() {
         if (audioTrack) {
           for (const event of ['mute','unmute','ended']) audioTrack.addEventListener(event, indicate, { signal });
           transcribe(new MediaStream([audioTrack]), signal, (text, final) => {
-            if (signal.aborted) return;
+            if (signal.aborted || paused) return;
             $('live-heard').textContent = 'Áudio · ' + text;
             if (final) { heard = text; heardAt = Date.now(); remember(text, evidenceFor(text), 'Áudio da superfície escolhida', new Date()); enrich(text,'Áudio da superfície escolhida'); }
           }).then(finish => { finishLiveAudio = finish; listening = true; indicate(); }).catch(() => { failedAudio = true; indicate(); });
@@ -463,6 +504,9 @@ async function analyzeLive() {
         showView('live', 'live-title');
       },
       async onFrame(content, canvas, time) {
+        if (paused) return;
+        content = { ...content, text: trechoDaTela(content.text) };
+        if (previousText && content.text === previousText && !heard) return;
         indicate();
         const spoken = Date.now() - heardAt < 9000 ? heard : '';
         const combined = [content.text, spoken].filter(Boolean).join('\n');
@@ -475,7 +519,7 @@ async function analyzeLive() {
           $('visual-source-link').href = reference.url;
           $('visual-source-link').textContent = 'Ver a arte original sobre ' + reference.topic + ' (nova aba)';
         }
-        const evidence = evidenceFor(content.text);
+        const evidence = resolvedText === currentText ? resolvedEvidence : evidenceFor(content.text);
         const audioEvidence = spoken ? evidenceFor(spoken) : { exact: [], related: [], news: [] };
         for (const key of ['exact','related','news']) evidence[key] = [...new Map([...evidence[key], ...audioEvidence[key]].map(item => [item.id || item.url, item])).values()];
         remember(content.text, evidenceFor(content.text), 'Texto na superfície escolhida', time);
@@ -501,7 +545,11 @@ async function analyzeLive() {
         $('live-text').textContent = content.text.slice(0, 650) || 'Sem texto visível neste quadro.';
         $('live-preview').src = canvas.toDataURL('image/jpeg', .6);
         $('live-preview').hidden = false;
-        enrich(currentText, spoken.length >= 15 ? 'Áudio da superfície escolhida' : 'Texto na superfície escolhida');
+        if (evidence.exact.length || evidence.orientation) pause();
+        else {
+          enrich(currentText, spoken.length >= 15 ? 'Áudio da superfície escolhida' : 'Texto na superfície escolhida');
+          await pendingResearch;
+        }
         $('live-time').textContent = 'Quadro analisado às ' + time.toLocaleTimeString('pt-BR') + '.';
         if (visualAssistant) {
           try {
@@ -585,11 +633,6 @@ $('review-form').addEventListener('submit', async (event) => {
       progress('research-status', false, '');
     }
   }
-});
-$('use-example').addEventListener('click', () => {
-  $('claim').value = checkScope === 'elections' ? 'Dá para votar pelo celular se estiver chovendo?' : 'Vídeo mostra resgate de onça no rio Negro, em Manaus, em 2025';
-  $('claim').dispatchEvent(new Event('input'));
-  $('claim').focus();
 });
 
 function applyPreferences(preferences) {
