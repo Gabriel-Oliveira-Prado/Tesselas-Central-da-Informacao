@@ -15,6 +15,12 @@ test('informações dos cards, atalhos e Tab alcançam a conclusão', async ({ p
   await expect(page.locator('.brand')).toBeFocused();
   await expect.poll(() => page.evaluate(() => window.focusSpeech.at(-1))).toBe('Logo Central da Informação, início');
   await page.keyboard.press('Tab');
+  await expect(page.getByRole('button',{ name:'Sobre', exact:true })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog')).toContainText('Se faltar evidência');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#abrir-sobre')).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(page.locator('#home-title')).toBeFocused();
   await expect.poll(() => page.evaluate(() => window.focusSpeech.at(-1))).toContain('Como podemos ajudar? Use 1 a 5 para selecionar.');
   for (const [index, card] of ['analyze-page','open-paste','open-audio','open-settings','open-elections'].entries()) {

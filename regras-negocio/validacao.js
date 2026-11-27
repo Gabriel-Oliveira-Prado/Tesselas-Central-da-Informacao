@@ -33,6 +33,7 @@ export function safePreferences(value = {}) {
     ...(value.speakChanges === true ? { speakChanges: true } : {}),
     ...(['protanopia', 'deuteranopia', 'tritanopia', 'mono'].includes(perfil) ? { colorProfile: perfil } : {}),
     ...(value.speakFocus === false ? { speakFocus: false } : {}),
+    ...(['dora','alex'].includes(value.voz) ? { voz:value.voz } : {}),
     ...(value.libras === true ? { libras: true } : {}),
     ...(value.reduceMotion === true ? { reduceMotion: true } : {}),
   };

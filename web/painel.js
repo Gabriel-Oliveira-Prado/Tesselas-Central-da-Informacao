@@ -17,6 +17,8 @@ import { enableAccessibleNavigation, highlightSpeech } from './navegacao-acessiv
 import { setLibras } from './libras.js';
 import { conclusionFor } from '../regras-negocio/veredito.js';
 import { trechoDaTela } from '../regras-negocio/trecho-da-tela.js';
+import { falar, pararVoz, pausarVoz } from './voz.js';
+import { falasFixas } from './falas-fixas.js';
 
 const $ = (id) => document.getElementById(id);
 const novaConsulta = $('new-query');
@@ -47,6 +49,24 @@ let shareAction;
 let shareOrigin = 'screen';
 try { navigator.mediaDevices?.setCaptureHandleConfig?.({ handle: 'central-painel', permittedOrigins: ['*'] }); } catch { /* Disponibilidade varia com a superfície. */ }
 const anunciarAutomaticamente = enableAccessibleNavigation();
+$('chamada-extensao').hidden = extension;
+$('sobre-guia').hidden = extension;
+$('abrir-sobre').addEventListener('click', () => {
+  $('sobre-central').showModal();
+  anunciarAutomaticamente($('sobre-resumo').textContent);
+});
+$('sobre-central').addEventListener('close', () => {
+  pararVoz();
+  $('abrir-sobre').focus();
+});
+$('ouvir-amostra').addEventListener('click', () => {
+  if (!voiceAvailable) return;
+  const amostra = new SpeechSynthesisUtterance(falasFixas.amostra);
+  amostra.lang = 'pt-BR';
+  $('estado-voz').textContent = '';
+  void falar(amostra);
+});
+$('ouvir-amostra').disabled = !voiceAvailable;
 const stopMediaInputs = setupMediaInputs({
   onShareRequest(action) { requestSharing(action, 'audio'); },
   onReview(text) { $('claim').value = text; $('claim').dispatchEvent(new Event('input')); $('claim').focus(); },
@@ -118,7 +138,7 @@ function resetSpeech() {
   $('listen-result').setAttribute('aria-pressed', 'false');
   speech = null;
   speechPaused = false;
-  if (voiceAvailable) window.speechSynthesis.cancel();
+  if (voiceAvailable) pararVoz();
   $('speak').disabled = !voiceAvailable;
   $('speech-rate').disabled = !voiceAvailable;
   $('pause-speech').disabled = true;
@@ -189,7 +209,7 @@ $('listen-result').addEventListener('click', () => {
   speech = utterance;
   $('listen-result').setAttribute('aria-pressed', 'true');
   utterance.onend = utterance.onerror = () => { if (speech === utterance) resetSpeech(); };
-  speechSynthesis.speak(utterance);
+  void falar(utterance);
 });
 novaConsulta.addEventListener('click', () => {
   $('claim').value = '';
@@ -453,7 +473,7 @@ async function analyzeLive() {
     visualAssistant = undefined;
     $('analyze-page').disabled = false;
     $('loading-message').hidden = true;
-    if (voiceAvailable) speechSynthesis.cancel();
+    if (voiceAvailable) pararVoz();
     $('live-state').textContent = 'Compartilhamento encerrado.';
     $('live-preview').removeAttribute('src');
     $('live-preview').hidden = true;
@@ -532,13 +552,12 @@ async function analyzeLive() {
           setLiveConclusion(evidence, !evidence.exact.length && currentText.length >= 15);
           showEvidence($('live-matches'), evidence);
           $('live-summary').textContent = verdict.explanation;
-          const voice = $('speak-changes').checked && localPortugueseVoice();
-          if (voice) {
-            speechSynthesis.cancel();
+          const voice = localPortugueseVoice();
+          if (voiceAvailable && $('speak-changes').checked && (voice || document.body.dataset.voz !== 'navegador')) {
             const utterance = new SpeechSynthesisUtterance(textoDoResultado(evidence));
-            utterance.voice = voice;
-            utterance.lang = voice.lang;
-            speechSynthesis.speak(utterance);
+            utterance.voice = voice || null;
+            utterance.lang = voice?.lang || 'pt-BR';
+            void falar(utterance);
           }
           lastKey = key;
         }
@@ -645,6 +664,7 @@ function applyPreferences(preferences) {
   $('speak-focus').checked = safe.speakFocus !== false;
   $('enable-libras').checked = !!safe.libras;
   $('reduce-motion').checked = !!safe.reduceMotion;
+  $('voz-leitura').value = safe.voz || 'navegador';
   void setLibras(!!safe.libras);
 }
 async function readPreferences() {
@@ -656,7 +676,7 @@ async function readPreferences() {
 }
 async function savePreferences() {
   preferenceRevision += 1;
-  const preferences = safePreferences({ fontSize: $('font-size').value, highContrast: !$('standard-colors').checked, textSpacing: $('text-spacing').value, speakChanges: $('speak-changes').checked, colorProfile: $('color-profile').value, speakFocus: $('speak-focus').checked, libras: $('enable-libras').checked, reduceMotion: $('reduce-motion').checked });
+  const preferences = safePreferences({ voz:$('voz-leitura').value, fontSize: $('font-size').value, highContrast: !$('standard-colors').checked, textSpacing: $('text-spacing').value, speakChanges: $('speak-changes').checked, colorProfile: $('color-profile').value, speakFocus: $('speak-focus').checked, libras: $('enable-libras').checked, reduceMotion: $('reduce-motion').checked });
   applyPreferences(preferences);
   try {
     if (extension) await chrome.storage.local.set({ readingPreferences: preferences });
@@ -675,6 +695,11 @@ $('speak-changes').addEventListener('change', savePreferences);
 $('speak-focus').addEventListener('change', savePreferences);
 $('enable-libras').addEventListener('change', savePreferences);
 $('reduce-motion').addEventListener('change', savePreferences);
+$('voz-leitura').addEventListener('change', () => {
+  resetSpeech();
+  $('estado-voz').textContent = '';
+  void savePreferences();
+});
 readPreferences();
 
 if (!voiceAvailable) {
@@ -739,13 +764,13 @@ $('speak').addEventListener('click', async () => {
   $('pause-speech').disabled = false;
   $('stop-speech').disabled = false;
   $('speech-rate').disabled = true;
-  window.speechSynthesis.speak(utterance);
+  void falar(utterance);
   $('pause-speech').focus();
   audioStatus('Leitura iniciada. Use Pausar ou Parar para controlar.');
 });
 $('pause-speech').addEventListener('click', () => {
   if (!speech) return;
-  if (speechPaused) window.speechSynthesis.resume(); else window.speechSynthesis.pause();
+  pausarVoz(!speechPaused);
   speechPaused = !speechPaused;
   $('pause-speech').textContent = speechPaused ? 'Continuar' : 'Pausar';
   audioStatus(speechPaused ? 'Leitura pausada.' : 'Leitura retomada.');

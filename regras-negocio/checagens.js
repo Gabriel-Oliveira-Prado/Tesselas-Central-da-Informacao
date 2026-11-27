@@ -82,7 +82,8 @@ export const FACT_CHECKS = [
 ];
 
 export function normalizeForLookup(value) {
-  return (typeof value === 'string' ? value.slice(0, 8000) : '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  return (typeof value === 'string' ? value.slice(0, 8000) : '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
+    .replace(/\bproibid[oa](?: de)? entrar\b/g, 'proibido entrar').replace(/\bcom (?:o |um )celular\b/g, 'com celular');
 }
 
 export function findFactChecks(text) {

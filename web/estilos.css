@@ -29,6 +29,19 @@ button, a, input, select, textarea, summary { touch-action: manipulation; }
 .brand-bar { display: flex; flex-direction: column; gap: .75rem; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
 .brand { display: inline-flex; max-width: 100%; min-height: 44px; align-items: center; border-radius: .25rem; }
 .brand img { display: block; width: 14rem; max-width: 100%; height: auto; }
+.brand-bar:has(.brand-about) { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: .5rem; }
+.brand-bar:has(.brand-about) .brand { grid-column: 2; }
+.brand-about { justify-self: end; min-height: 44px; min-width: 44px; padding: .25rem .55rem; border: 1px solid var(--border); border-radius: .6rem; color: var(--primary); background: var(--surface); font-weight: 650; }
+a.brand-about { display: inline-flex; align-items: center; }
+@media (max-width: 28rem) { .brand-bar:has(.brand-about) .brand { width: clamp(5rem, calc(100vw - 12rem), 14rem); } }
+body[data-large-text="true"] .brand-bar:has(.brand-about) { display: flex; }
+body[data-large-text="true"] .brand-about { align-self: end; }
+body[data-large-text="true"] .brand-bar .brand { width: auto; }
+dialog { max-width: min(30rem, 92vw); max-height: 85vh; overflow: auto; background: var(--surface); color: var(--ink); border: 2px solid var(--primary); border-radius: .8rem; padding: 1.25rem; }
+dialog::backdrop { background: rgb(17 27 49 / 55%); }
+.guia-extensao { margin-block: 1.25rem; padding: 1rem; border: 1px solid var(--border); border-radius: .8rem; }
+.guia-extensao a { display: inline-flex; }
+.video-guia { display: block; width: 100%; aspect-ratio: 1160/840; background: #182451; margin-bottom: 1.5rem; }
 /* A placa clara mantém o desenho legível também nas cores forçadas do sistema. */
 @media (forced-colors: active) { .brand img { background: white; forced-color-adjust: none; } }
 .home-intro { margin-block: 2rem 1.5rem; }

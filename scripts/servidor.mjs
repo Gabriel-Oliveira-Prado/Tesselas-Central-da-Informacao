@@ -6,16 +6,48 @@ import { electionSources } from '../regras-negocio/fontes-eleitorais.js';
 import { articleUrl, newsFeeds } from '../regras-negocio/noticias.js';
 import { allowedSearchUrl } from '../regras-negocio/busca-online.js';
 import { atenderGemini } from './gemini.mjs';
+import { atenderVoz } from './voz.mjs';
+import { createReadStream } from 'node:fs';
+import { stat } from 'node:fs/promises';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 try { process.loadEnvFile(resolve(root, '.env')); } catch (err) { if (err.code !== 'ENOENT') throw err; }
 const types = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json; charset=utf-8', '.webm': 'video/webm', '.wav': 'audio/wav', '.wasm': 'application/wasm', '.ttf': 'font/ttf' };
-let port = Number(process.env.PORT || 4173);
+types['.mp3'] = 'audio/mpeg';
+let port = Number(process.env.PORT || 4177);
 const initialPort = port;
 
 const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, 'http://localhost');
+    if (['/demonstracoes/demonstracao.mp4','/demonstracoes/demonstracao.vtt'].includes(url.pathname)) {
+      const video = url.pathname.endsWith('.mp4');
+      const caminho = resolve(root,'docs/gravacoes',video ? 'demonstracao.mp4' : 'demonstracao.vtt');
+      const {size} = await stat(caminho);
+      const cabecalhos = {'Content-Type': video ? 'video/mp4' : 'text/vtt; charset=utf-8', 'Accept-Ranges':'bytes'};
+      const intervalo = /^bytes=(\d+)-(\d*)$/.exec(request.headers.range || '');
+      const start = intervalo ? Number(intervalo[1]) : 0;
+      const end = intervalo?.[2] ? Math.min(Number(intervalo[2]),size-1) : size-1;
+      if (start > end) return response.writeHead(416,{'Content-Range':'bytes */'+size}).end();
+      if (intervalo) cabecalhos['Content-Range'] = 'bytes '+start+'-'+end+'/'+size;
+      response.writeHead(intervalo ? 206 : 200, {...cabecalhos,'Content-Length':end-start+1});
+      if (request.method === 'HEAD') return response.end();
+      const corpo = createReadStream(caminho,{start,end});
+      response.on('close', () => corpo.destroy());
+      corpo.on('error', () => response.destroy()).pipe(response);
+      return;
+    }
+    if (url.pathname === '/api/voz') return await atenderVoz(request, response);
+    if (url.pathname === '/downloads/central-da-informacao.zip') {
+      const pacote = resolve(root,'dist/site/downloads/central-da-informacao.zip');
+      const info = await stat(pacote);
+      response.writeHead(200, {'Content-Type':'application/zip','Content-Length':info.size,'Content-Disposition':'attachment; filename="central-da-informacao.zip"'});
+      if (request.method === 'HEAD') return response.end();
+      const arquivo = createReadStream(pacote);
+      response.on('close', () => arquivo.destroy());
+      arquivo.on('error', () => response.destroy()).pipe(response);
+      return;
+    }
     if (url.pathname === '/api/comparar') {
       await atenderGemini(request, response);
       return;

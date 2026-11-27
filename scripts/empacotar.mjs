@@ -1,4 +1,5 @@
-import { cp, mkdir, writeFile, readFile, rm } from 'node:fs/promises';
+import { cp, mkdir, writeFile, readFile, rm, readdir } from 'node:fs/promises';
+import { zipSync } from 'fflate';
 import { fileURLToPath } from 'node:url';
 import { resolve, sep } from 'node:path';
 
@@ -17,9 +18,11 @@ for (const target of ['site', 'extensao']) {
     for (const file of ['manifest.json', 'servico.js']) {
       await cp(new URL('extensao/' + file, root), new URL(file, output));
     }
-    if (process.env.CENTRAL_PUBLIC_ORIGIN) {
-      const url = new URL(process.env.CENTRAL_PUBLIC_ORIGIN);
-      if (url.protocol !== 'https:' || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('Informe somente a origem HTTPS da Central.');
+    const endereco = process.env.CENTRAL_PUBLIC_ORIGIN || (process.env.PORT && 'http://127.0.0.1:' + process.env.PORT);
+    if (endereco) {
+      const url = new URL(endereco);
+      const local = url.protocol === 'http:' && url.hostname === '127.0.0.1';
+      if ((!local && url.protocol !== 'https:') || url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('Informe a origem HTTPS da Central ou a porta de desenvolvimento local.');
       const path = new URL('manifest.json', output);
       const manifest = JSON.parse(await readFile(path, 'utf8'));
       manifest.homepage_url = url.origin + '/web/index.html';
@@ -41,3 +44,19 @@ for (const folder of ['web', 'regras-negocio']) {
   await cp(new URL('dist/extensao/' + folder, root), destination, { recursive: true });
 }
 console.log('Site em dist/site. Extensão pronta para carregar em extensao e dist/extensao.');
+const origem = new URL('dist/extensao/', root);
+const entradas = Object.create(null);
+for (const nome of await readdir(origem, {recursive:true, withFileTypes:true})) {
+  if (!nome.isFile()) continue;
+  const arquivo = resolve(nome.parentPath, nome.name);
+  const relativo = arquivo.slice(fileURLToPath(origem).length).split(sep).join('/');
+  entradas[relativo] = await readFile(arquivo);
+}
+const downloads = new URL('dist/site/downloads/', root);
+await mkdir(downloads, {recursive:true});
+await writeFile(new URL('central-da-informacao.zip', downloads), zipSync(entradas, {level: 3}));
+const demonstracoes = new URL('dist/site/demonstracoes/', root);
+await mkdir(demonstracoes, {recursive:true});
+for (const nome of ['demonstracao.mp4','demonstracao.vtt']) {
+  await cp(new URL('docs/gravacoes/' + nome, root), new URL(nome, demonstracoes));
+}

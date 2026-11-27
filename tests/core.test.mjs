@@ -68,6 +68,8 @@ test('consulta reconhece frases completas e mantém fonte e data do resultado', 
   assert.equal(matches[0].id, 'urna-internet');
   assert.match(matches[0].url, /^https:\/\/www.justicaeleitoral.jus.br\//);
   assert.equal(matches[0].consultedAt, '2026-11-25');
+  assert.equal(findFactChecks('é proibida de entrar na cabine de votação com o celular')[0].kind, 'true');
+  assert.deepEqual(findFactChecks('não é proibida de entrar na cabine de votação com o celular'), []);
 });
 
 test('tópicos parecidos, negações e afirmações desconhecidas não recebem veredito', () => {

@@ -1,3 +1,5 @@
+import { falar, pararVoz } from './voz.js';
+
 export function enableAccessibleNavigation() {
   let keyboard = false, utterance, timer;
   const prepareText = root => {
@@ -12,7 +14,7 @@ export function enableAccessibleNavigation() {
   observer.observe(document.querySelector('main'), { childList: true, subtree: true });
   document.addEventListener('keydown', event => {
     if (event.key === 'Tab') keyboard = true;
-    if (event.defaultPrevented || event.isComposing) return;
+    if (event.defaultPrevented || event.isComposing || event.target.closest('dialog[open]')) return;
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
         event.target.matches('input:not([type=checkbox]),textarea,select') || event.target.isContentEditable) return;
     // Botões já aceitam ambas as teclas. Complete apenas a tecla ausente.
@@ -37,7 +39,9 @@ export function enableAccessibleNavigation() {
   function speakFocus(el) {
     if (!keyboard || document.body.dataset.speakFocus === 'false' || !globalThis.speechSynthesis) return;
     clearTimeout(timer);
-    if (utterance) speechSynthesis.cancel();
+    // A movimentação de foco nos controles não interrompe a leitura que eles comandam.
+    if (el.closest('#reading-controls') && !document.getElementById('stop-speech')?.disabled) return;
+    if (utterance) pararVoz();
     if (el.closest('[hidden]') || el.matches('body,main,section,html')) return;
     const label = el.getAttribute('aria-label') || el.labels?.[0]?.textContent ||
       el.querySelector('img[alt]')?.alt || el.querySelector('.card-label')?.textContent || el.textContent;
@@ -50,8 +54,7 @@ export function enableAccessibleNavigation() {
       utterance = new SpeechSynthesisUtterance(text.trim().slice(0, 1200));
       utterance.lang = 'pt-BR';
       utterance.voice = speechSynthesis.getVoices().find(v => v.localService && /^pt/i.test(v.lang)) || null;
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utterance);
+      void falar(utterance);
     }, 120);
   }
   document.addEventListener('focusin', event => speakFocus(event.target));
@@ -87,8 +90,7 @@ export function enableAccessibleNavigation() {
     utterance = new SpeechSynthesisUtterance(mensagem);
     utterance.lang = 'pt-BR';
     utterance.voice = speechSynthesis.getVoices().find(v => v.localService && /^pt/i.test(v.lang)) || null;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(utterance);
+    void falar(utterance);
   };
 }
 

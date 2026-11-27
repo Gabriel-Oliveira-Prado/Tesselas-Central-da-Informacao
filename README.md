@@ -2,11 +2,15 @@
 
 # Central da Informação
 
-**Versão 0.18.0** · Site e extensão para Chrome de computador.
+**Versão 0.19.0** · Site e extensão para Chrome de computador.
 
 A Central da Informação verifica notícias de qualquer tema. O resultado começa com **Verdadeiro** ou **Falso** e explica o que a fonte confirmou sobre a afirmação. Quando a evidência é insuficiente ou contraditória, aparece **Não verificado**. A Central acompanha a área de tela escolhida e reconhece texto e fala em português no dispositivo. A pesquisa consulta páginas online por assunto e usa a chave do servidor quando a comparação por Gemini está disponível.
 
 <p align="center"><img src="docs/inicio.png" width="320" height="549" alt="Painel inicial da Central com cinco opções."> <img src="docs/checagem.png" width="320" height="549" alt="Resultado Falso para a afirmação de que o vídeo do resgate da onça é de 2020. A fonte confirma 2025."></p>
+
+Veja Dora e Alex, os ajustes de acessibilidade, uma checagem por áudio em Eleições e a leitura da aba do Instagram na [demonstração narrada](docs/gravacoes/demonstracao.mp4). As [legendas em português](docs/gravacoes/demonstracao.vtt) também estão disponíveis no player do guia de instalação.
+
+O áudio sobre levar celular à cabine recebeu **Verdadeiro**. A extensão reconheceu palavras e números na [publicação do Jornal do Commercio no Instagram](https://www.instagram.com/p/DeLGhWcjNlL/) e exibiu **Não verificado** para o trecho capturado. A postagem aberta apresentou imagem e legenda. A faixa de narração e o arquivo de voz usado na checagem são identificados pelas legendas do vídeo.
 
 Se a notícia troca o ano de um vídeo real, o resultado explica qual ano aparece no trecho e qual foi confirmado pela fonte. Veja a comparação entre 2020 e 2025 na [gravação do site](docs/gravacoes/checagem-de-ano.webm) e na [gravação da análise de tela da extensão](docs/gravacoes/ano-na-analise-de-tela.webm).
 
@@ -25,6 +29,8 @@ Com Node.js 22.19 ou posterior, execute `npm start` e abra o endereço impresso 
 
 ## Preparar a extensão
 
+No início do site, **Como instalar e usar a extensão** abre o guia com o download do ZIP para Chrome, as instruções por teclado e o vídeo narrado. O mesmo guia inclui legendas em português. O botão **Sobre** ao lado do logotipo explica a Central sem interromper a sessão. Escape fecha a explicação e devolve o foco ao botão.
+
 Execute `npm run build`. No Chrome, abra `chrome://extensions`, ative Modo do desenvolvedor e escolha Carregar sem compactação. Selecione a pasta `extensao` do projeto. O ícone abre o painel lateral. Ao executar `npm start`, essa preparação também acontece automaticamente.
 
 ## Organização
@@ -37,6 +43,14 @@ Execute `npm run build`. No Chrome, abra `chrome://extensions`, ative Modo do de
 - `dist/site` e `dist/extensao` são gerados pelo mesmo código. Alterações devem ser feitas nos arquivos-fonte.
 
 O site em atualização online usa o servidor de `npm start`. O pacote estático mantém a edição de notícias incluída quando as fontes online estão indisponíveis.
+
+## Vozes em português do Brasil
+
+Em **Acessibilidade → Voz da leitura**, escolha **Dora** ou **Alex** e use **Ouvir amostra da voz**. Os dois timbres são sintetizados. As amostras e os avisos frequentes estão incluídos no pacote e funcionam sem internet. A opção **Voz do navegador** mantém a leitura disponível com os recursos do dispositivo.
+
+Para ler textos novos com Dora e Alex, quem hospeda a Central executa uma vez `python scripts/preparar-vozes.py` com Python 3.12 antes de iniciar o servidor Node. Esse comando prepara o ambiente isolado, baixa e verifica os pesos do modelo. O servidor gera o áudio em memória. Quem usa o site ou instala a extensão só precisa escolher a voz. Para uma implantação HTTPS, configure a origem da extensão durante o build conforme descrito abaixo.
+
+Os timbres brasileiros usados são `pf_dora` e `pm_alex` do Kokoro-82M. O pacote inclui as frases sintetizadas. [Ficha das vozes](https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md) · [Modelo ONNX utilizado](https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files-v1.0)
 
 ## Comparação de contexto com Gemini
 
@@ -70,7 +84,7 @@ Requer Node.js 22.19 ou mais recente.
 npm start
 ```
 
-Abra http://127.0.0.1:4173/web/index.html no Chrome ou Edge de computador. Para testar com um vídeo que muda de assunto, abra http://127.0.0.1:4173/demo/acompanhamento.html em outra aba. Compartilhe essa aba com a Central e reproduza o vídeo.
+Abra o endereço impresso por `npm start` no Chrome ou Edge de computador. Na porta padrão, o [site](http://127.0.0.1:4177/web/index.html) e a [aba de demonstração](http://127.0.0.1:4177/demo/acompanhamento.html) podem ser usados juntos. Compartilhe a aba de demonstração com a Central e reproduza o vídeo.
 
 ## Os cinco cards
 

@@ -1,4 +1,4 @@
-# Acessibilidade — Central da Informação 0.9.0
+# Acessibilidade — Central da Informação
 
 Referências: **ABNT NBR 17225:2025** e **WCAG 2.2**, com foco nos requisitos A e AA. Este documento registra decisões e pendências; não substitui o checklist integral da norma e não constitui declaração de conformidade.
 
@@ -22,6 +22,8 @@ Referências: **ABNT NBR 17225:2025** e **WCAG 2.2**, com foco nos requisitos A 
 | Áudio e vídeo | Arquivo de som, vídeo, microfone e som da aba podem gerar transcrição local. A Central aceita SRT e VTT e mantém a leitura em voz alta. A demonstração inclui descrição escrita e controles nativos. |
 | Animação | Indicador suave de pesquisa, sem flashes. Redução de movimento pelo sistema e por controle persistido nas configurações. |
 | Tempo | Sem contagem regressiva, expiração de formulários ou avisos que desaparecem automaticamente. |
+
+Na versão 0.19.0, **Sobre** abre um diálogo com explicação escrita e falada conforme a preferência de leitura. Escape e **Fechar** devolvem o foco ao botão do cabeçalho. **Voz da leitura** oferece amostras de Dora e Alex. O guia da extensão apresenta instruções por escrito e um vídeo com narração, legendas em português e controles nativos.
 
 Os cinco ícones medem 56 px CSS na escala inicial. O card inteiro recebe o clique. A área de acionamento toma como referência os itens 5.8.6 e 5.8.7 da ABNT NBR 17225, conforme o [mapeamento do Ceweb.br](https://todosnaweb.ceweb.br/publicacoes/wcag-2-2-abnt-17225). A cartilha Acessibilidade na Web, fascículo VI, página 64, orientou o uso de parágrafos de pelo menos 16 px e entrelinha de 1,5 ou mais. O tamanho de 56 px do ícone é uma escolha do projeto.
 

@@ -6,3 +6,4 @@ extensao/web/
 extensao/regras-negocio/
 .env
 .env.*
+__pycache__/
