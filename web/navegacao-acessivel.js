@@ -1,7 +1,8 @@
-import { falar, pararVoz } from './voz.js';
+import { falar, pararVoz, prepararFalas } from './voz.js';
 
 export function enableAccessibleNavigation() {
   let keyboard = false, utterance, timer;
+  let avisoPrioritario, focoAdiado;
   const prepareText = root => {
     for (const el of root.querySelectorAll('h1,h2,h3,p,blockquote,li')) {
       if (el.id === 'home-instructions' || el.closest('[hidden],.sr-only,header,footer,[vw],#vlibras-app-root')) continue;
@@ -39,6 +40,7 @@ export function enableAccessibleNavigation() {
   function speakFocus(el) {
     if (!keyboard || document.body.dataset.speakFocus === 'false' || typeof Audio !== 'function') return;
     clearTimeout(timer);
+    if (avisoPrioritario) { focoAdiado = el; return; }
     // A movimentação de foco nos controles não interrompe a leitura que eles comandam.
     if (el.closest('#reading-controls') && !document.getElementById('stop-speech')?.disabled) return;
     if (utterance) pararVoz();
@@ -53,10 +55,10 @@ export function enableAccessibleNavigation() {
     const text = [...new Set([titulo, label?.trim(), el.selectedOptions?.[0]?.textContent, valor, estado, description].filter(Boolean))].join(' ');
     if (!text?.trim()) return;
     timer = setTimeout(() => {
-      if (document.activeElement !== el) return;
+      if (document.activeElement !== el || document.body.dataset.speakFocus === 'false') return;
       utterance = {text:text.trim().slice(0, 1200)};
       void falar(utterance);
-    }, 120);
+    }, el.matches('.card-info') ? 0 : 120);
   }
   document.addEventListener('focusin', event => speakFocus(event.target));
   const skip = document.querySelector('.skip-link');
@@ -72,10 +74,13 @@ export function enableAccessibleNavigation() {
     target.focus();
   });
   for (const button of document.querySelectorAll('.card-info')) {
+    const description = document.getElementById(button.getAttribute('aria-controls'));
+    const preparar = () => prepararFalas([button.getAttribute('aria-label'), description.textContent]);
+    button.addEventListener('pointerenter', preparar);
+    button.addEventListener('focus', preparar);
     button.addEventListener('click', () => {
       const open = button.getAttribute('aria-expanded') !== 'true';
       button.setAttribute('aria-expanded', String(open));
-      const description = document.getElementById(button.getAttribute('aria-controls'));
       description.hidden = !open;
       if (open) { description.tabIndex = 0; description.focus(); anunciarAutomaticamente(description.textContent); }
       else { clearTimeout(timer); pararVoz(); }
@@ -86,10 +91,24 @@ export function enableAccessibleNavigation() {
     const open = document.activeElement.closest('.card-shell')?.querySelector('.card-info[aria-expanded=true]');
     if (open) { open.click(); open.focus(); }
   });
-  function anunciarAutomaticamente(mensagem, explicito = false) {
+  function anunciarAutomaticamente(mensagem, {prioritario = false, complemento} = {}) {
     clearTimeout(timer);
-    if ((!explicito && document.body.dataset.speakFocus === 'false') || typeof Audio !== 'function') return;
+    if (document.body.dataset.speakFocus === 'false' || typeof Audio !== 'function') return;
     utterance = {text:mensagem};
+    avisoPrioritario = prioritario ? utterance : undefined;
+    focoAdiado = undefined;
+    if (prioritario) {
+      const aviso = utterance;
+      let concluido = false;
+      aviso.onend = () => { concluido = true; };
+      void falar(aviso).finally(() => {
+        if (avisoPrioritario !== aviso) return;
+        avisoPrioritario = undefined;
+        if (focoAdiado && document.activeElement === focoAdiado && keyboard) speakFocus(focoAdiado);
+        else if (concluido && complemento) anunciarAutomaticamente(complemento);
+      });
+      return;
+    }
     void falar(utterance);
   }
   return anunciarAutomaticamente;

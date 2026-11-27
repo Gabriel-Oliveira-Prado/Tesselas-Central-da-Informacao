@@ -3,7 +3,7 @@
   "name": "Central da Informação",
   "short_name": "Central",
   "homepage_url": "https://tesselas-central-da-informacao.vercel.app/web/index.html",
-  "version": "0.21.0",
+  "version": "0.21.1",
   "description": "Site e extensão acessíveis para verificar notícias, texto, áudio e vídeo com fontes.",
   "minimum_chrome_version": "116",
   "permissions": [

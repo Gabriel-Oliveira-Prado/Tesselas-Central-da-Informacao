@@ -17,7 +17,7 @@ import { enableAccessibleNavigation, highlightSpeech } from './navegacao-acessiv
 import { setLibras } from './libras.js';
 import { conclusionFor } from '../regras-negocio/veredito.js';
 import { trechoDaTela } from '../regras-negocio/trecho-da-tela.js';
-import { falar, pararVoz, pausarVoz } from './voz.js';
+import { falar, pararVoz, pausarVoz, prepararFalas } from './voz.js';
 import { falasFixas } from './falas-fixas.js';
 
 const $ = (id) => document.getElementById(id);
@@ -385,7 +385,8 @@ function showSessionResults() {
     section.append(search);
     $('history-matches').append(section);
   }
-  showView('history', 'history-title');
+  showView('history', 'history-back');
+  anunciarAutomaticamente(falasFixas.fimDaAnalise, {prioritario:true});
 }
 
 async function analyzeLive() {
@@ -410,7 +411,9 @@ async function analyzeLive() {
     const chave = JSON.stringify([trecho, resultado.kind]);
     if (chave === ultimoAviso) return;
     ultimoAviso = chave;
-    anunciarAutomaticamente(resultado.label + '. ' + resultado.explanation, $('speak-changes').checked);
+    if (!$('speak-changes').checked) return;
+    const mensagem = {true:falasFixas.resultadoVerdadeiro, false:falasFixas.resultadoFalso}[resultado.kind] || falasFixas.resultadoIncerto;
+    anunciarAutomaticamente(mensagem, {prioritario:true, complemento:resultado.explanation});
   };
   const pause = () => {
     paused = true;
@@ -419,7 +422,12 @@ async function analyzeLive() {
     $('live-state').textContent = 'Análise pausada · compartilhamento ativo';
     badge?.(track, 'Central · análise pausada');
   };
+  const anunciarInicio = () => {
+    if ($('speak-changes').checked) anunciarAutomaticamente(falasFixas.pesquisando, {prioritario:true});
+  };
   continueLive = () => {
+    ultimoAviso = '';
+    anunciarInicio();
     trechoEmPesquisa?.abort();
     pendingResearch = undefined;
     previousText = currentText;
@@ -443,7 +451,7 @@ async function analyzeLive() {
   const enrich = (text, origin, jaVerificado = false) => {
     if (pendingResearch || text.length < 15 || text === searchedText) return;
     searchedText = text;
-    if (!jaVerificado) iniciarPesquisa('live-progress');
+    if (!jaVerificado) progress('live-progress', true, falasFixas.pesquisando);
     const trabalho = new AbortController();
     trechoEmPesquisa = trabalho;
     const sinalDoTrecho = AbortSignal.any([signal, trabalho.signal]);
@@ -543,6 +551,7 @@ async function analyzeLive() {
         progress('live-progress',true,'Reconhecendo o conteúdo da área compartilhada…');
         for (const id of ['live-text', 'live-time', 'vision-result', 'live-heard']) $(id).textContent = '';
         showView('live', 'live-title');
+        anunciarInicio();
       },
       async onFrame(content, canvas, time) {
         if (paused) return;
@@ -671,14 +680,23 @@ $('review-form').addEventListener('submit', async (event) => {
 function applyPreferences(preferences) {
   const safe = applyReadingPreferences(preferences);
   $('text-spacing').value = safe.textSpacing;
-  $('speak-changes').checked = !!safe.speakChanges;
+  $('speak-changes').checked = safe.speakChanges !== false;
+  $('speak-changes').disabled = safe.speakFocus === false;
   $('color-profile').value = safe.colorProfile || 'normal';
   $('font-size').value = safe.fontSize;
   $('standard-colors').checked = !safe.highContrast;
   $('speak-focus').checked = safe.speakFocus !== false;
+  $('live-voice').checked = $('speak-focus').checked;
   $('enable-libras').checked = !!safe.libras;
   $('reduce-motion').checked = !!safe.reduceMotion;
   $('voz-leitura').value = safe.voz || 'dora';
+  if (safe.speakFocus === false) pararVoz();
+  else if (!navigator.connection?.saveData) {
+    prepararFalas([...document.querySelectorAll('.card-description')].map(el => el.textContent));
+    prepararFalas([...document.querySelectorAll('.card-info')].map(el => el.getAttribute('aria-label')));
+    prepararFalas([falasFixas.pesquisando, falasFixas.resultadoVerdadeiro, falasFixas.resultadoFalso,
+      falasFixas.resultadoIncerto, falasFixas.fimDaAnalise]);
+  }
   void setLibras(!!safe.libras);
 }
 async function readPreferences() {
@@ -707,13 +725,17 @@ $('text-spacing').addEventListener('change', savePreferences);
 $('color-profile').addEventListener('change', savePreferences);
 $('speak-changes').addEventListener('change', savePreferences);
 $('speak-focus').addEventListener('change', savePreferences);
+$('live-voice').addEventListener('change', () => {
+  $('speak-focus').checked = $('live-voice').checked;
+  void savePreferences();
+});
 $('enable-libras').addEventListener('change', savePreferences);
 $('reduce-motion').addEventListener('change', savePreferences);
 $('voz-leitura').addEventListener('change', () => {
   resetSpeech();
   $('estado-voz').textContent = '';
   void savePreferences();
-  anunciarAutomaticamente(falasFixas.amostra, true);
+  anunciarAutomaticamente(falasFixas.amostra);
 });
 const preferenciasCarregadas = readPreferences();
 

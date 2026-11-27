@@ -92,6 +92,7 @@
         <p class="capture-status" id="live-state"></p>
         <button id="continue-live" class="button button-primary" type="button" hidden>Continuar análise</button>
         <button id="stop-live" class="button button-primary" type="button"><svg class="pictograma" aria-hidden="true"><use href="assets/acoes.svg#parar"></use></svg>Encerrar acompanhamento</button>
+        <label class="check-row"><input id="live-voice" type="checkbox" checked>Ativar voz automática da Central</label>
         <div id="live-matches"></div>
         <p class="small">O texto reconhecido pode ser enviado aos serviços de pesquisa e comparação da Central para comparação com reportagens.</p>
         <h2 class="field-label" id="excerpt-title">Trecho em análise</h2>
@@ -186,7 +187,7 @@
       </section>
 
       <section id="history-view" class="view tool-view" aria-labelledby="history-title" hidden>
-        <div class="view-heading">        <button class="back-button" type="button" data-back><span aria-hidden="true">←</span> Voltar</button><h1 id="history-title" tabindex="-1">Resultados do acompanhamento</h1></div>
+        <div class="view-heading">        <button class="back-button" type="button" data-back id="history-back"><span aria-hidden="true">←</span> Voltar</button><h1 id="history-title" tabindex="-1">Resultados do acompanhamento</h1></div>
         <p id="history-summary" role="status"></p>
         <div id="history-matches"></div>
         <button id="restart-analysis" class="button button-primary" type="button">Analisar novamente</button>
@@ -201,17 +202,17 @@
         <select id="text-spacing"><option value="normal">Padrão</option><option value="medium">Média</option><option value="wide">Ampla</option></select>
         <label class="field-label" for="color-profile">Cores para daltonismo</label>
         <select id="color-profile"><option value="normal">Padrão</option><option value="protanopia">Protanopia</option><option value="deuteranopia">Deuteranopia</option><option value="tritanopia">Tritanopia</option><option value="mono">Escala de cinza</option></select>
-        <label class="check-row"><input id="speak-changes" type="checkbox">Ouvir avisos da análise ao vivo</label>
+        <label class="check-row"><input id="speak-changes" type="checkbox" checked>Ouvir avisos da análise ao vivo</label>
         <label class="field-label" for="voz-leitura">Voz da leitura</label>
         <select id="voz-leitura" aria-describedby="voz-ajuda"><option value="dora">Dora · feminina</option><option value="alex">Alex · masculina</option></select>
         <p class="small" id="voz-ajuda">Ao mudar, você ouve a voz escolhida. Para ler textos novos, a Central envia o trecho ao seu servidor e gera o áudio em português do Brasil.</p>
         <p id="estado-voz" role="status"></p>
         <p><a class="libras-link" href="https://www.vlibras.gov.br/app2/" target="_blank" rel="noopener noreferrer">Abrir VLibras (nova aba)</a></p>
-        <label class="check-row"><input id="speak-focus" type="checkbox" checked>Ouvir navegação, pesquisa e resultado</label><label class="check-row"><input id="enable-libras" type="checkbox">Ativar Libras em todas as telas</label><p id="libras-global-status" role="status"></p><p class="small">O alto contraste vem ativado. Sua escolha fica salva neste dispositivo.</p>
+        <label class="check-row"><input id="speak-focus" type="checkbox" checked>Ativar voz automática da Central</label><label class="check-row"><input id="enable-libras" type="checkbox">Ativar Libras em todas as telas</label><p id="libras-global-status" role="status"></p><p class="small">O alto contraste vem ativado. Sua escolha fica salva neste dispositivo.</p>
       </section>
       <p class="sr-only" id="app-status" role="status" aria-live="polite" aria-atomic="true"></p>
     </main>
-    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.21.0</span></footer>
+    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.21.1</span></footer>
   </div>
 </body>
 </html>

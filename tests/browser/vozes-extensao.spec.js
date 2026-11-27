@@ -1,5 +1,24 @@
 import { test, expect } from '@playwright/test';
 import { unzipSync } from 'fflate';
+import { observarVoz } from '../observar-voz.js';
+
+test('voz automática inicia ligada e o silêncio persiste ao voltar aos cards', async ({page}) => {
+  await observarVoz(page);
+  await page.goto('/web/index.html');
+  await page.locator('#open-settings').click();
+  const voz = page.getByRole('checkbox', {name:'Ativar voz automática da Central'});
+  await expect(voz).toBeChecked();
+  await expect(page.locator('#speak-changes')).toBeChecked();
+  await voz.uncheck();
+  await expect(page.locator('#speak-changes')).toBeDisabled();
+  await page.reload();
+  await page.locator('#open-settings').click();
+  await expect(voz).not.toBeChecked();
+  await page.locator('#settings-view [data-back]').click();
+  await page.getByRole('button', {name:'Sobre Analisar tela', exact:true}).press('Enter');
+  await expect(page.locator('#card-info-1')).toBeFocused();
+  expect(await page.evaluate(() => window.leituras)).toEqual([]);
+});
 
 test('as duas vozes tocam amostras distintas e a escolha persiste', async ({page}) => {
   await page.addInitScript(() => {

@@ -58,7 +58,7 @@ test('início tem cinco cards; teclado e retorno preservam o foco', async ({ pag
   await page.locator('#start-sharing').click();
   await expect(page.getByRole('heading', { name: 'Análise ao vivo', exact: true })).toBeFocused();
   await page.locator('#stop-live').click();
-  await expect(page.locator('#history-title')).toBeFocused();
+  await expect(page.locator('#history-back')).toBeFocused();
   await page.locator('#history-view [data-back]').click();
   await page.screenshot({ path: 'test-results/central-inicio.png', fullPage: true });
 });
@@ -104,7 +104,7 @@ test('analisar tela lê imagem por OCR local e encerra o compartilhamento', asyn
   await expect(page.locator('#live-text')).toContainText(knownClaim);
   await expect(page.locator('#live-matches a').first()).toHaveAttribute('href', /justicaeleitoral.jus.br/);
   await page.locator('#stop-live').press('Space');
-  await expect(page.locator('#history-title')).toBeFocused();
+  await expect(page.locator('#history-back')).toBeFocused();
   await expect.poll(() => page.evaluate(() => window.testStream.active)).toBe(false);
   expect(outsideRequests).toEqual([]);
   await page.screenshot({ path: 'test-results/central-analise.png', fullPage: true });
@@ -138,7 +138,7 @@ test('vídeo reproduzido ao vivo muda o veredito e descarta o anterior, sem envi
   await page.locator('#stop-live').press('Enter');
   await expect(page.locator('#live-state')).toHaveText('Compartilhamento encerrado.');
   expect(await page.evaluate(() => window.testStream.active)).toBe(false);
-  await expect(page.locator('#history-title')).toBeFocused();
+  await expect(page.locator('#history-back')).toBeFocused();
   expect(external).toEqual([]);
 });
 
@@ -382,7 +382,7 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     await demoPage.evaluate(() => { document.body.innerHTML = '<main style="padding:45px;font:32px Arial">Dá para votar pelo celular se estiver chovendo?</main>'; });
     await expect(extensionPage.locator('#live-matches')).toContainText('votação é presencial', { timeout: 15000 });
     await extensionPage.locator('#stop-live').click();
-    await expect(extensionPage.locator('#history-title')).toBeFocused();
+    await expect(extensionPage.locator('#history-back')).toBeFocused();
     await extensionPage.locator('#history-view [data-back]').click();
     await demoPage.reload();
     await extensionPage.evaluate(() => {

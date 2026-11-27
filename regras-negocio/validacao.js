@@ -30,7 +30,7 @@ export function safePreferences(value = {}) {
     fontSize: sizes.includes(String(value.fontSize)) ? String(value.fontSize) : '100',
     highContrast: value.highContrast !== false,
     textSpacing: ['normal', 'medium', 'wide'].includes(value.textSpacing) ? value.textSpacing : value.wideSpacing === true ? 'wide' : 'normal',
-    ...(value.speakChanges === true ? { speakChanges: true } : {}),
+    ...(value.speakChanges === false ? { speakChanges: false } : {}),
     ...(['protanopia', 'deuteranopia', 'tritanopia', 'mono'].includes(perfil) ? { colorProfile: perfil } : {}),
     ...(value.speakFocus === false ? { speakFocus: false } : {}),
     ...(['dora','alex'].includes(value.voz) ? { voz:value.voz } : {}),

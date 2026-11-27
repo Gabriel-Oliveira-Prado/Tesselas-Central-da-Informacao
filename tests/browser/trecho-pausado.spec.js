@@ -3,6 +3,15 @@ import { test, expect } from '@playwright/test';
 test('resultado da pesquisa fica estável e Continuar análise lê o próximo trecho', async ({ page }) => {
   test.setTimeout(60000);
   await page.addInitScript(() => {
+    window.eventosDeVoz = [];
+    window.Audio = class extends Audio {
+      constructor(url) {
+        super(url);
+        for (const evento of ['playing','ended']) this.addEventListener(evento, () => {
+          window.eventosDeVoz.push(evento + ' ' + this.currentSrc.split('/').pop());
+        });
+      }
+    };
     navigator.mediaDevices.getDisplayMedia = async () => {
       const canvas = document.createElement('canvas');
       canvas.width = 1200; canvas.height = 240;
@@ -32,7 +41,14 @@ test('resultado da pesquisa fica estável e Continuar análise lê o próximo tr
   await page.goto('/web/index.html');
   await page.locator('#analyze-page').click();
   await page.locator('#start-sharing').click();
+  const ouviu = async evento => expect.poll(() => page.evaluate(() => window.eventosDeVoz)).toContain(evento);
+  await ouviu('playing pesquisando.mp3');
+  await page.keyboard.press('Tab');
   await expect(page.locator('#live-verdict')).toHaveText('Falso', { timeout: 30000 });
+  await ouviu('playing resultadoFalso.mp3');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await ouviu('ended resultadoFalso.mp3');
   await expect(page.locator('#continue-live')).toBeVisible();
   for (const id of ['continue-live','stop-live']) {
     expect(await page.locator('#'+id).evaluate(el => Boolean(el.compareDocumentPosition(document.getElementById('live-matches')) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
@@ -41,7 +57,20 @@ test('resultado da pesquisa fica estável e Continuar análise lê o próximo tr
   await expect(page.locator('#live-text')).toContainText('Curitiba');
   await page.locator('#continue-live').press('Space');
   await expect(page.locator('#live-verdict')).toHaveText('Verdadeiro', { timeout: 15000 });
+  await ouviu('playing resultadoVerdadeiro.mp3');
+  await page.keyboard.press('Tab');
+  await ouviu('ended resultadoVerdadeiro.mp3');
   await page.locator('#stop-live').click();
+  await expect(page.locator('#history-back')).toBeFocused();
+  await ouviu('playing fimDaAnalise.mp3');
   await expect(page.locator('#history-matches')).toContainText('A exposição acontece em Santos');
   await expect(page.locator('#history-matches')).toContainText('Verdadeiro');
+  await page.locator('#restart-analysis').click();
+  await page.locator('#start-sharing').click();
+  await page.locator('#live-voice').uncheck();
+  const antes = await page.evaluate(() => window.eventosDeVoz.length);
+  await expect(page.locator('#continue-live')).toBeVisible({timeout:15000});
+  await page.locator('#stop-live').click();
+  await expect(page.locator('#history-back')).toBeFocused();
+  expect(await page.evaluate(antes => window.eventosDeVoz.slice(antes).filter(e => e.startsWith('playing ')), antes)).toEqual([]);
 });

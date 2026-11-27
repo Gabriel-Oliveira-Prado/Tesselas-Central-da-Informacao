@@ -2,6 +2,28 @@ import { falasFixas } from './falas-fixas.js';
 
 const arquivos = new Map(Object.entries(falasFixas).map(([arquivo, texto]) => [texto, arquivo]));
 let sessao;
+let perfilPreparado;
+const audiosPreparados = new Map();
+
+function urlDaFala(voz, arquivo) {
+  return new URL('assets/vozes/' + voz + '/' + arquivo + '.mp3', import.meta.url).href;
+}
+
+export function prepararFalas(mensagens) {
+  if (typeof Audio !== 'function' || document.body.dataset.speakFocus === 'false') return;
+  const voz = document.body.dataset.voz === 'alex' ? 'alex' : 'dora';
+  if (perfilPreparado !== voz) {
+    audiosPreparados.clear();
+    perfilPreparado = voz;
+  }
+  for (const mensagem of mensagens) {
+    const arquivo = arquivos.get(mensagem.trim());
+    if (!arquivo || audiosPreparados.has(arquivo)) continue;
+    const audio = new Audio(urlDaFala(voz, arquivo));
+    audio.preload = 'auto';
+    audiosPreparados.set(arquivo, audio);
+  }
+}
 
 export function pararVoz() {
   if (sessao) {
@@ -70,7 +92,7 @@ export async function falar(frase) {
     let inicio = 0;
     for (const texto of partes) {
       let url;
-      if (arquivo) url = new URL('assets/vozes/' + voz + '/' + arquivo + '.mp3', import.meta.url).href;
+      if (arquivo) url = urlDaFala(voz, arquivo);
       else {
         const resposta = await fetch(new URL('/api/voz', servidor), {method:'POST', credentials:'omit', redirect:'error',
           headers:{'Content-Type':'application/json'}, body:JSON.stringify({voz,texto}), signal:estado.cancelar.signal});
@@ -78,7 +100,9 @@ export async function falar(frase) {
         url = URL.createObjectURL(await resposta.blob());
       }
       try {
-        const audio = new Audio(url);
+        const preparado = arquivo && perfilPreparado === voz && audiosPreparados.get(arquivo);
+        const audio = preparado || new Audio(url);
+        if (preparado) audiosPreparados.delete(arquivo);
         audio.playbackRate = frase.rate || 1;
         if (frase.onboundary) acompanharPalavras(audio, texto, inicio, frase.onboundary);
         await reproduzir(audio, estado);
