@@ -13,7 +13,7 @@ export function applyReadingPreferences(value) {
   document.body.dataset.contrast = safe.highContrast ? 'high' : 'default';
   document.body.dataset.colorProfile = safe.colorProfile || 'normal';
   document.body.dataset.speakFocus = String(safe.speakFocus !== false);
-  document.body.dataset.voz = safe.voz || 'navegador';
+  document.body.dataset.voz = safe.voz || 'dora';
   document.body.dataset.largeText = String(Number(safe.fontSize) >= 150);
   document.body.dataset.textSpacing = safe.textSpacing;
   document.body.toggleAttribute('data-extra-large', Number(safe.fontSize) >= 250);

@@ -48,8 +48,8 @@ const server = createServer(async (request, response) => {
       arquivo.on('error', () => response.destroy()).pipe(response);
       return;
     }
-    if (url.pathname === '/api/comparar') {
-      await atenderGemini(request, response);
+    if (url.pathname === '/api/comparar' || url.pathname === '/api/consultas') {
+      await atenderGemini(request, response, url.pathname === '/api/consultas');
       return;
     }
     if (url.pathname === '/') {

@@ -2,10 +2,15 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test('comparação usa passagens recuperadas para uma notícia fora do acervo', async ({ page }) => {
+  const alternativa = 'mostra de cerâmica museu litoral';
+  await page.route('**/api/consultas', route => route.fulfill({json:{status:'planejado', consultas:[alternativa]}}));
   const titulo = 'Museu recebe exposição de cerâmica em Santos';
   const trecho = 'A exposição de cerâmica abriu na terça-feira no museu de Santos e seguirá em cartaz até dezembro.';
   await page.route('**/pesquisa/fonte?*', route => {
     const url = new URL(new URL(route.request().url()).searchParams.get('url'));
+    if (url.hostname !== 'g1.globo.com' && !url.searchParams.get('q')?.includes(alternativa)) {
+      return route.fulfill({body:'<rss><channel></channel></rss>'});
+    }
     const body = url.hostname === 'g1.globo.com' ? '<main><h1>'+titulo+'</h1><p>'+trecho+'</p></main>' :
       '<rss><channel><item><title>'+titulo+'</title><link>https://g1.globo.com/cultura/exposicao.html</link></item></channel></rss>';
     return route.fulfill({body});
@@ -96,6 +101,26 @@ test('recusa de um portal permite ler a Constituição em outra fonte oficial co
   await expect(page.locator('#result-matches')).toContainText('candidaturas válidas');
   await expect(page.locator('#result-matches blockquote')).toContainText('sufrágio universal');
   await expect(page.locator('#result-matches a').first()).toHaveAttribute('href',/planalto.gov.br/);
+});
+
+test('divergência com orientação oficial mostra as duas fontes e preserva a incerteza', async ({page}) => {
+  const trecho = 'Art. 14. A soberania popular será exercida pelo sufrágio universal e pelo voto direto e secreto.';
+  await page.route('**/pesquisa/fonte?*', route => {
+    const url = new URL(new URL(route.request().url()).searchParams.get('url'));
+    return route.fulfill({body:url.hostname === 'www.tse.jus.br'
+      ? '<title>Direitos políticos</title><main><p>' + trecho + '</p></main>'
+      : '<rss><channel></channel></rss>'});
+  });
+  await page.route('**/api/comparar', route => route.fulfill({json:{
+    status:'comparado', tipo:'true', indice:0, trecho, explicacao:'Interpretação divergente de teste.',
+  }}));
+  await page.goto('/web/index.html');
+  await page.locator('#open-paste').click();
+  await page.locator('#claim').fill('É proibido votar no Nordeste?');
+  await page.locator('#review-form [type=submit]').click();
+  await expect(page.locator('#result-title')).toHaveText('Não verificado');
+  await expect(page.locator('#result-summary')).toContainText('conclusões diferentes');
+  await expect(page.locator('#result-matches .finding')).toHaveText(['Falso','Verdadeiro']);
 });
 
 test('página indisponível preserva a notícia encontrada e não transforma manchete em veredito', async ({ page }) => {

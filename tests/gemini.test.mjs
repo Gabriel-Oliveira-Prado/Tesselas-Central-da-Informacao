@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { compararComGemini } from '../scripts/gemini.mjs';
+import { compararComGemini, compararComNovaTentativa, planejarConsultas } from '../scripts/gemini.mjs';
 import { searchPlan } from '../regras-negocio/fontes-pesquisa.js';
 
 const base = 'Flávio Bolsonaro perde para Lula na seção eleitoral em que vota';
@@ -39,4 +39,19 @@ test('resposta a pergunta aberta exige passagem e âncora encontradas na fonte',
     assert.equal(resultado.status, status);
     if (status === 'comparado') assert.equal(resultado.tipo, 'answer');
   }
+});
+
+test('planejamento aceita buscas distintas e remove endereços, contatos e repetições', async () => {
+  const lista = ['Feira do livro', 'https://exemplo.com', 'Feira do livro', 'E-mail a@exemplo.com', 'Data da feira', 'outra consulta'];
+  const enviar = async () => Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(lista)}]}}]});
+  const {consultas} = await planejarConsultas('Quando foi a feira do livro?', {chave:'teste', enviar});
+  assert.deepEqual(consultas, ['Feira do livro','Data da feira']);
+});
+
+test('falha temporária permite uma nova tentativa e a cota encerra a consulta', async () => {
+  let chamadas = 0;
+  const enviar = async () => new Response(null,{status:++chamadas === 1 ? 503 : 429});
+  const resultado = await compararComNovaTentativa(base, fontes, {chave:'teste', signal:new AbortController().signal, enviar});
+  assert.equal(chamadas, 2);
+  assert.equal(resultado.status, 'quota');
 });

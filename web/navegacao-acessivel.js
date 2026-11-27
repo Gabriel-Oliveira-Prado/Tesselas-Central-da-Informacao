@@ -37,7 +37,7 @@ export function enableAccessibleNavigation() {
   });
   document.addEventListener('pointerdown', () => { keyboard = false; clearTimeout(timer); });
   function speakFocus(el) {
-    if (!keyboard || document.body.dataset.speakFocus === 'false' || !globalThis.speechSynthesis) return;
+    if (!keyboard || document.body.dataset.speakFocus === 'false' || typeof Audio !== 'function') return;
     clearTimeout(timer);
     // A movimentação de foco nos controles não interrompe a leitura que eles comandam.
     if (el.closest('#reading-controls') && !document.getElementById('stop-speech')?.disabled) return;
@@ -51,9 +51,7 @@ export function enableAccessibleNavigation() {
     if (!text?.trim()) return;
     timer = setTimeout(() => {
       if (document.activeElement !== el) return;
-      utterance = new SpeechSynthesisUtterance(text.trim().slice(0, 1200));
-      utterance.lang = 'pt-BR';
-      utterance.voice = speechSynthesis.getVoices().find(v => v.localService && /^pt/i.test(v.lang)) || null;
+      utterance = {text:text.trim().slice(0, 1200)};
       void falar(utterance);
     }, 120);
   }
@@ -76,7 +74,8 @@ export function enableAccessibleNavigation() {
       button.setAttribute('aria-expanded', String(open));
       const description = document.getElementById(button.getAttribute('aria-controls'));
       description.hidden = !open;
-      if (open) { description.tabIndex = 0; description.focus(); }
+      if (open) { description.tabIndex = 0; description.focus(); anunciarAutomaticamente(description.textContent); }
+      else { clearTimeout(timer); pararVoz(); }
     });
   }
   document.addEventListener('keydown', event => {
@@ -84,14 +83,13 @@ export function enableAccessibleNavigation() {
     const open = document.activeElement.closest('.card-shell')?.querySelector('.card-info[aria-expanded=true]');
     if (open) { open.click(); open.focus(); }
   });
-  return function anunciarAutomaticamente(mensagem) {
-    if (document.body.dataset.speakFocus === 'false' || !globalThis.speechSynthesis || !globalThis.SpeechSynthesisUtterance) return;
+  function anunciarAutomaticamente(mensagem, explicito = false) {
     clearTimeout(timer);
-    utterance = new SpeechSynthesisUtterance(mensagem);
-    utterance.lang = 'pt-BR';
-    utterance.voice = speechSynthesis.getVoices().find(v => v.localService && /^pt/i.test(v.lang)) || null;
+    if ((!explicito && document.body.dataset.speakFocus === 'false') || typeof Audio !== 'function') return;
+    utterance = {text:mensagem};
     void falar(utterance);
-  };
+  }
+  return anunciarAutomaticamente;
 }
 
 export function highlightSpeech(utterance, text, container) {

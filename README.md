@@ -2,7 +2,7 @@
 
 # Central da Informação
 
-**Versão 0.19.0** · Site e extensão para Chrome de computador.
+**Versão 0.20.0** · Site e extensão para Chrome de computador.
 
 A Central da Informação verifica notícias de qualquer tema. O resultado começa com **Verdadeiro** ou **Falso** e explica o que a fonte confirmou sobre a afirmação. Quando a evidência é insuficiente ou contraditória, aparece **Não verificado**. A Central acompanha a área de tela escolhida e reconhece texto e fala em português no dispositivo. A pesquisa consulta páginas online por assunto e usa a chave do servidor quando a comparação por Gemini está disponível.
 
@@ -46,7 +46,7 @@ O site em atualização online usa o servidor de `npm start`. O pacote estático
 
 ## Vozes em português do Brasil
 
-Em **Acessibilidade → Voz da leitura**, escolha **Dora** ou **Alex** e use **Ouvir amostra da voz**. Os dois timbres são sintetizados. As amostras e os avisos frequentes estão incluídos no pacote e funcionam sem internet. A opção **Voz do navegador** mantém a leitura disponível com os recursos do dispositivo.
+A leitura começa com **Dora**. Em **Acessibilidade → Voz da leitura**, escolha **Alex** ou volte para **Dora**. Ao mudar, você ouve a apresentação na nova voz. A apresentação, o resumo do botão Sobre e os avisos frequentes acompanham o pacote e funcionam sem internet.
 
 Para ler textos novos com Dora e Alex, quem hospeda a Central executa uma vez `python scripts/preparar-vozes.py` com Python 3.12 antes de iniciar o servidor Node. Esse comando prepara o ambiente isolado, baixa e verifica os pesos do modelo. O servidor gera o áudio em memória. Quem usa o site ou instala a extensão só precisa escolher a voz. Para uma implantação HTTPS, configure a origem da extensão durante o build conforme descrito abaixo.
 
@@ -54,7 +54,7 @@ Os timbres brasileiros usados são `pf_dora` e `pm_alex` do Kokoro-82M. O pacote
 
 ## Comparação de contexto com Gemini
 
-O site e a extensão usam a mesma comparação. A pesquisa também procura o acontecimento sem a localização final. O servidor chama o Gemini com a afirmação e parágrafos lidos das reportagens. Para exibir um veredito da IA, a aplicação exige uma fonte identificada e confere se a citação está presente no texto recuperado. Sem chave ou sem cota, a pesquisa comum continua disponível.
+O site e a extensão usam a mesma comparação. A pesquisa também procura o acontecimento sem a localização final. O servidor pede ao Gemini até duas consultas alternativas para localizar fontes. Depois envia a afirmação e parágrafos recuperados para comparação, inclusive quando já há uma checagem local. Para exibir um veredito da IA, a aplicação exige uma fonte identificada e confere se a citação está presente no texto recuperado. Sem chave ou sem cota, a pesquisa comum continua disponível.
 
 Para desenvolver, crie uma chave no [Google AI Studio](https://aistudio.google.com/api-keys) e salve-a no arquivo local `.env` da raiz como `GEMINI_API_KEY=sua_chave`. Reinicie o servidor. O modelo padrão é `gemini-3.1-flash-lite`, substituível por `GEMINI_MODEL`. No PowerShell use `$env:PORT='4177'` antes de `npm start` para testar a extensão local.
 
@@ -90,7 +90,7 @@ Abra o endereço impresso por `npm start` no Chrome ou Edge de computador. Na po
 
 - **Analisar tela** usa reconhecimento de texto, comparação com duas artes conhecidas e transcrição em português. O reconhecimento de objetos inicia automaticamente nos computadores que disponibilizam o modelo do Chrome. Ao encerrar, os trechos e suas fontes ficam na tela Resultados do acompanhamento. O navegador pode precisar baixá-lo.
 - **Colar informação** recebe texto ou um link do UOL Notícias, Terra, g1, Agência Brasil, TSE, Justiça Eleitoral ou Aos Fatos. O card de arquivos aceita áudio, vídeo e legendas SRT ou VTT. Confira o texto reconhecido antes de verificar.
-- **Ouvir conteúdo** recebe arquivo, microfone ou som da aba. Ao escolher o microfone, você também pode dizer “abrir eleições”, “abrir acessibilidade”, “colar informação” ou “voltar ao início”. A leitura em voz alta tem velocidade, pausa e parada, com destaque de palavra quando a voz do navegador informa os marcadores de leitura.
+- **Ouvir conteúdo** recebe arquivo, microfone ou som da aba. Ao escolher o microfone, você também pode dizer “abrir eleições”, “abrir acessibilidade”, “colar informação” ou “voltar ao início”. A leitura em voz alta tem velocidade ajustável, pausa e destaque aproximado das palavras conforme o áudio avança.
 - **Acessibilidade** permite ampliar até 400%, escolher a distância entre letras e palavras, usar cores suaves, escolher paletas para protanopia, deuteranopia e tritanopia ou escala de cinza, ativar avisos falados e consultar o VLibras. A fonte Atkinson Hyperlegible Next acompanha a extensão.
 
 - **Eleições** recebe perguntas, links, áudio, vídeo e legendas no mesmo formulário de checagem compartilhado. Mostra a apuração das eleições gerais de 2026 para a Presidência e as 27 UFs, por cargo e turno. Cada candidatura traz o percentual e a situação publicada pelo TSE. Os arquivos da edição acompanham o site e a extensão e podem ser renovados com `node scripts/atualizar-apuracao.mjs`. O painel também apresenta até três manchetes por fonte, com data e link. O painel consulta as listagens públicas do TSE e da Agência Brasil. Use **Atualizar notícias** para consultar essas duas origens. Sem conexão, a seleção incluída na versão continua disponível. Para renovar essa seleção antes de distribuir uma versão, execute `node scripts/atualizar-edicao.mjs` com as dependências e o Chromium do Playwright instalados.
@@ -115,7 +115,7 @@ O VLibras é gratuito. A API comercial Hand Talk for Devs requer uma chave contr
 
 O manifesto autoriza consultas ao servidor da Central, UOL Notícias, Terra, Bing, Google Notícias, g1, Agência Brasil, TSE, Justiça Eleitoral, Aos Fatos e Planalto. Não solicita acesso permanente a todos os sites. O seletor de tela e o microfone exigem autorização do navegador. A transcrição usa o Vosk local e o modelo de português incluído. A pesquisa por assunto envia um trecho de texto ou fala aos buscadores e portais consultados. Imagens e arquivos permanecem no dispositivo. As perguntas e os resultados da pesquisa ficam na memória da sessão.
 
-O texto fica na memória do painel; recarregá-lo apaga o conteúdo. Apenas os ajustes de leitura são armazenados localmente. A comparação editorial é local. A pesquisa online transmite a consulta aos provedores indicados na interface. Ao abrir uma busca adicional, o trecho visível no campo correspondente é enviado ao Google. Os links informam abertura de nova aba. Vozes podem usar serviços do navegador/sistema; vozes locais em português são priorizadas quando disponíveis.
+O texto fica na memória do painel; recarregá-lo apaga o conteúdo. Apenas os ajustes de leitura são armazenados localmente. A comparação editorial é local. A pesquisa online transmite a consulta aos provedores indicados na interface. Ao abrir uma busca adicional, o trecho visível no campo correspondente é enviado ao Google. Os links informam abertura de nova aba. A geração de falas novas com Dora ou Alex envia o texto ao servidor da Central.
 
 A imagem pode conter qualquer dado visível na área escolhida. O fluxo alternativo que lê o documento da aba exclui campos de formulário e conteúdo oculto. Ambos mantêm o texto apenas na memória do painel.
 

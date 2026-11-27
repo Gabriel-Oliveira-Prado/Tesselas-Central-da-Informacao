@@ -68,11 +68,10 @@ async function gravarSite() {
     await site.locator('#color-profile').selectOption('deuteranopia');
     await site.locator('#color-profile').scrollIntoViewIfNeeded();
   });
-  for (const [voz,nome] of [['dora','Dora, voz feminina'],['alex','Alex, voz masculina']]) {
+  for (const [voz,nome] of [['alex','Alex, voz masculina'],['dora','Dora, voz feminina']]) {
     await cena(site, nome + '. ' + falasFixas.amostra, async () => {
-      await site.locator('#voz-leitura').selectOption(voz);
       const carregou = site.waitForResponse(r => r.url().endsWith('/' + voz + '/amostra.mp3') && r.ok());
-      await site.locator('#ouvir-amostra').click();
+      await site.locator('#voz-leitura').selectOption(voz);
       await carregou;
     }, 'web/assets/vozes/' + voz + '/amostra.mp3');
   }

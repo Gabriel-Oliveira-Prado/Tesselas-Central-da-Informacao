@@ -1,4 +1,5 @@
 import { sources, searchOrigins, newsPublishers, portaisAdicionais, reportagens, searchPlan, keywords, normalize } from './fontes-pesquisa.js';
+import { buscarConsultas } from './comparacao.js';
 
 const installed = globalThis.location?.protocol === 'chrome-extension:';
 export function allowedSearchUrl(value) {
@@ -79,16 +80,23 @@ export function extractPage(html, url, query) {
   return {title:text(title),url:url.href,source:sources.find(source=>source.url===url.href)?.name || url.hostname,date,passages:ranked.map(item=>item.value.slice(0,700)),lead:ranked[0]?.value.slice(0,400)||'',retrievedAt:new Date().toISOString()};
 }
 
-export async function searchOnline(value, { signal = new AbortController().signal, onProgress = ()=>{} } = {}) {
+export async function searchOnline(value, { signal = new AbortController().signal, onProgress = ()=>{}, fontesConhecidas = [] } = {}) {
   const plan = searchPlan(value);
   if (!plan.query) return { articles:[],status:'empty',query:'' };
   onProgress('Buscando publicações e orientações na internet…');
-  const requests = plan.queries.flatMap(query=>{
+  const pesquisar = queries => Promise.allSettled(queries.flatMap(query=>{
     const bing = new URL('https://www.bing.com/search');bing.searchParams.set('q',query+' (site:tse.jus.br OR site:g1.globo.com OR site:agenciabrasil.ebc.com.br OR site:aosfatos.org OR site:terra.com.br OR site:noticias.uol.com.br)');bing.searchParams.set('format','rss');
     const google = new URL('https://news.google.com/rss/search');google.searchParams.set('q',query);google.searchParams.set('hl','pt-BR');google.searchParams.set('gl','BR');google.searchParams.set('ceid','BR:pt-419');
     return [{url:bing,engine:'bing'},{url:google,engine:'google'}];
-  });
-  const results = await Promise.allSettled(requests.map(async request=>parseSearch(await load(request.url,signal),request.engine)));
+  }).map(async request=>parseSearch(await load(request.url,signal),request.engine)));
+  const [originais, adicionais] = await Promise.all([
+    pesquisar(plan.queries),
+    buscarConsultas(value.slice(0,8000),signal).then(resposta => {
+      const extras = new Set((resposta.consultas || []).map(s => searchPlan(s).query).filter(q => q && !plan.queries.includes(q)));
+      return pesquisar([...extras].slice(0,2));
+    }),
+  ]);
+  const results = [...originais, ...adicionais];
   signal.throwIfAborted();
   const tokens = keywords(plan.civic ? plan.queries.join(' ') : plan.query);
   const names = ((plan.queries[1] && !plan.civic ? plan.queries[1] : plan.query).match(/(?<=\s)[A-ZÀ-Ý][a-zà-ÿ-]{2,}/g) || []).map(word=>word.toLocaleLowerCase('pt-BR'));
@@ -100,7 +108,7 @@ export async function searchOnline(value, { signal = new AbortController().signa
   onProgress('Lendo os trechos das fontes encontradas…');
   const referencias = reportagens.map(row=>({...row,score:keywords(row.titulo).filter(k=>tokens.includes(k)).length})).filter(row=>row.score >= 5);
   const prioritarias = plan.idadeEleitoral || plan.horarioEleitoral ? plan.sources.slice(0,1) : [];
-  const pages = [...new Map([...prioritarias,...referencias,...unique.filter(row=>!row.url.startsWith('https://news.google.com/')),...plan.sources].map(row=>[row.url,row])).values()].slice(0,6);
+  const pages = [...new Map([...fontesConhecidas.filter(row=>allowedSearchUrl(row.url)),...prioritarias,...referencias,...unique.filter(row=>!row.url.startsWith('https://news.google.com/')),...plan.sources].map(row=>[row.url,row])).values()].slice(0,6);
   const extracted = await Promise.allSettled(pages.map(async row=>{
     const page = extractPage(await load(new URL(row.url),signal),new URL(row.url),plan.query);
     return page ? {...page,score:row.score || 0} : undefined;

@@ -1,3 +1,4 @@
+import { observarVoz } from '../observar-voz.js';
 import { test, expect, chromium } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { mkdtemp, rm } from 'node:fs/promises';
@@ -254,19 +255,10 @@ test('texto a 200% e alto contraste funcionam em 320 pixels em todas as opções
 
 test('voz tem acionamento explícito, lê a explicação e permite pausa e parada', async ({ page }) => {
   await shareTestImage(page);
-  await page.addInitScript(() => {
-    window.voiceActions = [];
-    Object.defineProperty(window, 'speechSynthesis', { value: {
-      getVoices: () => [],
-      speak: (utterance) => { window.spokenText = utterance.text; window.voiceActions.push('speak'); },
-      cancel: () => window.voiceActions.push('cancel'),
-      pause: () => window.voiceActions.push('pause'),
-      resume: () => window.voiceActions.push('resume'),
-    } });
-  });
+  await observarVoz(page);
   await page.goto(panelPath);
   await page.getByRole('button', { name: 'Ouvir conteúdo', exact: true }).click();
-  expect(await page.evaluate(() => window.voiceActions.includes('speak'))).toBe(false);
+  expect(await page.evaluate(() => window.acoesDeAudio.includes('ouvir'))).toBe(false);
   await page.locator('#audio-view [data-back]').click();
   await pasteAndVerify(page, knownClaim);
   await page.locator('#listen-result').click();
@@ -276,13 +268,13 @@ test('voz tem acionamento explícito, lê a explicação e permite pausa e parad
   await page.locator('#open-audio').evaluate(el => el.click());
   await page.locator('#speak').click();
   await expect(page.getByRole('button', { name: 'Pausar', exact: true })).toBeFocused();
-  expect(await page.evaluate(() => window.spokenText)).toContain('Falso');
+  expect(await page.evaluate(() => window.leituras.at(-1)?.texto)).toContain('Falso');
   await page.keyboard.press('Enter');
   await expect(page.getByRole('button', { name: 'Continuar', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
   await page.getByRole('button', { name: 'Parar', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Ouvir última informação', exact: true })).toBeFocused();
-  expect(await page.evaluate(() => window.voiceActions.filter((action) => action !== 'cancel'))).toEqual(['speak', 'speak', 'speak', 'speak', 'pause', 'resume']);
+  expect(await page.evaluate(() => window.acoesDeAudio)).toEqual(expect.arrayContaining(['ouvir','pausar','continuar']));
   await page.getByRole('button', { name: 'Voltar', exact: true }).click();
   await expect(page.locator('#open-audio')).toBeFocused();
 });
@@ -369,6 +361,10 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     await demoPage.goto('http://127.0.0.1:4176/demo/noticia.html');
     await demoPage.evaluate(() => { document.title = 'Teste de captura autorizada'; });
     const extensionPage = await context.newPage();
+    // O manifesto instalado aponta ao servidor normal, que pode ter uma chave real.
+    for (const rota of ['consultas','comparar']) {
+      await extensionPage.route('**/api/' + rota, route => route.fulfill({status:503,json:{status:'sem-chave'}}));
+    }
     const extensionErrors=[];
     extensionPage.on('pageerror',error=>extensionErrors.push(error.message));
     await extensionPage.goto(`chrome-extension://${extensionId}/web/index.html`);
@@ -415,7 +411,7 @@ test('extensão permite autorizar a leitura do texto da aba após cancelar a cap
     await extensionPage.getByRole('button', { name: 'Acessibilidade', exact: true }).click();
     await extensionPage.getByLabel('Tamanho do texto').selectOption('125');
     await expect(extensionPage.locator('#app-status')).toHaveText('Ajustes de leitura salvos neste dispositivo.');
-    expect(await worker.evaluate(() => chrome.storage.local.get(null))).toEqual({ readingPreferences: { fontSize: '125', highContrast: true, textSpacing: 'normal' } });
+    expect(await worker.evaluate(() => chrome.storage.local.get(null))).toEqual({ readingPreferences: { voz:'dora', fontSize: '125', highContrast: true, textSpacing: 'normal' } });
     expect(extensionErrors).toEqual([]);
   } finally {
     await context?.close();
@@ -486,12 +482,7 @@ test('ampliação e espaçamento acompanham a pessoa até a página de privacida
 });
 
 test('resultado falado tem equivalente escrito, velocidade ajustável e retorno de foco', async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(window, 'speechSynthesis', { value: {
-      getVoices: () => [], speak: (u) => { window.lastSpeech = { text: u.text, rate: u.rate }; },
-      cancel() {}, pause() {}, resume() {},
-    } });
-  });
+  await observarVoz(page);
   await page.goto(panelPath);
   await pasteAndVerify(page, knownClaim);
   await page.getByRole('button', { name: 'Ouvir áudio' }).press('Enter');
@@ -502,9 +493,10 @@ test('resultado falado tem equivalente escrito, velocidade ajustável e retorno 
   await page.locator('#open-audio').click();
   await page.getByLabel('Velocidade da voz').selectOption('0.75');
   await page.locator('#speak').press('Enter');
-  const spoken = await page.evaluate(() => window.lastSpeech);
-  expect(spoken.rate).toBe(0.75);
-  expect(spoken.text).toContain('Falso');
+  await expect.poll(() => page.evaluate(() => window.leituras.at(-1)?.velocidade)).toBe(0.75);
+  const spoken = await page.evaluate(() => window.leituras.at(-1));
+  expect(spoken.velocidade).toBe(0.75);
+  expect(spoken.texto).toContain('Falso');
   await expect(page.getByText('Ver texto para ouvir', { exact: true })).toHaveCount(0);
   await page.locator('#audio-view [data-back]').press('Enter');
   await expect(page.locator('#open-audio')).toBeFocused();

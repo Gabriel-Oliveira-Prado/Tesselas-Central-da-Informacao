@@ -9,14 +9,30 @@ export function pararVoz() {
     sessao.audio?.pause();
     sessao = null;
   }
-  window.speechSynthesis?.cancel();
 }
 
 export function pausarVoz(pausar) {
-  if (!sessao) return pausar ? window.speechSynthesis?.pause() : window.speechSynthesis?.resume();
+  if (!sessao) return;
   sessao.pausada = pausar;
   if (pausar) sessao.audio?.pause();
   else sessao.retomar?.();
+}
+
+// O modelo entrega o áudio do trecho sem marcas de tempo por palavra.
+function acompanharPalavras(audio, trecho, inicio, avisar) {
+  const palavras = [...trecho.matchAll(/\S+/g)];
+  let anterior;
+  const atualizar = () => {
+    if (!Number.isFinite(audio.duration) || !audio.duration) return;
+    const posicao = trecho.length * audio.currentTime / audio.duration;
+    const palavra = palavras.findLast(p => p.index <= posicao);
+    if (palavra && palavra !== anterior) {
+      anterior = palavra;
+      avisar({name:'word', charIndex:inicio + palavra.index});
+    }
+  };
+  audio.addEventListener('playing', atualizar);
+  audio.addEventListener('timeupdate', atualizar);
 }
 
 async function reproduzir(audio, estado) {
@@ -44,17 +60,14 @@ async function reproduzir(audio, estado) {
 
 export async function falar(frase) {
   pararVoz();
-  const voz = document.body.dataset.voz;
-  if (!['alex','dora'].includes(voz)) {
-    window.speechSynthesis.speak(frase);
-    return;
-  }
+  const voz = document.body.dataset.voz === 'alex' ? 'alex' : 'dora';
   const estado = { cancelar:new AbortController(), pausada:false };
   sessao = estado;
   const arquivo = arquivos.get(frase.text.trim());
   const servidor = globalThis.chrome?.runtime?.id ? chrome.runtime.getManifest().homepage_url : location.href;
   try {
     const partes = arquivo ? [frase.text] : frase.text.match(/.{1,400}(?:[.!?]\s+|\s+|$)|.{1,400}/gs) || [];
+    let inicio = 0;
     for (const texto of partes) {
       let url;
       if (arquivo) url = new URL('assets/vozes/' + voz + '/' + arquivo + '.mp3', import.meta.url).href;
@@ -67,18 +80,20 @@ export async function falar(frase) {
       try {
         const audio = new Audio(url);
         audio.playbackRate = frase.rate || 1;
+        if (frase.onboundary) acompanharPalavras(audio, texto, inicio, frase.onboundary);
         await reproduzir(audio, estado);
       } finally { if (!arquivo) URL.revokeObjectURL(url); }
+      inicio += texto.length;
     }
     if (sessao === estado) { sessao = null; frase.onend?.(); }
   } catch {
     if (sessao !== estado || estado.cancelar.signal.aborted) return;
     sessao = null;
     const aviso = document.getElementById('estado-voz');
-    const mensagem = 'A voz escolhida está indisponível. A leitura segue com a voz do navegador.';
+    const mensagem = 'O áudio de ' + (voz === 'alex' ? 'Alex' : 'Dora') + ' está indisponível. Tente ouvir novamente.';
     if (aviso) aviso.textContent = mensagem;
     const status = document.getElementById('app-status');
     if (status && !aviso?.getClientRects().length) status.textContent = mensagem;
-    window.speechSynthesis.speak(frase);
+    frase.onerror?.();
   }
 }

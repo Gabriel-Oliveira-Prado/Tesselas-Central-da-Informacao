@@ -23,7 +23,7 @@ Referências: **ABNT NBR 17225:2025** e **WCAG 2.2**, com foco nos requisitos A 
 | Animação | Indicador suave de pesquisa, sem flashes. Redução de movimento pelo sistema e por controle persistido nas configurações. |
 | Tempo | Sem contagem regressiva, expiração de formulários ou avisos que desaparecem automaticamente. |
 
-Na versão 0.19.0, **Sobre** abre um diálogo com explicação escrita e falada conforme a preferência de leitura. Escape e **Fechar** devolvem o foco ao botão do cabeçalho. **Voz da leitura** oferece amostras de Dora e Alex. O guia da extensão apresenta instruções por escrito e um vídeo com narração, legendas em português e controles nativos.
+Na versão 0.20.0, **Sobre** abre um diálogo com explicação escrita e falada conforme a preferência de leitura. Escape e **Fechar** devolvem o foco ao botão do cabeçalho. **Voz da leitura** começa com Dora e apresenta a voz automaticamente ao trocar. O guia da extensão apresenta instruções por escrito e um vídeo com narração, legendas em português e controles nativos.
 
 Os cinco ícones medem 56 px CSS na escala inicial. O card inteiro recebe o clique. A área de acionamento toma como referência os itens 5.8.6 e 5.8.7 da ABNT NBR 17225, conforme o [mapeamento do Ceweb.br](https://todosnaweb.ceweb.br/publicacoes/wcag-2-2-abnt-17225). A cartilha Acessibilidade na Web, fascículo VI, página 64, orientou o uso de parágrafos de pelo menos 16 px e entrelinha de 1,5 ou mais. O tamanho de 56 px do ícone é uma escolha do projeto.
 
@@ -100,6 +100,6 @@ O botão mede pelo menos 48 px de altura e tem borda sólida de 2 px. Os cinco c
 
 ## Verificações da versão 0.9.0
 
-Os cards têm botões independentes para informação, números visíveis e atalhos 1 a 5 para posicionar o foco. Enter ou Espaço abre a opção. No celular, são empilhados. Textos de resultado entram na sequência do Tab. A voz de foco é opcional e pode ser desativada em Acessibilidade. A leitura de conteúdo destaca palavras quando o sintetizador fornece eventos de fronteira. A captura recusa a própria interface e mantém um histórico temporário com a origem dos trechos. O histórico é apagado ao iniciar outra análise ou fechar o painel.
+Os cards têm botões independentes para informação, números visíveis e atalhos 1 a 5 para posicionar o foco. Enter ou Espaço abre a opção. No celular, são empilhados. Textos de resultado entram na sequência do Tab. A voz de foco é opcional e pode ser desativada em Acessibilidade. O destaque visual estima a palavra pela posição no áudio de Dora ou Alex. A captura recusa a própria interface e mantém um histórico temporário com a origem dos trechos. O histórico é apagado ao iniciar outra análise ou fechar o painel.
 
 O fuzzing determinístico cobre 4.000 entradas com Unicode inválido, links, HTML e negações. A avaliação automática da interface própria continua usando axe-core. A validação linguística de Libras, a análise de todos os critérios WCAG e o uso com leitores de tela por pessoas com deficiência continuam pendentes. As observações anteriores sobre o widget são registros da avaliação anterior, não uma certificação desta edição.

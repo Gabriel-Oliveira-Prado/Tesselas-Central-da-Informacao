@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="estilos.css">
   <script type="module" src="painel.js"></script>
 </head>
-<body class="no-js" data-contrast="high">
+<body class="no-js" data-contrast="high" data-voz="dora">
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
   <div class="shell">
     <header class="brand-bar">
@@ -203,16 +203,15 @@
         <select id="color-profile"><option value="normal">Padrão</option><option value="protanopia">Protanopia</option><option value="deuteranopia">Deuteranopia</option><option value="tritanopia">Tritanopia</option><option value="mono">Escala de cinza</option></select>
         <label class="check-row"><input id="speak-changes" type="checkbox">Ouvir avisos da análise ao vivo</label>
         <label class="field-label" for="voz-leitura">Voz da leitura</label>
-        <select id="voz-leitura" aria-describedby="voz-ajuda"><option value="navegador">Voz do navegador</option><option value="dora">Dora · feminina</option><option value="alex">Alex · masculina</option></select>
-        <p class="small" id="voz-ajuda">Dora e Alex são vozes sintéticas em português do Brasil. Ao escolher uma delas, o texto a ler pode ser enviado ao servidor da Central para gerar o áudio.</p>
-        <button type="button" class="button button-secondary" id="ouvir-amostra">Ouvir amostra da voz</button>
+        <select id="voz-leitura" aria-describedby="voz-ajuda"><option value="dora">Dora · feminina</option><option value="alex">Alex · masculina</option></select>
+        <p class="small" id="voz-ajuda">Ao mudar, você ouve a voz escolhida. Para ler textos novos, a Central envia o trecho ao seu servidor e gera o áudio em português do Brasil.</p>
         <p id="estado-voz" role="status"></p>
         <p><a class="libras-link" href="https://www.vlibras.gov.br/app2/" target="_blank" rel="noopener noreferrer">Abrir VLibras (nova aba)</a></p>
         <label class="check-row"><input id="speak-focus" type="checkbox" checked>Ouvir navegação, pesquisa e resultado</label><label class="check-row"><input id="enable-libras" type="checkbox">Ativar Libras em todas as telas</label><p id="libras-global-status" role="status"></p><p class="small">O alto contraste vem ativado. Sua escolha fica salva neste dispositivo.</p>
       </section>
       <p class="sr-only" id="app-status" role="status" aria-live="polite" aria-atomic="true"></p>
     </main>
-    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.19.0</span></footer>
+    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.20.0</span></footer>
   </div>
 </body>
 </html>

@@ -1,19 +1,14 @@
+import { observarVoz } from '../observar-voz.js';
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
 test('informações dos cards, atalhos e Tab alcançam a conclusão', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.focusSpeech = [];
-    Object.defineProperty(window, 'speechSynthesis', { value: {
-      cancel() {}, getVoices: () => [],
-      speak: utterance => window.focusSpeech.push(utterance.text),
-    } });
-  });
+  await observarVoz(page);
   await page.goto('/web/index.html');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await expect(page.locator('.brand')).toBeFocused();
-  await expect.poll(() => page.evaluate(() => window.focusSpeech.at(-1))).toBe('Logo Central da Informação, início');
+  await expect.poll(() => page.evaluate(() => window.leituras.map(fala => fala.texto).at(-1))).toBe('Logo Central da Informação, início');
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button',{ name:'Sobre', exact:true })).toBeFocused();
   await page.keyboard.press('Enter');
@@ -22,7 +17,7 @@ test('informações dos cards, atalhos e Tab alcançam a conclusão', async ({ p
   await expect(page.locator('#abrir-sobre')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.locator('#home-title')).toBeFocused();
-  await expect.poll(() => page.evaluate(() => window.focusSpeech.at(-1))).toContain('Como podemos ajudar? Use 1 a 5 para selecionar.');
+  await expect.poll(() => page.evaluate(() => window.leituras.map(fala => fala.texto).at(-1))).toContain('Como podemos ajudar? Use 1 a 5 para selecionar.');
   for (const [index, card] of ['analyze-page','open-paste','open-audio','open-settings','open-elections'].entries()) {
     await page.keyboard.press(String(index + 1));
     await expect(page.locator('#' + card)).toBeFocused();
@@ -36,7 +31,7 @@ test('informações dos cards, atalhos e Tab alcançam a conclusão', async ({ p
   await expect(help).toHaveAttribute('aria-expanded', 'false');
   await page.keyboard.press('2');
   await expect(page.locator('#open-paste')).toBeFocused();
-  await expect.poll(() => page.evaluate(() => window.focusSpeech.at(-1))).toBe('Colar informação');
+  await expect.poll(() => page.evaluate(() => window.leituras.map(fala => fala.texto).at(-1))).toBe('Colar informação');
   await page.keyboard.press('Enter');
   await expect(page.locator('#paste-title')).toBeFocused();
   await page.locator('#claim').fill('Pode votar depois das 17?');
@@ -46,7 +41,7 @@ test('informações dos cards, atalhos e Tab alcançam a conclusão', async ({ p
   await page.locator('#result-summary').focus();
   for (let i = 0; i < 6 && !await conclusion.evaluate(el => el === document.activeElement); i++) await page.keyboard.press('Tab');
   await expect(conclusion).toBeFocused();
-  await expect.poll(() => page.evaluate(() => window.focusSpeech.join(' '))).toContain('Verdadeiro');
+  await expect.poll(() => page.evaluate(() => window.leituras.map(fala => fala.texto).join(' '))).toContain('Verdadeiro');
   await page.locator('#new-query').click();
   await expect(page.locator('#claim')).toBeFocused();
   await expect(page.locator('#claim')).toHaveValue('');
@@ -110,12 +105,7 @@ test('legenda da fala destaca a palavra recebida do sintetizador', async ({ page
   await expect(page.locator('[data-spoken-word]')).toHaveText('presencial');
 });
 test('Espaço e Enter ativam os controles e a pesquisa anuncia o início uma vez', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.avisos = [];
-    Object.defineProperty(window, 'speechSynthesis', { value: {
-      getVoices: () => [], cancel() {}, speak: fala => window.avisos.push(fala.text),
-    } });
-  });
+  await observarVoz(page);
   await page.route('**/pesquisa/fonte?*', route => route.fulfill({ status: 503 }));
   await page.goto('/web/index.html');
   await page.keyboard.press('Tab');
@@ -136,7 +126,7 @@ test('Espaço e Enter ativam os controles e a pesquisa anuncia o início uma vez
   await expect(page.locator('#result-title')).toHaveText('Verdadeiro');
   await expect(page.locator('#result-summary')).toContainText('Sim. No Brasil, quem tem 16 ou 17 anos pode escolher');
   await expect(page.locator('#result-title')).toBeFocused();
-  expect(await page.evaluate(() => window.avisos.filter(texto => texto.startsWith('Pesquisando')))).toEqual(['Pesquisando a informação. Aguarde.']);
-  expect(await page.evaluate(() => window.avisos.at(-1))).toMatch(/^Verdadeiro\. Sim\./);
+  expect(await page.evaluate(() => window.leituras.map(fala => fala.texto).filter(texto => texto.startsWith('Pesquisando')))).toEqual(['Pesquisando a informação. Aguarde.']);
+  expect(await page.evaluate(() => window.leituras.map(fala => fala.texto).at(-1))).toMatch(/^Verdadeiro\. Sim\./);
   await expect(page.getByRole('button', { name:'Ouvir áudio' })).toBeVisible();
 });

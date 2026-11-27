@@ -1,3 +1,4 @@
+import { observarVoz } from '../observar-voz.js';
 import { test, expect } from '@playwright/test';
 
 test('orientação por teclado vem antes da permissão e oferece alternativa sem captura', async ({ page }) => {
@@ -58,13 +59,7 @@ test('legenda com o ano trocado leva o foco ao veredito e informa o ano confirma
 });
 
 test('perguntas e detalhes trocados mostram e falam o veredito seguido do contexto', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.resultadosFalados = [];
-    Object.defineProperty(window, 'speechSynthesis', { value: {
-      cancel() {}, getVoices: () => [],
-      speak: frase => window.resultadosFalados.push(frase.text),
-    } });
-  });
+  await observarVoz(page);
   await page.route('**/pesquisa/fonte?*', route => route.fulfill({status:503}));
   await page.goto('/web/index.html');
   await page.locator('#open-paste').click();
@@ -78,7 +73,7 @@ test('perguntas e detalhes trocados mostram e falam o veredito seguido do contex
     await expect(page.locator('#result-title')).toHaveText(veredito);
     await expect(page.locator('#result-summary')).toContainText(contexto);
     await expect(page.locator('#result-matches .finding')).toHaveText(veredito);
-    expect(await page.evaluate(() => window.resultadosFalados.at(-1))).toContain(veredito + '. ');
+    expect(await page.evaluate(() => window.leituras.map(fala => fala.texto).at(-1))).toContain(veredito + '. ');
     await expect(page.locator('#result-view')).not.toContainText(/Fora de contexto|Resposta da fonte|Orientação da fonte/);
     await page.locator('#open-libras-details').click();
     await expect(page.locator('#libras-text')).toHaveValue(new RegExp('^' + veredito));
