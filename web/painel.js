@@ -3,7 +3,7 @@ import { loadReadingPreferences, applyReadingPreferences } from './preferencias.
 import './legendas.js';
 import { openElectionNews } from './eleicoes.js';
 import { readPageContent } from './leitura-pagina.js';
-import { followScreen } from './captura-tela.js';
+import { createReader, followScreen, readFrame } from './captura-tela.js';
 import { evidenceFor, showEvidence, renderVerdict } from './resultados.js';
 import { createVisualAssistant, describeFrame, visualAvailability } from './assistente-visual.js';
 import { findVisualReference } from './comparacao-visual.js';
@@ -114,15 +114,56 @@ function setLiveConclusion(evidence, pending) {
 function requestSharing(action, origin = 'screen') {
   shareAction = action;
   shareOrigin = origin;
-  $('read-tab-alternative').hidden = !extension;
+  const canShare = typeof navigator.mediaDevices?.getDisplayMedia === 'function';
+  $('screen-image-option').hidden = origin !== 'screen';
+  $('screen-sharing-guide').hidden = !canShare;
+  $('start-sharing').hidden = !canShare;
+  $('capture-help-title').textContent = canShare ? 'Antes de compartilhar' : origin === 'screen' ? 'Analisar uma captura de tela' : 'Adicionar áudio ou vídeo';
+  $('read-tab-alternative').hidden = !extension || origin !== 'screen';
   progress('capture-help-status',false,'');
   showView('capture-help', 'capture-help-title');
 }
 $('start-sharing').addEventListener('click', () => {
   const action = shareAction;
-  shareAction = undefined;
   if (shareOrigin === 'audio') showView('audio', 'audio-title');
   action?.();
+});
+$('screen-image').addEventListener('change', async event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  event.target.value = '';
+  activeCapture?.abort();
+  activeCapture = new AbortController();
+  const { signal } = activeCapture;
+  const url = URL.createObjectURL(file);
+  let reader;
+  try {
+    progress('capture-help-status', true, 'Lendo o texto da captura de tela…');
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    signal.throwIfAborted();
+    const scale = Math.min(1, 2400 / Math.max(image.width, image.height));
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    reader = await createReader(signal);
+    const content = await readFrame(reader, canvas, signal);
+    content.text = trechoDaTela(content.text);
+    if (!content.text) {
+      progress('capture-help-status', false, 'Não encontrei texto legível. Escolha uma captura mais nítida ou cole a informação.');
+      return;
+    }
+    iniciarPesquisa('capture-help-status');
+    content.evidence = await research(content.text, undefined, { signal });
+    if (!signal.aborted) renderResult(content);
+  } catch {
+    if (!signal.aborted) progress('capture-help-status', false, 'Não consegui analisar a captura. Tente uma imagem PNG ou JPEG ou cole o texto.');
+  } finally {
+    URL.revokeObjectURL(url);
+    if (reader) await reader.terminate();
+  }
 });
 $('share-paste-alternative').addEventListener('click', () => openPaste());
 $('read-tab-alternative').addEventListener('click', analyzeTab);

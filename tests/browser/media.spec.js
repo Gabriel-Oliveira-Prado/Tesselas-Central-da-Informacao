@@ -17,6 +17,14 @@ test('um arquivo local de voz gera transcrição editável e contexto com fonte'
 
 for (const mode of ['mic', 'tab']) {
   test('transcrição de voz via ' + mode + ' libera a faixa e mostra a fonte', async ({ page }) => {
+    let liberarModelo;
+    if (mode === 'mic') {
+      const espera = new Promise(resolve => { liberarModelo = resolve; });
+      await page.route('**/vendor/speech/vosk.js', async route => {
+        await espera;
+        await route.continue();
+      });
+    }
     await page.addInitScript(({ mode, wav }) => {
       const capture = async () => {
         const context = new AudioContext();
@@ -26,7 +34,10 @@ for (const mode of ['mic', 'tab']) {
         const source = context.createBufferSource();
         source.buffer = buffer;
         source.connect(dest);
-        window.playFixture = () => source.start();
+        window.playFixture = () => new Promise(resolve => {
+          source.onended = resolve;
+          source.start();
+        });
         return window.fixtureStream = dest.stream;
       };
       navigator.mediaDevices[mode === 'mic' ? 'getUserMedia' : 'getDisplayMedia'] = capture;
@@ -37,8 +48,13 @@ for (const mode of ['mic', 'tab']) {
     if (mode === 'tab') await page.locator('#start-sharing').click();
     await expect(page.locator('#audio-input-status')).toContainText('Escutando', { timeout: 10000 });
     await page.evaluate(() => window.playFixture());
-    await expect(page.locator('#audio-transcript')).toContainText(/cabine de votação com (?:o )?celular/i, { timeout: 15000 });
+    if (mode === 'tab') await expect(page.locator('#audio-transcript')).toContainText(/cabine de votação com (?:o )?celular/i, { timeout: 15000 });
     await page.locator('#audio-input-stop').click();
+    if (mode === 'mic') {
+      expect(await page.evaluate(() => window.fixtureStream.active)).toBe(false);
+      await expect(page.locator('#result-view')).toBeHidden();
+      liberarModelo();
+    }
     await expect(page.locator('#result-matches a').first()).toBeVisible({timeout:20000});
     expect(await page.evaluate(() => window.fixtureStream.active)).toBe(false);
   });

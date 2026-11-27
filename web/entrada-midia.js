@@ -15,7 +15,7 @@ export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest
     status.dataset.busy = 'true';
     const stop = $(paste ? 'paste-media-stop' : 'audio-input-stop');
     const transcript = $(paste ? 'claim' : 'audio-transcript');
-    let stream, player, objectURL, reader, timer, finishAudio, inFrame, finishing = false;
+    let stream, player, objectURL, reader, timer, audioReady, inFrame, finishing = false;
     let collected = '', lastFrame = '', reachedLimit = false, speechText = '';
     const visualTexts = [];
     const display = text => { if (paste) transcript.value = text; else transcript.textContent = text; };
@@ -34,7 +34,7 @@ export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest
       }
       collected = [speechText,...visualTexts].filter(Boolean).join('\n\n').slice(0, MAX_TEXT_LENGTH);
       display(collected);
-      if (collected.length === MAX_TEXT_LENGTH && !reachedLimit) {
+      if (collected.length === MAX_TEXT_LENGTH && kind !== 'mic' && !reachedLimit) {
         reachedLimit = true;
         queueMicrotask(complete);
       }
@@ -53,17 +53,22 @@ export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest
     async function complete() {
       if (finishing || signal.aborted) return;
       finishing = true;
-      status.textContent = 'Concluindo a transcrição. Aguarde…';
+      if (kind === 'mic') stream.getTracks().forEach(track => track.stop());
+      status.dataset.busy = 'true';
+      status.textContent = kind === 'mic' ? 'Microfone encerrado. Lendo sua fala…' : 'Concluindo a transcrição. Aguarde…';
       player?.pause();
       clearTimeout(timer);
       try {
+        const finishAudio = await audioReady;
         await finishAudio?.();
         await inFrame;
         if (signal.aborted) return;
         owner.abort();
         if (collected) {
           status.textContent = reachedLimit ? 'Primeiros 8.000 caracteres prontos para revisão.' : 'Transcrição pronta. Confira o trecho reconhecido.';
-          if (paste) onReview(collected); else onResult(collected);
+          const command = collected.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+          if (kind === 'mic' && ['abrir eleicoes', 'abrir acessibilidade', 'abrir configuracoes', 'colar informacao', 'voltar ao inicio'].includes(command)) onCommand(command);
+          else if (paste) onReview(collected); else onResult(collected);
         } else status.textContent = 'Nenhuma fala ou frase legível encontrada. Tente outra fonte ou escreva o trecho.';
       } catch { if (!signal.aborted) { owner.abort(); status.textContent = 'Não foi possível concluir a leitura.'; } }
     }
@@ -86,19 +91,16 @@ export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest
       const input = player || new MediaStream(stream.getAudioTracks());
       stop.hidden = false;
       stop.onclick = complete;
-      status.textContent = 'Preparando a transcrição em português…';
-      finishAudio = await transcribe(input, signal, (words, final) => {
-        if (kind === 'mic' && final) {
-          const command = words.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
-          if (['abrir eleicoes', 'abrir acessibilidade', 'abrir configuracoes', 'colar informacao', 'voltar ao inicio'].includes(command)) {
-            owner.abort();
-            onCommand(command);
-            return;
-          }
-          if (command === 'concluir' || command === 'concluir a leitura') { if (!finishing) void complete(); return; }
-        }
+      stop.textContent = kind === 'mic' ? 'Encerrar microfone e pesquisar' : 'Concluir e verificar';
+      if (kind !== 'mic') status.textContent = 'Preparando a transcrição em português…';
+      audioReady = transcribe(input, signal, (words, final) => {
         if (final) append(words,true); else display((speechText + ' ' + words + '\n' + visualTexts.join('\n')).trim().slice(0, MAX_TEXT_LENGTH));
+      }, () => {
+        if (kind !== 'mic' || finishing) return;
+        status.dataset.busy = 'false';
+        status.textContent = 'Escutando. Fale agora e toque em Encerrar microfone e pesquisar quando terminar.';
       });
+      await audioReady;
       if (signal.aborted || finishing) return;
       if (player) {
         player.onended = complete;
@@ -123,8 +125,8 @@ export function setupMediaInputs({ onReview, onResult, onCommand, onShareRequest
           };
           next();
         }
-      } else stream.getTracks().forEach(track => track.addEventListener('ended', complete, { once: true }));
-      if (!signal.aborted) status.textContent = file ? 'Lendo ' + file.name + '. Você pode concluir o trecho antes do fim.' : kind === 'mic' ? 'Escutando. Diga a informação ou um comando como “abrir eleições”. Toque em Concluir e verificar ao terminar.' : 'Escutando a aba compartilhada. Escolha Concluir e verificar quando terminar.';
+      } else if (kind === 'tab') stream.getTracks().forEach(track => track.addEventListener('ended', complete, { once: true }));
+      if (!signal.aborted && kind !== 'mic') status.textContent = file ? 'Lendo ' + file.name + '. Você pode concluir o trecho antes do fim.' : 'Escutando a aba compartilhada. Escolha Concluir e verificar quando terminar.';
     } catch (err) {
       if (!signal.aborted) {
         owner.abort();

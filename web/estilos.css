@@ -203,3 +203,9 @@ body[data-extra-large] .skip-link:focus { inset: 4px 4px auto; padding: 4px; }
 @media (max-width: 480px) {
   #history-view .view-heading { flex-wrap: wrap; }
 }
+
+@media (pointer: coarse) {
+  .card-info { width: 48px; height: 48px; }
+  .tool-view :is(button, select) { min-height: 48px; }
+  #capture-help-view .button, #audio-input-stop { width: 100%; white-space: normal; }
+}

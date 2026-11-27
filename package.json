@@ -1,6 +1,6 @@
 {
   "name": "central-da-informacao",
-  "version": "0.21.1",
+  "version": "0.22.0",
   "private": true,
   "type": "module",
   "description": "Site e extensão acessíveis para verificar notícias, texto, áudio e vídeo com fontes.",

@@ -77,9 +77,13 @@
 
       <section id="capture-help-view" class="view tool-view" aria-labelledby="capture-help-title" hidden>
         <div class="view-heading"><button class="back-button" type="button" data-back><span aria-hidden="true">←</span> Voltar</button><h1 id="capture-help-title" tabindex="-1">Antes de compartilhar</h1></div>
-        <p>A próxima janela pertence ao navegador. Depois que você confirmar, a Central poderá pesquisar o texto reconhecido e compará-lo com fontes pela Central.</p>
+        <div id="screen-image-option" hidden>
+          <p id="screen-image-help">Faça uma captura de tela da notícia e escolha a imagem da galeria. A Central vai ler o texto da imagem e pesquisar a informação.</p>
+          <label class="file-card">Escolher captura de tela<input id="screen-image" type="file" accept="image/*" aria-describedby="screen-image-help"></label>
+        </div>
+        <div id="screen-sharing-guide"><p>A próxima janela pertence ao navegador. Depois que você confirmar, a Central poderá pesquisar o texto reconhecido e compará-lo com fontes pela Central.</p>
         <ol><li>Use Tab ou Shift + Tab para percorrer os controles. Use as setas para escolher a aba, janela ou tela que contém a notícia.</li><li>Se precisar do som, marque Compartilhar áudio. Essa opção varia entre navegadores e superfícies.</li><li>Confirme em Compartilhar. Para cancelar a janela, pressione Escape.</li></ol>
-        <p>Se o leitor de tela não anunciar as opções, cancele e cole a informação ou adicione um arquivo. Na extensão, você também pode autorizar a leitura do texto da aba aberta, sem usar esse seletor.</p>
+        <p>Se o leitor de tela não anunciar as opções, cancele e cole a informação ou adicione um arquivo. Na extensão, você também pode autorizar a leitura do texto da aba aberta, sem usar esse seletor.</p></div>
         <p id="capture-help-status" class="research-progress" role="status"></p>
         <button id="start-sharing" class="button button-primary" type="button"><svg class="pictograma" aria-hidden="true"><use href="assets/acoes.svg#tela"></use></svg>Continuar e escolher a tela</button>
         <button id="read-tab-alternative" class="button button-secondary" type="button" hidden>Ler o texto da aba aberta</button>
@@ -212,7 +216,7 @@
       </section>
       <p class="sr-only" id="app-status" role="status" aria-live="polite" aria-atomic="true"></p>
     </main>
-    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.21.1</span></footer>
+    <footer class="footer"><a href="sobre.html" target="_blank" rel="noopener noreferrer">Sobre e privacidade <span class="small">(nova aba)</span></a><span id="project-version">Versão 0.22.0</span></footer>
   </div>
 </body>
 </html>

@@ -4,7 +4,7 @@
 
 [Abrir o site da Central](https://tesselas-central-da-informacao.vercel.app) · [Instalar a extensão](https://tesselas-central-da-informacao.vercel.app/web/extensao.html)
 
-**Versão 0.21.1** · Site e extensão para Chrome de computador.
+**Versão 0.22.0** · Site para celular e computador e extensão para Chrome de computador.
 
 A Central da Informação verifica notícias de qualquer tema. O resultado começa com **Verdadeiro** ou **Falso** e explica o que a fonte confirmou sobre a afirmação. Quando a evidência é insuficiente ou contraditória, aparece **Não verificado**. A Central acompanha a área de tela escolhida e reconhece texto e fala em português no dispositivo. A pesquisa consulta páginas online por assunto e usa a chave do servidor quando a comparação por Gemini está disponível.
 
@@ -72,7 +72,7 @@ O serviço de busca usa endpoints públicos de RSS, sujeitos a disponibilidade e
 
 Escolha **Colar informação** e cole a frase de teste “A urna eletrônica é conectada à internet durante a votação.” Clique em **Pesquisar informação**. O painel encontra a checagem, explica que a urna funciona desconectada durante a votação e oferece o link da Justiça Eleitoral.
 
-Em **Analisar tela**, escolha a aba ou a tela. Para incluir voz, marque o áudio no seletor do navegador. O painel mostra o trecho e o contexto e oferece **Encerrar acompanhamento**. Na aba autorizada, um selo informa se a Central lê a tela e escuta áudio. Outras superfícies usam o indicador nativo do navegador.
+No celular, abra **Analisar tela** e toque em **Escolher captura de tela** para pesquisar o texto de uma imagem da galeria. Nos navegadores que permitem compartilhar ao vivo, você também pode escolher a aba ou a tela. Para incluir voz, marque o áudio no seletor do navegador. O painel mostra o trecho e o contexto e oferece **Encerrar acompanhamento**. Na aba autorizada, um selo informa se a Central lê a tela e escuta áudio. Outras superfícies usam o indicador nativo do navegador.
 
 Após a autorização, a Central analisa um trecho e mantém o resultado na tela. Use **Continuar análise** para apresentar mais conteúdo e **Encerrar acompanhamento** para consultar os resultados. Use Tab para chegar a um controle e Enter ou Espaço para acioná-lo. Ao iniciar ou continuar a análise, a voz anuncia a pesquisa. Quando o resultado chega, o aviso de voz tem prioridade enquanto você usa Tab. Ao encerrar, o foco vai para **Voltar**. Em **Acessibilidade**, desmarque **Ativar voz automática da Central** para silenciar a navegação e os avisos.
 
@@ -92,7 +92,7 @@ Abra o endereço impresso por `npm start` no Chrome ou Edge de computador. Na po
 
 - **Analisar tela** usa reconhecimento de texto, comparação com duas artes conhecidas e transcrição em português. O reconhecimento de objetos inicia automaticamente nos computadores que disponibilizam o modelo do Chrome. Ao encerrar, os trechos e suas fontes ficam na tela Resultados do acompanhamento. O navegador pode precisar baixá-lo.
 - **Colar informação** recebe texto ou um link do UOL Notícias, Terra, g1, Agência Brasil, TSE, Justiça Eleitoral ou Aos Fatos. O card de arquivos aceita áudio, vídeo e legendas SRT ou VTT. Confira o texto reconhecido antes de verificar.
-- **Ouvir conteúdo** recebe arquivo, microfone ou som da aba. Ao escolher o microfone, você também pode dizer “abrir eleições”, “abrir acessibilidade”, “colar informação” ou “voltar ao início”. A leitura em voz alta tem velocidade ajustável, pausa e destaque aproximado das palavras conforme o áudio avança.
+- **Ouvir conteúdo** recebe arquivo, microfone ou som da aba. No microfone, toque em Encerrar microfone e pesquisar ao terminar de falar. Você também pode dizer “abrir eleições”, “abrir acessibilidade”, “colar informação” ou “voltar ao início”. A leitura em voz alta tem velocidade ajustável, pausa e destaque aproximado das palavras conforme o áudio avança.
 - **Acessibilidade** permite ampliar até 400%, escolher a distância entre letras e palavras, usar cores suaves, escolher paletas para protanopia, deuteranopia e tritanopia ou escala de cinza, ativar avisos falados e consultar o VLibras. A fonte Atkinson Hyperlegible Next acompanha a extensão.
 
 - **Eleições** recebe perguntas, links, áudio, vídeo e legendas no mesmo formulário de checagem compartilhado. Mostra a apuração das eleições gerais de 2026 para a Presidência e as 27 UFs, por cargo e turno. Cada candidatura traz o percentual e a situação publicada pelo TSE. Os arquivos da edição acompanham o site e a extensão e podem ser renovados com `node scripts/atualizar-apuracao.mjs`. O painel também apresenta até três manchetes por fonte, com data e link. O painel consulta as listagens públicas do TSE e da Agência Brasil. Use **Atualizar notícias** para consultar essas duas origens. Sem conexão, a seleção incluída na versão continua disponível. Para renovar essa seleção antes de distribuir uma versão, execute `node scripts/atualizar-edicao.mjs` com as dependências e o Chromium do Playwright instalados.
