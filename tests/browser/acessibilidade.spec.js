@@ -131,4 +131,6 @@ test('Espaço e Enter ativam os controles e a pesquisa anuncia o início uma vez
   await expect(page.locator('#result-summary')).toContainText('Sim. No Brasil, quem tem 16 ou 17 anos pode escolher');
   await expect(page.locator('#result-title')).toBeFocused();
   expect(await page.evaluate(() => window.avisos.filter(texto => texto.startsWith('Pesquisando')))).toEqual(['Pesquisando a informação. Aguarde.']);
+  expect(await page.evaluate(() => window.avisos.at(-1))).toMatch(/^Verdadeiro\. Sim\./);
+  await expect(page.getByRole('button', { name:'Ouvir áudio' })).toBeVisible();
 });

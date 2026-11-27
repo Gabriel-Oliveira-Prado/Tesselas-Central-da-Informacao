@@ -81,10 +81,10 @@ export function enableAccessibleNavigation() {
     const open = document.activeElement.closest('.card-shell')?.querySelector('.card-info[aria-expanded=true]');
     if (open) { open.click(); open.focus(); }
   });
-  return function anunciarPesquisa() {
+  return function anunciarAutomaticamente(mensagem) {
     if (document.body.dataset.speakFocus === 'false' || !globalThis.speechSynthesis || !globalThis.SpeechSynthesisUtterance) return;
     clearTimeout(timer);
-    utterance = new SpeechSynthesisUtterance('Pesquisando a informação. Aguarde.');
+    utterance = new SpeechSynthesisUtterance(mensagem);
     utterance.lang = 'pt-BR';
     utterance.voice = speechSynthesis.getVoices().find(v => v.localService && /^pt/i.test(v.lang)) || null;
     speechSynthesis.cancel();

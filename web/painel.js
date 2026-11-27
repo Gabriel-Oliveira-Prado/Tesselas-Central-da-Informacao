@@ -46,7 +46,7 @@ let checkScope = 'general';
 let shareAction;
 let shareOrigin = 'screen';
 try { navigator.mediaDevices?.setCaptureHandleConfig?.({ handle: 'central-painel', permittedOrigins: ['*'] }); } catch { /* Disponibilidade varia com a superfície. */ }
-const anunciarPesquisa = enableAccessibleNavigation();
+const anunciarAutomaticamente = enableAccessibleNavigation();
 const stopMediaInputs = setupMediaInputs({
   onShareRequest(action) { requestSharing(action, 'audio'); },
   onReview(text) { $('claim').value = text; $('claim').dispatchEvent(new Event('input')); $('claim').focus(); },
@@ -91,7 +91,7 @@ function progress(id, busy, message) {
 }
 function iniciarPesquisa(id) {
   progress(id, true, 'Pesquisando a informação. Aguarde.');
-  anunciarPesquisa();
+  anunciarAutomaticamente('Pesquisando a informação. Aguarde.');
 }
 function setLiveConclusion(evidence, pending) {
   const verdict = conclusionFor(evidence);
@@ -282,6 +282,7 @@ function renderResult(content) {
   $('search-query').value = content.text.slice(0, MAX_SEARCH_LENGTH);
   renderSearchLinks();
   showView('result', 'result-title');
+  anunciarAutomaticamente($('result-title').textContent + '. ' + $('result-summary').textContent);
   announce('');
 }
 
@@ -305,6 +306,7 @@ function showCaptureError(error, fromScreen) {
   $('retry-paste').hidden = false;
   $('allow-tab').hidden = !extension || !fromScreen;
   showView('result', 'result-title');
+  anunciarAutomaticamente($('result-title').textContent + '. ' + $('result-summary').textContent);
   announce('');
 }
 

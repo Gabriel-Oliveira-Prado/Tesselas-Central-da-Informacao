@@ -8,6 +8,20 @@ import { newsEdition } from '../regras-negocio/edicao-noticias.js';
 import { conclusionFor } from '../regras-negocio/veredito.js';
 import { evidenceFor } from '../regras-negocio/pesquisa.js';
 import { searchPlan } from '../regras-negocio/fontes-pesquisa.js';
+
+test('horário de chegada, fila e números de candidatura têm sentidos distintos', () => {
+  for (const pergunta of ['pode votar de 20horas da noite?', 'Posso votar às oito da noite?', 'Dá pra votar às 20:30?']) {
+    const resposta = conclusionFor(evidenceFor(pergunta));
+    assert.equal(resposta.label, 'Resposta da fonte');
+    assert.match(resposta.explanation, /fila já estará fechada/);
+    assert.match(resposta.explanation, /17h recebe senha/);
+    assert.match(searchPlan(pergunta).sources[0].name, /Horário/);
+  }
+  assert.match(conclusionFor(evidenceFor('Posso votar às 8h?')).explanation, /Sim,/);
+  for (const pergunta of ['Posso votar 13?', 'Posso votar às 20h em Portugal?', 'Tenho 20 anos, posso votar?']) {
+    assert.ok(!evidenceFor(pergunta).exact.some(item => item.id.startsWith('horario-votacao-')));
+  }
+});
 import { trechoDaTela } from '../regras-negocio/trecho-da-tela.js';
 
 test('manchete reconhecida mantém o local e descarta controles de autenticação', () => {

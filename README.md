@@ -2,13 +2,22 @@
 
 # Central da Informação
 
-**Versão 0.16.0** · Site e extensão para Chrome de computador.
+**Versão 0.17.0** · Site e extensão para Chrome de computador.
 
 A Central da Informação verifica notícias de qualquer tema e mostra primeiro a conclusão, seguida da afirmação, da explicação e da fonte. Os resultados são Falso, Verdadeiro, Fora de contexto ou Não verificado quando faltam evidências. Ela acompanha a área de tela escolhida e reconhece texto e fala em português. O reconhecimento ocorre no dispositivo. A pesquisa consulta páginas online por assunto e usa a chave do servidor quando a comparação por Gemini está disponível.
 
-<p align="center"><img src="docs/inicio.png" width="320" height="549" alt="Painel inicial da Central com cinco opções."> <img src="docs/checagem.png" width="320" height="549" alt="Fora de contexto. O trecho informa 2020 e a fonte confirma o resgate da onça em 2025."></p>
+<p align="center"><img src="docs/inicio.png" width="320" height="549" alt="Painel inicial da Central com cinco opções."> <img src="docs/checagem.png" width="320" height="549" alt="Resposta sobre chegar às 20h para votar, com a regra da fila às 17h, fonte do TSE e botão Ouvir áudio."></p>
 
 Quando a checagem confirma o acontecimento e o trecho troca o ano, a Central mostra **Fora de contexto**, o ano informado, o ano confirmado e a fonte. A comparação também se aplica ao texto reconhecido na tela e às transcrições. Veja as gravações da mesma afirmação com 2020 e 2025 no [site](docs/gravacoes/checagem-de-ano.webm) e na [análise de tela da extensão](docs/gravacoes/ano-na-analise-de-tela.webm).
+
+## Equipe
+
+Conheça no LinkedIn as pessoas que desenvolvem a Central da Informação.
+
+- [Gabriel Oliveira Prado](https://www.linkedin.com/in/gabriel-oliveira-prado/)
+- [Carlos Henrique](https://www.linkedin.com/in/carlos-henrique-12bb44351/)
+- [Pedro Henrique Canto Bezerra](https://www.linkedin.com/in/pedro-henrique-canto-bezerra-5198682b7/)
+- [Alyson Coutinho](https://www.linkedin.com/in/alyson-coutinho-b706442b3/)
 
 ## Executar o site
 

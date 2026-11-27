@@ -1,4 +1,5 @@
 import { fonteVotoJovem } from './idade-eleitoral.js';
+import { assuntoHorario, fonteHorario } from './horario-eleitoral.js';
 
 export const sources = [
   { name: 'TSE · Sigilo e liberdade de escolha', url: 'https://www.tse.jus.br/institucional/escola-judiciaria-eleitoral/publicacoes/revistas-da-eje/artigos/revista-eletronica-eje-n.-5-ano-4/protecao-ao-sigilo-do-voto', topics: ['votar','voto','escolha','candidato','proibido','direito','regiao'] },
@@ -44,6 +45,8 @@ export function searchPlan(text) {
     && tokens.every(word=>!['horario','17','fila','celular','documento','internet'].includes(word));
   const regional = tokens.includes('regiao') || /\bbrasil\b/.test(normalize(cleaned));
   const queries = [cleaned];
+  const horarioEleitoral = assuntoHorario(cleaned);
+  if (horarioEleitoral) queries.push('TSE horário de votação abertura encerramento fila senha horário de Brasília');
   // Procure também o assunto sem o início coloquial, preservando a pergunta original para a comparação.
   const assunto = cleaned.replace(/^(?:(?:eu )?(?:queria|quero|gostaria de) saber (?:se |sobre )?|(?:é|e) (?:verdade|verdadeiro) que |(?:voc[eê] )?(?:pode|consegue) (?:me )?(?:dizer|explicar) (?:se )?)/iu, '').trim();
   if (assunto !== cleaned && keywords(assunto).length >= 2) queries.push(assunto);
@@ -59,6 +62,7 @@ export function searchPlan(text) {
   const ranked = sources.map(source => ({ source, score: source.topics.reduce((n, word) => n + (tokens.includes(aliases[word] || word) ? word==='voto'||word==='votar'?1:3:0), 0) })).filter(item => item.score > 0).sort((a,b)=>b.score-a.score).slice(0,3);
   const primary = electoral ? ranked.map(item=>item.source) : [];
   if (idadeEleitoral) primary.unshift(fonteVotoJovem);
+  if (horarioEleitoral) primary.unshift(fonteHorario);
   if (civic && !primary.includes(sources.at(-1))) primary.push(sources.at(-1));
-  return { query: cleaned, queries: [...new Set(queries)].filter(Boolean), electoral, civic, regional, idadeEleitoral, sources: primary };
+  return { query: cleaned, queries: [...new Set(queries)].filter(Boolean), electoral, civic, regional, idadeEleitoral, horarioEleitoral, sources: primary };
 }

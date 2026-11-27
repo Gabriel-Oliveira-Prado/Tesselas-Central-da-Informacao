@@ -3,7 +3,7 @@
   "name": "Central da Informação",
   "short_name": "Central",
   "homepage_url": "http://127.0.0.1:4177/web/index.html",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "Site e extensão acessíveis para verificar notícias, texto, áudio e vídeo com fontes.",
   "minimum_chrome_version": "116",
   "permissions": [

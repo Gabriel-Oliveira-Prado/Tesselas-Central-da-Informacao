@@ -99,7 +99,7 @@ export async function searchOnline(value, { signal = new AbortController().signa
     .filter(row=>row.score>=minimum && (plan.civic || mentionsNames(row))).sort((a,b)=>b.score-a.score).slice(0,4);
   onProgress('Lendo os trechos das fontes encontradas…');
   const referencias = reportagens.map(row=>({...row,score:keywords(row.titulo).filter(k=>tokens.includes(k)).length})).filter(row=>row.score >= 5);
-  const prioritarias = plan.idadeEleitoral ? plan.sources.slice(0,1) : [];
+  const prioritarias = plan.idadeEleitoral || plan.horarioEleitoral ? plan.sources.slice(0,1) : [];
   const pages = [...new Map([...prioritarias,...referencias,...unique.filter(row=>!row.url.startsWith('https://news.google.com/')),...plan.sources].map(row=>[row.url,row])).values()].slice(0,6);
   const extracted = await Promise.allSettled(pages.map(async row=>{
     const page = extractPage(await load(new URL(row.url),signal),new URL(row.url),plan.query);

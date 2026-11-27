@@ -282,7 +282,7 @@ test('voz tem acionamento explícito, lê a explicação e permite pausa e parad
   await page.keyboard.press('Enter');
   await page.getByRole('button', { name: 'Parar', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Ouvir última informação', exact: true })).toBeFocused();
-  expect(await page.evaluate(() => window.voiceActions.filter((action) => action !== 'cancel'))).toEqual(['speak', 'speak', 'speak', 'pause', 'resume']);
+  expect(await page.evaluate(() => window.voiceActions.filter((action) => action !== 'cancel'))).toEqual(['speak', 'speak', 'speak', 'speak', 'pause', 'resume']);
   await page.getByRole('button', { name: 'Voltar', exact: true }).click();
   await expect(page.locator('#open-audio')).toBeFocused();
 });
@@ -494,7 +494,7 @@ test('resultado falado tem equivalente escrito, velocidade ajustável e retorno 
   });
   await page.goto(panelPath);
   await pasteAndVerify(page, knownClaim);
-  await page.getByRole('button', { name: 'Ouvir resultado' }).press('Enter');
+  await page.getByRole('button', { name: 'Ouvir áudio' }).press('Enter');
   await expect(page.locator('#result-view')).toBeVisible();
   await expect(page.locator('#listen-result')).toHaveAttribute('aria-pressed','true');
   await page.locator('#listen-result').press('Space');
