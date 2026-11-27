@@ -73,7 +73,7 @@ test('apuração oficial permite comparar turnos e percorrer candidaturas estadu
   await page.goto('/web/index.html');
   await page.locator('#open-elections').click();
   await expect(page.locator('#candidaturas li')).toHaveCount(2);
-  await expect(page.locator('#fonte-apuracao')).toHaveAttribute('href', /resultados\.tse\.jus\.br\/oficial\/ele2026\/6258\//);
+  await expect(page.locator('#elections-view a[href*="resultados.tse.jus.br"]')).toHaveCount(0);
   await expect(page.locator('#candidaturas')).toContainText(/Presidente · Eleito · \d+,\d+%/);
   await page.locator('#local-apuracao').selectOption('df');
   await page.locator('#disputa').selectOption({ label: 'Deputado Distrital · 1º turno' });

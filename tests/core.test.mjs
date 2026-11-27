@@ -59,6 +59,39 @@ test('manchetes completas de vídeos checados preservam a conclusão publicada',
   assert.deepEqual(publishedChecks('Não é verdade que ' + fake.title), []);
 });
 
+test('ano do registro em checagem publicada vale para texto, OCR e transcrição', () => {
+  const fato = 'Vídeo mostra resgate de onça no rio Negro, em Manaus, em 2025';
+  for (const texto of [
+    fato.replace('2025', '2020'),
+    'Em 2020, o vídeo mostra resgate de onça no rio Negro, em Manaus.',
+    fato.replace('Negro, em', 'Negro,\nem').replace('2025', 'dois mil e vinte'),
+  ]) {
+    const [registro] = publishedChecks(texto);
+    assert.equal(registro.kind, 'context');
+    assert.match(registro.explanation, /2020.*2025/);
+    assert.equal(registro.claim, fato);
+  }
+  assert.equal(publishedChecks(fato)[0].kind, 'true');
+  for (const texto of [
+    'Não é verdade que ' + fato.replace('2025', '2020'),
+    fato.replace('Manaus', 'Recife').replace('2025', '2020'),
+    fato.replace('2025', '2020 ou 2021'),
+    fato + '. ' + fato.replace('2025', '2020'),
+  ]) assert.deepEqual(publishedChecks(texto), []);
+});
+
+test('compara também manchetes novas e exige confirmação expressa do ano do evento', () => {
+  const alegacao = 'Foto mostra a reabertura do museu em 2018';
+  const reportagem = { title: 'É #FATO: ' + alegacao, url: 'https://g1.globo.com/fato-ou-fake/teste-museu', date: '2024-01-01' };
+  const alterada = alegacao.replace('2018', '2015');
+  const [prova] = publishedChecks(alterada, reportagem, false);
+  assert.equal(prova.kind, 'context');
+  assert.match(prova.explanation, /2015.*2018/);
+  for (const title of [reportagem.title.replace('#FATO', '#FAKE'), reportagem.title.replace(' em 2018', ''), alegacao]) {
+    assert.deepEqual(publishedChecks(alterada, { ...reportagem, title }, false), []);
+  }
+});
+
 test('buscas preservam a consulta como dado, inclusive caracteres especiais', () => {
   const query = 'uma notícia & <script> + "outro contexto" #?';
   const links = createSearchLinks(query);

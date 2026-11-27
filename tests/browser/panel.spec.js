@@ -80,7 +80,7 @@ test('Eleições ocupa a linha e mantém a seleção quando uma fonte falha', as
   await page.getByRole('button', { name: 'Atualizar notícias' }).press('Enter');
   await expect(page.locator('#election-status')).toContainText('e Agência Brasil');
   await expect(page.getByRole('link', { name: 'Cobertura de teste' })).toBeVisible();
-  await expect(page.getByRole('link', { name: /resultados oficiais/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /resultados oficiais/ })).toHaveCount(0);
   const audit = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
   expect(audit.violations).toEqual([]);
   await page.locator('#elections-view [data-back]').press('Enter');

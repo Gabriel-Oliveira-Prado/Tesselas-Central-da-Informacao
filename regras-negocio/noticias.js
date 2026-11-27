@@ -1,5 +1,6 @@
 import { newsEdition } from './edicao-noticias.js';
 import { portaisAdicionais } from './fontes-pesquisa.js';
+import { compararAnoDaMidia } from './ano-da-midia.js';
 
 export const newsFeeds = [
   { id: 'g1', name: 'g1 · Fato ou Fake', url: 'https://g1.globo.com/rss/g1/fato-ou-fake/' },
@@ -72,7 +73,17 @@ export function publishedChecks(text, story, linkedStory = true) {
     if (new URL(row.url).hostname !== 'g1.globo.com' || !new URL(row.url).pathname.includes('/fato-ou-fake/')) return [];
     const match = /^É #(FAKE|FATO)(?:\s+que\s+|:\s*|\s+)(.+?)(?:;|$)/i.exec(row.title);
     const fullHeadline = normalize(row.title).replace(/[.!?]$/, '');
-    if (!match || ((!linkedStory || story?.url !== row.url) && !sentences.has(normalize(match[2]).replace(/[.!?]$/, '')) && !sentences.has(fullHeadline))) return [];
+    if (!match) return [];
+    const ano = match[1].toUpperCase() === 'FATO' && compararAnoDaMidia(text, match[2]);
+    if (ano?.ambiguo) return [];
+    if (ano && ano.informado !== ano.confirmado) return [{
+      id: row.url + '#ano-' + ano.informado, kind:'context', claim:match[2],
+      finding:'Fora de contexto · ano trocado',
+      explanation:'O trecho informa ' + ano.informado + '. A checagem confirma ' + ano.confirmado + '. ' + match[2] + '.',
+      url:row.url, source:'g1 · Fato ou Fake', topic:'o registro original', published:row.date,
+      consultedAt:new Date().toISOString().slice(0,10),
+    }];
+    if (!ano && (!linkedStory || story?.url !== row.url) && !sentences.has(normalize(match[2]).replace(/[.!?]$/, '')) && !sentences.has(fullHeadline)) return [];
     return [{ id: row.url, kind: match[1].toUpperCase() === 'FAKE' ? 'false' : 'true', claim: match[2],
       finding: match[1].toUpperCase() === 'FAKE' ? 'Falso, segundo a fonte' : 'Confirmado pela fonte',
       explanation: row.lead || row.title, url: row.url, source: 'g1 · Fato ou Fake', topic: 'esta checagem do g1', published: row.date, consultedAt: new Date().toISOString().slice(0, 10) }];

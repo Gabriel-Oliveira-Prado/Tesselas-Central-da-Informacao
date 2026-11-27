@@ -11,7 +11,6 @@ const disputa = document.getElementById('disputa');
 const lista = document.getElementById('candidaturas');
 const mais = document.getElementById('mais-candidaturas');
 const resumo = document.getElementById('resumo-apuracao');
-const fonte = document.getElementById('fonte-apuracao');
 let disputas = [];
 let revisao = 0;
 for (const [uf, nome] of Object.entries(locais)) local.add(new Option(nome, uf));
@@ -33,8 +32,6 @@ function mostrarPagina(ampliar = false) {
   }
   if (ampliar) lista.children[inicio]?.focus();
   mais.hidden = lista.children.length >= atual.candidatos.length;
-  fonte.href = atual.fonte;
-  fonte.hidden = false;
   resumo.textContent = 'Apuração do TSE de ' + atual.data + ' às ' + atual.hora + '. ' +
     lista.children.length + ' de ' + atual.candidatos.length + ' candidaturas.';
 }
@@ -46,7 +43,6 @@ export async function carregarApuracao() {
   disputa.replaceChildren();
   disputa.disabled = true;
   mais.hidden = true;
-  fonte.hidden = true;
   try {
     const resposta = await fetch(new URL('../regras-negocio/apuracao-2026/' + local.value + '.json', import.meta.url));
     if (!resposta.ok) throw new Error();
@@ -57,7 +53,7 @@ export async function carregarApuracao() {
     disputa.disabled = false;
     mostrarPagina();
   } catch {
-    if (id === revisao) resumo.textContent = 'Não foi possível abrir a apuração. Consulte o link do TSE abaixo.';
+    if (id === revisao) resumo.textContent = 'Não foi possível abrir a apuração. Escolha o estado novamente para tentar outra vez.';
   }
 }
 

@@ -43,6 +43,19 @@ test('Eleições verifica legenda com o mesmo formulário e permite outra checag
   await expect(page.locator('#election-headlines a').first()).toContainText(/Tribunal Superior Eleitoral|Agência Brasil/);
 });
 
+test('legenda com o ano trocado leva o foco ao veredito e informa o ano confirmado', async ({ page }) => {
+  await page.goto('/web/index.html');
+  await page.locator('#open-paste').click();
+  const legenda = 'WEBVTT\n\n00:00.000 --> 00:05.000\nVídeo mostra resgate de onça no rio Negro, em Manaus, em 2020.';
+  await page.locator('#caption-file').setInputFiles({ name: 'resgate.vtt', mimeType: 'text/vtt', buffer: Buffer.from(legenda) });
+  await page.locator('#use-caption').click();
+  await page.locator('#review-form [type=submit]').click();
+  const titulo = page.getByRole('heading', { name: 'Fora de contexto', exact: true });
+  await expect(titulo).toBeFocused({ timeout: 25000 });
+  await expect(page.locator('#result-matches')).toContainText('A checagem confirma 2025');
+  await expect(page.locator('#result-matches a').first()).toHaveAttribute('href', /g1\.globo\.com\/fato-ou-fake\//);
+});
+
 test('pesquisa tem sinal de espera e respeita redução de movimento', async ({ page }) => {
   await page.route('**/pesquisa/fonte?*',async route=>{await new Promise(r=>setTimeout(r,1200));await route.fulfill({body:'<rss><channel></channel></rss>'});});
   await page.goto('/web/index.html');

@@ -42,6 +42,8 @@ export function searchPlan(text) {
     && tokens.every(word=>!['horario','17','fila','celular','documento','internet'].includes(word));
   const regional = tokens.includes('regiao') || /\bbrasil\b/.test(normalize(cleaned));
   const queries = [cleaned];
+  const semAno = cleaned.replace(/\b(?:em\s+|no ano de\s+)?(?:19|20)\d{2}\b/gi, '').replace(/[,\s]+$/,'').trim();
+  if (semAno !== cleaned && keywords(semAno).length >= 4) queries.push(semAno);
   const semLocal = cleaned.replace(/\s+(?:em|no|na)\s+(?!.*\s(?:em|no|na)\s)[\p{L}\s-]{3,45}[?.!]?$/iu,'').trim();
   if (semLocal !== cleaned && keywords(semLocal).length >= 4) queries.push(semLocal);
   if (civic) queries.push(regional ? 'direito voto sufrágio universal local de votação' : 'liberdade escolha candidato voto secreto');
